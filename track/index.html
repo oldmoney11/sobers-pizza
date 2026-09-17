@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#171513" />
+    <title>Track your Sobers Pizza order</title>
+    <link rel="stylesheet" href="./track.css?v=1" />
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="../">SOBERS <span>PIZZA</span></a>
+      <section class="track-card">
+        <p class="eyebrow">OFFICIAL ORDER TRACKING</p>
+        <h1>Where’s my order?</h1>
+        <p>Enter the official reference from your confirmation and the same phone number used at checkout.</p>
+        <form id="trackForm">
+          <label>Order reference<input name="order_number" required autocomplete="off" placeholder="e.g. SP-10010" /></label>
+          <label>Phone number<input name="customer_phone" required type="tel" inputmode="tel" autocomplete="tel" /></label>
+          <button type="submit">Track order</button>
+          <p class="message" id="trackMessage" role="status"></p>
+        </form>
+      </section>
+      <section class="receipt hidden" id="receipt" aria-live="polite">
+        <header><div><p class="eyebrow">VERIFIED SOBERS ORDER</p><h2 id="receiptNumber"></h2></div><span class="status" id="receiptStatus"></span></header>
+        <div class="progress" id="orderProgress"></div>
+        <div class="meta" id="receiptMeta"></div>
+        <div class="items" id="receiptItems"></div>
+        <div class="total"><span>Total</span><strong id="receiptTotal"></strong></div>
+        <p class="safety"><b>Payment safety</b>Only use payment details displayed by Sobers through its official app or confirmed by management.</p>
+        <button class="print" type="button" id="printReceipt">Print / save receipt</button>
+      </section>
+    </main>
+    <script src="./track.js?v=1"></script>
+  </body>
+</html>
+

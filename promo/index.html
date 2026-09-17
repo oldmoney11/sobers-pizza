@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0f13" />
+    <title>Sobers Pizza — 15 Second Promo Experiment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,800;1,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="promo.css" />
+  </head>
+  <body>
+    <main class="promo-page">
+      <section class="promo-stage is-playing" id="promoStage" aria-label="Sobers Pizza animated advertisement">
+        <div class="ambient ambient-one"></div>
+        <div class="ambient ambient-two"></div>
+        <div class="grain"></div>
+
+        <article class="scene scene-hook" aria-hidden="true">
+          <div class="hook-image media-layer"></div>
+          <div class="hook-depth" aria-hidden="true"></div>
+          <div class="hook-pizza" aria-hidden="true">
+            <img src="../assets/sobers-pizza/pizzas/meat-lovers.jpg" alt="" />
+          </div>
+          <div class="hook-flash" aria-hidden="true"></div>
+          <div class="speed-line speed-line-one"></div>
+          <div class="speed-line speed-line-two"></div>
+          <p class="micro-copy">TAKORADI · YOUR CRAVING IS CALLING</p>
+          <h1 class="kinetic-title" aria-label="Hungry?">
+            <span>HUN</span><span>GRY</span><i>?</i>
+          </h1>
+          <p class="hook-answer">Sobers Pizza has you covered.</p>
+          <span class="scroll-cue">15 SEC · KEEP WATCHING</span>
+        </article>
+
+        <article class="scene scene-product" aria-hidden="true">
+          <div class="product-halo"></div>
+          <div class="pizza-frame pizza-frame-main">
+            <img src="../assets/sobers-pizza/pizzas/meat-lovers.jpg" alt="Sobers meat lovers pizza with a cheese pull" />
+          </div>
+          <div class="pizza-frame pizza-frame-detail">
+            <img src="../assets/sobers-pizza/pizzas/spicy-sobers.jpg" alt="Sobers spicy pizza" />
+          </div>
+          <div class="word-stack" aria-label="Fresh. Hot. Loaded.">
+            <strong>FRESH.</strong>
+            <strong>HOT.</strong>
+            <strong>LOADED.</strong>
+          </div>
+          <p class="scene-caption">Big flavour. Proper satisfaction.</p>
+        </article>
+
+        <article class="scene scene-craving" aria-hidden="true">
+          <div class="craving-image media-layer"></div>
+          <div class="craving-depth" aria-hidden="true">
+            <img src="../assets/sobers-pizza/pizzas/spicy-sobers.jpg" alt="" />
+          </div>
+          <div class="craving-sweep"></div>
+          <p class="micro-copy">THE SOBERS EFFECT</p>
+          <h2><span>One bite</span><em>changes everything.</em></h2>
+          <div class="flavour-pill"><i></i> Made fresh to order</div>
+        </article>
+
+        <article class="scene scene-cta" aria-hidden="true">
+          <div class="cta-image media-layer"></div>
+          <div class="cta-glass">
+            <img class="brand-logo" src="../assets/logo/favicon-512.png" alt="Sobers Pizza" />
+            <p class="micro-copy">GOOD PIZZA · GOOD MOOD</p>
+            <h2>SOBERS<br /><span>PIZZA</span></h2>
+            <p>Hungry? We’ve got you covered.</p>
+            <a class="order-button" href="../#menu">ORDER NOW <span>→</span></a>
+          </div>
+          <div class="cta-footer"><span>Freshly baked</span><span>Order online</span></div>
+        </article>
+
+        <div class="motion-bridge motion-bridge-one" aria-hidden="true"></div>
+        <div class="motion-bridge motion-bridge-two" aria-hidden="true"></div>
+        <div class="timeline" aria-hidden="true"><span></span></div>
+      </section>
+
+      <div class="promo-controls">
+        <button id="replayPromo" type="button"><span>↻</span> Replay 15-second advert</button>
+        <p>Experimental page · Sound intentionally off</p>
+      </div>
+    </main>
+
+    <!-- Optional future soundtrack: add promo-audio.mp3 inside this folder, then add src="promo-audio.mp3". Audio is never autoplayed. -->
+    <audio id="promoAudio" preload="metadata"></audio>
+    <script src="promo.js"></script>
+  </body>
+</html>

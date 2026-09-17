@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Sobers Pizza Main Branch Kiosk",
+  "short_name": "Sobers Kiosk",
+  "description": "Sobers Pizza Main Branch self-service ordering kiosk.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#11100f",
+  "theme_color": "#11100f",
+  "icons": [
+    {
+      "src": "../../assets/logo/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../../assets/logo/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Sobers Pizza | Bold Pizza. Your Way.</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/sobers-pizza.css?v=17" />
+    <link rel="stylesheet" href="css/sobers-vibrant.css?v=11" />
+    <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
+    <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
+    <link rel="stylesheet" href="css/sobers-customer.css?v=7" />
+
+    <link rel="manifest" href="manifest.json?v=1" />
+
+    <meta name="theme-color" content="#10131a" />
+
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <meta name="apple-mobile-web-app-title" content="Sobers Pizza" />
+  </head>
+
+  <body id="top">
+    <div class="sp-welcome" id="spWelcome" hidden aria-hidden="true">
+      <div class="sp-welcome-aura" aria-hidden="true"></div>
+      <div class="sp-welcome-mark">
+        <img src="assets/logo/favicon-192.png" alt="" />
+        <span>WELCOME TO</span>
+        <strong>SOBERS <em>PIZZA</em></strong>
+        <small>A smile in every slice.</small>
+      </div>
+    </div>
+    <!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+    <header class="sp-nav">
+      <a class="sp-logo" href="index.html" aria-label="Sobers Pizza home">
+        SOBERS <span>PIZZA</span>
+      </a>
+
+      <nav class="sp-nav-links" aria-label="Sobers Pizza navigation">
+        <a href="#menu" data-filter="all">Menu</a>
+
+        <a href="#menu" data-filter="classic">Classics</a>
+
+        <a href="#menu" data-filter="meat">Meat Lovers</a>
+
+        <a href="#menu" data-filter="sides">Sides</a>
+      </nav>
+
+      <div class="sp-nav-actions">
+        <button
+          type="button"
+          class="sp-nav-tool"
+          id="spThemeButton"
+          aria-label="Switch colour theme"
+          title="Switch colour theme"
+        >
+          <span class="sp-theme-icon" aria-hidden="true">☀</span>
+        </button>
+
+        <button
+          type="button"
+          class="sp-nav-tool"
+          id="spQrButton"
+          aria-label="Show Sobers ordering QR code"
+          title="Show QR code"
+        >
+          <span aria-hidden="true">⌗</span>
+        </button>
+
+        <button type="button" class="sp-cart-button" id="spCartButton">
+          <span>Cart</span>
+
+          <strong id="spCartCount">0</strong>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- =====================================================
+     HERO
+===================================================== -->
+
+      <section class="sp-hero">
+        <img src="assets/sobers-pizza/hero/sobers-hero.jpg" alt="Freshly made Sobers Pizza" />
+
+        <div class="sp-hero-overlay"></div>
+
+        <div class="sp-hero-glow"></div>
+
+        <div class="sp-hero-content">
+          <div class="sp-hero-copy">
+            <p class="sp-eyebrow">FRESH FROM THE OVEN</p>
+
+            <h1>
+              Pizza with a
+              <em>little attitude.</em>
+            </h1>
+
+            <span> Big flavour. Crisp crust. Loaded toppings. Made fresh when you order it. </span>
+
+            <div class="sp-hero-actions">
+              <a href="#menu" class="sp-primary-button">
+                Order your pizza
+                <span>→</span>
+              </a>
+
+              <div class="sp-hero-meta">
+                <span>🍕 Freshly baked</span>
+                <span>•</span>
+                <span>🚴 Delivery</span>
+                <span>•</span>
+                <span>🥡 Pickup</span>
+              </div>
+
+              <a href="#story" class="sp-secondary-button"> Why Sobers </a>
+            </div>
+          </div>
+
+          <div class="sp-hero-badge">
+            <span class="sp-badge-icon">🍕</span>
+
+            <div>
+              <strong>Made fresh</strong>
+              <small>Every single order</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+     SERVICE STRIP
+===================================================== -->
+
+      <div class="sp-service-strip">
+        <span class="sp-service-status">
+          <i aria-hidden="true"></i>
+          <span>
+            <b>Kitchen live</b>
+            <small>Taking orders now</small>
+          </span>
+        </span>
+
+        <span class="sp-service-item">
+          <b>Made fresh</b>
+          <small>Prepared after you order</small>
+        </span>
+
+        <span class="sp-service-item">
+          <b>Your choice</b>
+          <small>Delivery or pickup</small>
+        </span>
+
+        <span class="sp-service-item">
+          <b>Built your way</b>
+          <small>Sizes, extras and notes</small>
+        </span>
+      </div>
+
+      <section class="sp-discovery" aria-labelledby="spDiscoverTitle">
+        <div><p>QUICK PICKS</p><h2 id="spDiscoverTitle">What feels right?</h2></div>
+        <div class="sp-discovery-rail">
+          <button type="button" data-smart-filter="promo-packs"><span>🔥</span><b>Today's deals</b><small>Save more</small></button>
+          <button type="button" data-smart-filter="pizza"><span>🍕</span><b>Pizza mood</b><small>Fresh & loaded</small></button>
+          <button type="button" data-smart-filter="shawarma"><span>⚡</span><b>Quick bites</b><small>Fast favourites</small></button>
+          <button type="button" data-smart-filter="chicken-sides"><span>👥</span><b>Meals for two</b><small>Better together</small></button>
+          <button type="button" data-smart-filter="drinks"><span>🥤</span><b>Something cold</b><small>Drinks & blends</small></button>
+        </div>
+      </section>
+
+      <!-- =====================================================
+     MENU
+===================================================== -->
+
+      <section class="sp-notice-board" id="notices" aria-labelledby="spNoticeTitle" hidden>
+        <div class="sp-notice-heading">
+          <div>
+            <p>FROM SOBERS</p>
+            <h2 id="spNoticeTitle">Notice board</h2>
+          </div>
+          <span class="sp-notice-live">Live updates</span>
+        </div>
+        <div class="sp-notice-list" id="spNoticeList"></div>
+      </section>
+
+      <section class="sp-menu-section" id="menu">
+        <div class="sp-section-heading">
+          <div class="sp-heading-number">01</div>
+
+          <div>
+            <p>THE SOBERS MENU</p>
+
+            <h2>
+              Pick your
+              <em>perfect slice.</em>
+            </h2>
+
+            <span> Start with a favourite or build something completely your own. </span>
+          </div>
+        </div>
+
+        <div class="sp-mobile-menu-tools">
+          <label class="sp-menu-search" for="spMenuSearch"><span>⌕</span><input id="spMenuSearch" type="search" placeholder="Search pizza, shawarma, drinks…" autocomplete="off"><button type="button" id="spSearchClear" aria-label="Clear search">×</button></label>
+          <p id="spSearchStatus" aria-live="polite">Browse all 72 menu items</p>
+        </div>
+
+        <div class="sp-category-pills" role="group" aria-label="Filter menu">
+          <button type="button" class="active" data-filter="all">All menu</button>
+
+          <button type="button" data-filter="classic">Classics</button>
+
+          <button type="button" data-filter="meat">Meat lovers</button>
+
+          <button type="button" data-filter="sides">Sides & drinks</button>
+        </div>
+
+        <div class="sp-menu-grid" id="spMenuGrid"></div>
+      </section>
+
+      <!-- =====================================================
+     SOBERS BRAND EXPERIENCE
+===================================================== -->
+
+      <section class="sp-brand-experience" id="experience">
+        <div class="sp-brand-heading">
+          <div class="sp-heading-number">02</div>
+
+          <div>
+            <p>THE SOBERS EXPERIENCE</p>
+
+            <h2>
+              Fresh ingredients.
+              <em>Big attitude.</em>
+            </h2>
+
+            <span>
+              Great pizza starts long before it reaches your table. From fresh dough to a blazing
+              oven, every Sobers order is made with care.
+            </span>
+          </div>
+        </div>
+
+        <div class="sp-brand-grid">
+          <!-- CHEF -->
+
+          <article class="sp-brand-card sp-brand-card-large">
+            <div class="sp-brand-image">
+              <img
+                src="assets/sobers-pizza/brand/chef-sobers.jpg"
+                alt="Sobers Pizza chef preparing fresh pizza"
+              />
+
+              <div class="sp-brand-image-overlay"></div>
+            </div>
+
+            <div class="sp-brand-card-content">
+              <span class="sp-brand-number"> 01 </span>
+
+              <div>
+                <p>THE CRAFT</p>
+
+                <h3>
+                  Made by people
+                  <em>who care.</em>
+                </h3>
+
+                <span>
+                  Every pizza starts with attention to detail, from the kitchen to your table.
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <!-- FRESH DOUGH -->
+
+          <article class="sp-brand-card">
+            <div class="sp-brand-image">
+              <img src="assets/sobers-pizza/brand/fresh-dough.jpg" alt="Fresh Sobers Pizza dough" />
+
+              <div class="sp-brand-image-overlay"></div>
+            </div>
+
+            <div class="sp-brand-card-content">
+              <span class="sp-brand-number"> 02 </span>
+
+              <div>
+                <p>FRESH DOUGH</p>
+
+                <h3>
+                  Start fresh.
+                  <em>Every time.</em>
+                </h3>
+
+                <span> Our dough is prepared fresh for that perfect crispy-yet-soft bite. </span>
+              </div>
+            </div>
+          </article>
+
+          <!-- PIZZA OVEN -->
+
+          <article class="sp-brand-card">
+            <div class="sp-brand-image">
+              <img src="assets/sobers-pizza/brand/pizza-oven.jpg" alt="Sobers Pizza oven" />
+
+              <div class="sp-brand-image-overlay"></div>
+            </div>
+
+            <div class="sp-brand-card-content">
+              <span class="sp-brand-number"> 03 </span>
+
+              <div>
+                <p>THE OVEN</p>
+
+                <h3>
+                  Hot oven.
+                  <em>Bold flavour.</em>
+                </h3>
+
+                <span>
+                  High heat brings everything together with that unmistakable freshly baked finish.
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <!-- DELIVERY -->
+
+          <article class="sp-brand-card sp-brand-card-delivery">
+            <div class="sp-brand-image">
+              <img src="assets/sobers-pizza/brand/delivery.jpg" alt="Sobers Pizza delivery" />
+
+              <div class="sp-brand-image-overlay"></div>
+            </div>
+
+            <div class="sp-brand-card-content">
+              <span class="sp-brand-number"> 04 </span>
+
+              <div>
+                <p>DELIVERY</p>
+
+                <h3>
+                  From our oven
+                  <em>to you.</em>
+                </h3>
+
+                <span> Choose delivery or pickup and enjoy Sobers wherever you are. </span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- =====================================================
+     BRAND STORY
+===================================================== -->
+
+      <section class="sp-story" id="story">
+        <div class="sp-story-copy">
+          <div class="sp-promise-kicker"><span>OUR STANDARD</span><i></i><b>THE SOBERS PROMISE</b></div>
+
+          <h2>
+            Made fresh.
+            <em>Never ordinary.</em>
+          </h2>
+
+          <span class="sp-promise-intro">Every Sobers order starts after you place it—fresh dough, generous toppings and the freedom to make it yours.</span>
+
+          <div class="sp-story-points">
+            <div>
+              <strong>01</strong><span><b>Made after you order</b><small>Prepared fresh, not left waiting.</small></span>
+            </div>
+
+            <div>
+              <strong>02</strong><span><b>Generous by design</b><small>Big flavour and properly loaded toppings.</small></span>
+            </div>
+
+            <div>
+              <strong>03</strong><span><b>Built around you</b><small>Your size, extras, notes and fulfilment choice.</small></span>
+            </div>
+          </div>
+
+          <div class="sp-promise-actions">
+            <a class="sp-promise-primary" href="#menu">Order your pizza <span>→</span></a>
+            <a class="sp-promise-secondary" href="track/">Track an order</a>
+          </div>
+        </div>
+
+        <div class="sp-story-image">
+          <img src="assets/food/pizza.jpg" alt="Pizza with fresh toppings" />
+
+          <div class="sp-story-stamp">
+            <span>EST.</span>
+            <strong>SOBERS</strong>
+            <small>PIZZA</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+     FOOTER
+===================================================== -->
+
+      <footer class="sp-footer">
+        <div class="sp-footer-brand">
+          <a class="sp-logo" href="index.html"> SOBERS <span>PIZZA</span> </a>
+
+          <p>Bold pizza. Fresh ingredients. Made for your moment.</p>
+        </div>
+
+        <div class="sp-footer-links">
+          <a href="#menu"> Menu </a>
+
+          <a href="track/"> Track order </a>
+
+          <a href="../../index.html" title="Open the Rich Republic Explore Ghana ecosystem"> Explore Ghana </a>
+
+          <a
+            href="https://wa.me/233204863743"
+            data-business-whatsapp
+            target="_blank"
+            rel="noopener"
+          >
+            WhatsApp
+          </a>
+        </div>
+
+        <div class="sp-footer-bottom">
+          <span> A Rich Republic brand. </span>
+
+          <span> © 2026 Sobers Pizza </span>
+        </div>
+
+        <div class="sp-powered-by">POWERED BY <span>RICH REPUBLIC</span></div>
+      </footer>
+    </main>
+
+    <nav class="sp-mobile-dock" aria-label="Mobile navigation">
+      <a href="#top" class="active" data-mobile-home><span>⌂</span><small>Home</small></a>
+      <a href="#menu"><span>▦</span><small>Menu</small></a>
+      <button type="button" data-customer-panel="rewards"><span>✦</span><small>Rewards</small></button>
+      <button type="button" data-customer-panel="purchases"><span>▤</span><small>Purchases</small></button>
+      <button type="button" data-customer-panel="account"><span>●</span><small>Account</small></button>
+    </nav>
+
+    <div class="sp-customer-shell" id="spCustomerShell" hidden aria-hidden="true">
+      <div class="sp-customer-backdrop" data-customer-close></div>
+      <section class="sp-customer-panel" role="dialog" aria-modal="true" aria-labelledby="spCustomerPanelTitle">
+        <header><div><p>SOBERS SPACE</p><h2 id="spCustomerPanelTitle">My Sobers</h2></div><button type="button" data-customer-close aria-label="Close">×</button></header>
+        <div class="sp-customer-view" data-panel-view="rewards">
+          <div class="sp-reward-hero"><span>SLICE REWARDS</span><h3>Every order gets you closer.</h3><p>Earn a slice stamp for every completed order.</p><div class="sp-slice-meter" aria-label="0 of 6 slice stamps"><i></i><i></i><i></i><i></i><i></i><i></i></div><small>6 stamps unlock a Sobers reward.</small></div>
+          <h3 class="sp-panel-heading">Make today fun</h3>
+          <div class="sp-challenge-grid"><button type="button" data-surprise-me><span>🎲</span><b>Surprise me</b><small>Let Sobers pick a craving</small></button><button type="button" data-filter="promo-packs"><span>🔥</span><b>Deal hunter</b><small>See live value packs</small></button></div>
+        </div>
+        <div class="sp-customer-view" data-panel-view="purchases">
+          <div class="sp-panel-tabs" role="tablist"><button class="active" data-purchase-tab="active">Active</button><button data-purchase-tab="history">History</button><button data-purchase-tab="favourites">Favourites</button><button data-purchase-tab="discounts">Discounts</button></div>
+          <div class="sp-purchase-content" id="spPurchaseContent"></div>
+        </div>
+        <div class="sp-customer-view" data-panel-view="account">
+          <div class="sp-account-card"><div class="sp-account-avatar">S</div><div><span id="spAccountStatus">GUEST EXPERIENCE</span><h3 id="spCustomerName">Welcome, pizza lover</h3><p id="spAccountSummary">Sign in only if you want synced favourites and purchase history.</p></div></div>
+          <button class="sp-account-action primary" type="button" data-auth-open><span>◎</span><div><b id="spAuthActionLabel">Sign in or create account</b><small>Optional — guest ordering stays available</small></div><i>›</i></button>
+          <button class="sp-account-action" type="button" data-profile-edit><span>◉</span><div><b>My details</b><small>Name, phone and delivery address</small></div><i>›</i></button>
+          <h3 class="sp-panel-heading">Preferences</h3>
+          <button class="sp-account-action" type="button" data-account-theme><span>◐</span><div><b>Appearance</b><small id="spAccountThemeText">Use light or dark mode</small></div><i>›</i></button>
+          <button class="sp-account-action" type="button" data-notification-preference><span>◌</span><div><b>Notifications</b><small>Promos and important order updates</small></div><i>›</i></button>
+          <button class="sp-account-action" type="button" data-location-preference><span>⌖</span><div><b>Delivery location</b><small id="spLocationStatus">Off — optional</small></div><i>›</i></button>
+          <h3 class="sp-panel-heading">Support & privacy</h3>
+          <button class="sp-account-action" type="button" data-open-legal="terms"><span>§</span><div><b>Terms and policies</b><small>How Sobers serves you</small></div><i>›</i></button>
+          <a class="sp-account-action" href="#notices" data-customer-close><span>!</span><div><b>Notices</b><small>Updates directly from Sobers</small></div><i>›</i></a>
+          <button class="sp-account-action sp-signout" type="button" data-auth-signout hidden><span>↪</span><div><b>Sign out</b><small>Guest ordering will still work</small></div><i>›</i></button>
+        </div>
+      </section>
+    </div>
+
+    <div class="sp-profile-dialog" id="spProfileDialog" hidden aria-hidden="true">
+      <form class="sp-profile-card"><button type="button" data-profile-close aria-label="Close">×</button><p>YOUR SOBERS PROFILE</p><h2>Make checkout quicker.</h2><label>Name<input name="name" autocomplete="name" placeholder="Your name" /></label><label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="024 000 0000" /></label><label>Delivery area<textarea name="address" rows="2" placeholder="Area and nearest landmark"></textarea></label><button type="submit">Save profile</button><small>This is saved only on this device for now.</small></form>
+    </div>
+
+    <div class="sp-profile-dialog" id="spAuthDialog" hidden aria-hidden="true">
+      <form class="sp-profile-card" id="spAuthForm">
+        <button type="button" data-auth-close aria-label="Close">×</button><p>MY SOBERS ACCOUNT</p><h2 id="spAuthTitle">Welcome back.</h2>
+        <div class="sp-auth-tabs"><button type="button" class="active" data-auth-mode="signin">Sign in</button><button type="button" data-auth-mode="signup">Create account</button></div>
+        <label>Email<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters" /></label>
+        <label class="sp-auth-name" hidden>Name<input name="full_name" autocomplete="name" placeholder="Your name" /></label>
+        <button type="submit" id="spAuthSubmit">Sign in securely</button><small id="spAuthMessage">Your account is optional. We never block guest checkout.</small>
+      </form>
+    </div>
+
+    <!-- =====================================================
+     CART OVERLAY
+===================================================== -->
+
+    <div class="sp-overlay" id="spCartOverlay"></div>
+
+    <!-- =====================================================
+     CART
+===================================================== -->
+
+    <aside class="sp-cart" id="spCart" aria-hidden="true">
+      <header>
+        <div>
+          <p>SOBERS PIZZA</p>
+
+          <h2>Your order</h2>
+        </div>
+
+        <button type="button" id="spCartClose" aria-label="Close cart">×</button>
+      </header>
+
+      <div class="sp-cart-body">
+        <div class="sp-empty" id="spEmpty">
+          <span>🍕</span>
+
+          <h3>Your cart is empty</h3>
+
+          <p>Add something fresh from the menu.</p>
+        </div>
+
+        <div id="spCartItems"></div>
+      </div>
+
+      <footer>
+        <div class="sp-cart-total">
+          <span> Subtotal </span>
+
+          <strong id="spCartTotal"> GH₵0.00 </strong>
+        </div>
+
+        <p>Delivery cost is confirmed on WhatsApp.</p>
+
+        <button type="button" id="spCheckoutButton">
+          Continue to checkout
+          <span>→</span>
+        </button>
+      </footer>
+    </aside>
+
+    <!-- =====================================================
+     CHECKOUT
+===================================================== -->
+
+    <div class="sp-checkout-overlay" id="spCheckoutOverlay" aria-hidden="true">
+      <section
+        class="sp-checkout"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="spCheckoutTitle"
+      >
+        <button type="button" id="spCheckoutClose" aria-label="Close checkout">×</button>
+
+        <p>SOBERS PIZZA</p>
+
+        <h2 id="spCheckoutTitle">Almost there.</h2>
+
+        <span>
+          Send your order to Sobers Pizza on WhatsApp and we will confirm everything with you.
+        </span>
+
+        <form id="spCheckoutForm">
+          <label>
+            Your name
+
+            <input name="name" required autocomplete="name" placeholder="e.g. Ama Mensah" />
+          </label>
+
+          <label>
+            Phone number
+
+            <input
+              name="phone"
+              required
+              autocomplete="tel"
+              type="tel"
+              inputmode="tel"
+              minlength="10"
+              maxlength="18"
+              pattern="[+0-9 ()-]{10,18}"
+              placeholder="e.g. 024 000 0000"
+            />
+          </label>
+
+          <div class="sp-fulfilment">
+            <label>
+              <input type="radio" name="fulfilment" value="Delivery" checked />
+
+              <span> Delivery </span>
+            </label>
+
+            <label>
+              <input type="radio" name="fulfilment" value="Pickup" />
+
+              <span> Pickup </span>
+            </label>
+          </div>
+
+          <label id="spAddressField">
+            Delivery address
+
+            <textarea
+              name="address"
+              rows="3"
+              required
+              placeholder="Area, landmark and helpful directions"
+            ></textarea>
+          </label>
+
+          <label>
+            Order note
+            <small>(optional)</small>
+
+            <textarea name="note" rows="2" placeholder="Any special request?"></textarea>
+          </label>
+
+          <div class="sp-checkout-total">
+            <span> Order subtotal </span>
+
+            <strong id="spCheckoutTotal"> GH₵0.00 </strong>
+          </div>
+
+          <button type="submit">
+            Send order on WhatsApp
+
+            <span>→</span>
+          </button>
+        </form>
+      </section>
+    </div>
+
+    <div class="sp-qr-overlay" id="spQrOverlay" aria-hidden="true">
+      <section class="sp-qr-card" role="dialog" aria-modal="true" aria-labelledby="spQrTitle">
+        <button class="sp-qr-close" id="spQrClose" type="button" aria-label="Close QR code">
+          ×
+        </button>
+        <span class="sp-qr-kicker">SOBERS PIZZA</span>
+        <h2 id="spQrTitle">Scan. Choose. Order.</h2>
+        <p>Open the Sobers menu instantly on another phone.</p>
+        <div class="sp-qr-frame">
+          <img id="spQrImage" alt="QR code for the Sobers Pizza ordering app" />
+        </div>
+        <strong id="spQrStatus">Customer ordering app</strong>
+        <small id="spQrNote"></small>
+        <button class="sp-qr-share" id="spQrShare" type="button">Share ordering link</button>
+      </section>
+    </div>
+
+    <script src="JS/sobers-platform-orders.js?v=3"></script>
+    <script src="JS/sobers-pizza.js?v=12"></script>
+    <script src="JS/sobers-notices.js?v=2"></script>
+    <script src="JS/sobers-extras.js?v=5"></script>
+    <script src="JS/sobers-customer.js?v=4"></script>
+    <script src="JS/sobers-auth.js?v=1"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js?v=44")
+            .then((registration) => {
+              registration.update();
+
+              console.log("Sobers Pizza service worker registered:", registration.scope);
+            })
+            .catch((error) => {
+              console.error("Sobers Pizza service worker registration failed:", error);
+            });
+        });
+
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v44")) {
+            return;
+          }
+
+          sessionStorage.setItem("sobers-pwa-v44", "1");
+          location.reload();
+        });
+      }
+    </script>
+  </body>
+</html>
