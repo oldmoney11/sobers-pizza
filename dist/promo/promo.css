@@ -1,0 +1,769 @@
+:root {
+  color-scheme: dark;
+  font-family: "DM Sans", system-ui, sans-serif;
+  --coal: #0d0f13;
+  --coal-soft: #171a20;
+  --cream: #fffaf2;
+  --silver: #dfe3e8;
+  --red: #e3263a;
+  --red-hot: #ff3a50;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at 50% 5%, rgba(227, 38, 58, .18), transparent 36rem),
+    #07090c;
+}
+
+button, a { font: inherit; }
+
+.promo-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.promo-stage {
+  position: relative;
+  width: min(100%, calc((100vh - 7rem) * .5625));
+  aspect-ratio: 9 / 16;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: clamp(1rem, 3vw, 2rem);
+  background: var(--coal);
+  box-shadow: 0 2.5rem 7rem rgba(0, 0, 0, .65), inset 0 1px rgba(255, 255, 255, .14);
+}
+
+.scene,
+.media-layer,
+.ambient,
+.grain {
+  position: absolute;
+  inset: 0;
+}
+
+.scene {
+  z-index: 2;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.media-layer {
+  background-position: center;
+  background-size: cover;
+}
+
+.media-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.ambient {
+  z-index: 0;
+  width: 55%;
+  height: 55%;
+  margin: auto;
+  border-radius: 50%;
+  filter: blur(4rem);
+  opacity: .28;
+}
+
+.ambient-one { translate: -52% -58%; background: var(--red); }
+.ambient-two { translate: 52% 58%; background: #8d1425; }
+
+.grain {
+  z-index: 9;
+  pointer-events: none;
+  opacity: .065;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.micro-copy {
+  margin: 0;
+  font-size: clamp(.55rem, 1.9vw, .78rem);
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+
+.hook-image {
+  background-image: url("../assets/sobers-pizza/hero/sobers-hero.jpg");
+  background-position: 57% center;
+  filter: saturate(1.18) contrast(1.08);
+}
+
+.hook-image::after {
+  background: linear-gradient(180deg, rgba(5, 6, 8, .08), rgba(5, 6, 8, .25) 42%, #090a0d 96%);
+}
+
+.scene-hook .micro-copy {
+  position: absolute;
+  top: 7%;
+  left: 8%;
+}
+
+.kinetic-title {
+  position: absolute;
+  left: 7%;
+  bottom: 19%;
+  display: flex;
+  margin: 0;
+  font-size: clamp(4rem, 17vw, 7rem);
+  font-weight: 900;
+  line-height: .76;
+  letter-spacing: -.09em;
+  text-shadow: 0 .35rem 1.5rem rgba(0, 0, 0, .55);
+}
+
+.kinetic-title i {
+  color: var(--red-hot);
+  font-family: "Playfair Display", serif;
+}
+
+.hook-answer {
+  position: absolute;
+  left: 8%;
+  bottom: 11.5%;
+  margin: 0;
+  color: var(--silver);
+  font-size: clamp(.9rem, 3.5vw, 1.3rem);
+  font-weight: 700;
+}
+
+.scroll-cue {
+  position: absolute;
+  right: 5%;
+  bottom: 3%;
+  color: rgba(255, 255, 255, .55);
+  font-size: .54rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.speed-line {
+  position: absolute;
+  z-index: 1;
+  width: 55%;
+  height: .25rem;
+  border-radius: 10rem;
+  background: linear-gradient(90deg, transparent, var(--red-hot), transparent);
+  filter: blur(.06rem);
+}
+
+.speed-line-one { top: 27%; left: -20%; rotate: -12deg; }
+.speed-line-two { top: 34%; right: -27%; rotate: 18deg; }
+
+.scene-product {
+  background:
+    radial-gradient(circle at 68% 35%, rgba(255, 58, 80, .2), transparent 38%),
+    linear-gradient(145deg, #08090b, #171217 62%, #09090b);
+}
+
+.product-halo {
+  position: absolute;
+  top: 12%;
+  right: -25%;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  box-shadow: 0 0 5rem rgba(227, 38, 58, .28), inset 0 0 4rem rgba(227, 38, 58, .12);
+}
+
+.pizza-frame {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, .55);
+}
+
+.pizza-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.pizza-frame-main {
+  top: 8%;
+  right: -5%;
+  width: 83%;
+  height: 57%;
+  border-radius: 50% 0 0 50%;
+}
+
+.pizza-frame-detail {
+  top: 44%;
+  left: -7%;
+  width: 47%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.word-stack {
+  position: absolute;
+  left: 8%;
+  bottom: 8%;
+  display: grid;
+  font-size: clamp(2.5rem, 10vw, 4.2rem);
+  font-weight: 900;
+  line-height: .88;
+  letter-spacing: -.055em;
+}
+
+.word-stack strong:nth-child(2) { color: var(--red-hot); }
+
+.scene-caption {
+  position: absolute;
+  right: 7%;
+  bottom: 9.2%;
+  width: 30%;
+  margin: 0;
+  color: var(--silver);
+  font-size: clamp(.58rem, 2vw, .8rem);
+  line-height: 1.35;
+}
+
+.craving-image {
+  background-image: url("../assets/sobers-pizza/promos/combo-deal.jpg");
+  background-position: center 60%;
+  filter: saturate(1.08) contrast(1.08);
+}
+
+.craving-image::after {
+  background: linear-gradient(180deg, rgba(6, 7, 9, .12), rgba(6, 7, 9, .12) 38%, rgba(6, 7, 9, .92) 84%);
+}
+
+.craving-sweep {
+  position: absolute;
+  inset: -15% -80%;
+  background: linear-gradient(90deg, transparent 45%, rgba(255, 255, 255, .35) 50%, transparent 55%);
+  rotate: -22deg;
+  mix-blend-mode: overlay;
+}
+
+.scene-craving .micro-copy { position: absolute; left: 8%; bottom: 28%; color: #ffc2c9; }
+
+.scene-craving h2 {
+  position: absolute;
+  left: 8%;
+  bottom: 9%;
+  margin: 0;
+  font-size: clamp(2.4rem, 9.5vw, 4rem);
+  line-height: .92;
+  letter-spacing: -.055em;
+}
+
+.scene-craving h2 span,
+.scene-craving h2 em { display: block; }
+.scene-craving h2 em { color: var(--red-hot); font-family: "Playfair Display", serif; }
+
+.flavour-pill {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .65rem .8rem;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 999px;
+  background: rgba(9, 10, 12, .58);
+  backdrop-filter: blur(1rem);
+  font-size: .65rem;
+  font-weight: 700;
+}
+
+.flavour-pill i { width: .45rem; aspect-ratio: 1; border-radius: 50%; background: #57b978; box-shadow: 0 0 1rem #57b978; }
+
+.scene-cta { background: #08090b; }
+
+.cta-image {
+  background-image: url("../assets/sobers-pizza/pizzas/pepperoni.jpg");
+  background-position: center;
+  filter: saturate(1.15) contrast(1.08);
+}
+
+.cta-image::after {
+  background: linear-gradient(180deg, rgba(5, 6, 8, .08), rgba(5, 6, 8, .28) 42%, rgba(5, 6, 8, .93) 75%);
+}
+
+.cta-glass {
+  position: absolute;
+  right: 6%;
+  bottom: 5%;
+  left: 6%;
+  display: grid;
+  justify-items: center;
+  padding: 1.4rem 1.2rem 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .19);
+  border-radius: 1.6rem;
+  background: linear-gradient(145deg, rgba(24, 25, 28, .83), rgba(8, 9, 11, .72));
+  box-shadow: 0 1.8rem 4rem rgba(0, 0, 0, .45), inset 0 1px rgba(255, 255, 255, .15);
+  backdrop-filter: blur(1.35rem) saturate(1.25);
+  text-align: center;
+}
+
+.brand-logo {
+  width: clamp(4.3rem, 18vw, 6.5rem);
+  margin-top: -3.5rem;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 1.25rem;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, .48), 0 0 2rem rgba(227, 38, 58, .24);
+}
+
+.cta-glass .micro-copy { margin-top: .7rem; color: #ffc2c9; }
+
+.cta-glass h2 {
+  margin: .3rem 0 0;
+  font-size: clamp(2.65rem, 11vw, 4.35rem);
+  line-height: .78;
+  letter-spacing: -.065em;
+}
+
+.cta-glass h2 span { color: var(--red-hot); }
+.cta-glass > p:not(.micro-copy) { margin: .7rem 0; color: var(--silver); font-size: .8rem; }
+
+.order-button {
+  display: flex;
+  width: 100%;
+  min-height: 3.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(135deg, var(--red-hot), #b70f24);
+  box-shadow: 0 .8rem 2rem rgba(227, 38, 58, .34), inset 0 1px rgba(255, 255, 255, .28);
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.order-button span { font-size: 1.25rem; }
+
+.cta-footer {
+  position: absolute;
+  top: 4%;
+  right: 5%;
+  left: 5%;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, .72);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.timeline {
+  position: absolute;
+  z-index: 20;
+  right: 4%;
+  bottom: 1.3%;
+  left: 4%;
+  height: .18rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .18);
+}
+
+.timeline span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--red-hot); transform-origin: left; }
+
+.promo-controls { display: grid; justify-items: center; gap: .45rem; }
+
+.promo-controls button {
+  min-height: 2.8rem;
+  padding: 0 1.2rem;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: 999px;
+  color: var(--cream);
+  background: rgba(255, 255, 255, .07);
+  cursor: pointer;
+}
+
+.promo-controls button:hover { border-color: var(--red-hot); background: rgba(255, 255, 255, .11); }
+.promo-controls p { margin: 0; color: #858b94; font-size: .68rem; }
+
+.is-playing .scene-hook { animation: scene-hook 15s linear both; }
+.is-playing .scene-product { animation: scene-product 15s linear both; }
+.is-playing .scene-craving { animation: scene-craving 15s linear both; }
+.is-playing .scene-cta { animation: scene-cta 15s linear both; }
+.is-playing .timeline span { animation: progress 15s linear both; }
+
+.is-playing .hook-image { animation: hook-camera 3.3s var(--ease-out) both; }
+.is-playing .kinetic-title span:first-child { animation: word-in .6s .18s var(--ease-out) both; }
+.is-playing .kinetic-title span:nth-child(2) { animation: word-in .6s .31s var(--ease-out) both; }
+.is-playing .kinetic-title i { animation: mark-in .5s .5s var(--ease-out) both; }
+.is-playing .hook-answer { animation: rise .55s .72s var(--ease-out) both; }
+.is-playing .scene-hook .micro-copy { animation: rise .5s .1s var(--ease-out) both; }
+.is-playing .speed-line-one { animation: speed 1s .1s ease-out both; }
+.is-playing .speed-line-two { animation: speed 1s .24s ease-out both reverse; }
+
+.is-playing .pizza-frame-main { animation: pizza-main 4.5s 2.75s var(--ease-out) both; }
+.is-playing .pizza-frame-detail { animation: pizza-detail 4.2s 3.05s var(--ease-out) both; }
+.is-playing .product-halo { animation: halo 4.4s 2.75s ease-in-out both; }
+.is-playing .word-stack strong:first-child { animation: stamp .48s 3.3s var(--ease-out) both; }
+.is-playing .word-stack strong:nth-child(2) { animation: stamp .48s 3.68s var(--ease-out) both; }
+.is-playing .word-stack strong:nth-child(3) { animation: stamp .48s 4.06s var(--ease-out) both; }
+.is-playing .scene-caption { animation: rise .55s 4.32s var(--ease-out) both; }
+
+.is-playing .craving-image { animation: craving-camera 4.5s 6.65s ease-out both; }
+.is-playing .craving-sweep { animation: sweep 1.15s 7.15s ease-out both; }
+.is-playing .scene-craving .micro-copy { animation: rise .48s 7.25s var(--ease-out) both; }
+.is-playing .scene-craving h2 span { animation: word-in .62s 7.5s var(--ease-out) both; }
+.is-playing .scene-craving h2 em { animation: rise .62s 7.82s var(--ease-out) both; }
+.is-playing .flavour-pill { animation: pill-in .55s 8.15s var(--ease-out) both; }
+
+.is-playing .cta-image { animation: cta-camera 4.35s 10.65s ease-out both; }
+.is-playing .cta-glass { animation: glass-in .72s 11.05s var(--ease-out) both; }
+.is-playing .brand-logo { animation: logo-in .65s 11.3s var(--ease-out) both; }
+.is-playing .order-button { animation: button-in .55s 12.1s var(--ease-out) both, pulse 1.4s 12.8s ease-in-out infinite; }
+.is-playing .cta-footer { animation: rise .5s 11.45s var(--ease-out) both; }
+
+@keyframes scene-hook { 0%, 20% { opacity: 1; } 22% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes scene-product { 0%, 18% { opacity: 0; } 21%, 44% { opacity: 1; } 47%, 100% { opacity: 0; } }
+@keyframes scene-craving { 0%, 43% { opacity: 0; } 46%, 70% { opacity: 1; } 73%, 100% { opacity: 0; } }
+@keyframes scene-cta { 0%, 69% { opacity: 0; } 72%, 100% { opacity: 1; } }
+@keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes hook-camera { from { scale: 1.18; translate: 4% 2%; } to { scale: 1.03; translate: 0 0; } }
+@keyframes word-in { from { opacity: 0; translate: 0 100%; rotate: 5deg; } to { opacity: 1; translate: 0 0; rotate: 0; } }
+@keyframes mark-in { 0% { opacity: 0; scale: 3; rotate: 20deg; } 100% { opacity: 1; scale: 1; rotate: 0; } }
+@keyframes rise { from { opacity: 0; translate: 0 1.2rem; } to { opacity: 1; translate: 0 0; } }
+@keyframes speed { from { opacity: 0; translate: -130% 0; } 30% { opacity: 1; } to { opacity: 0; translate: 230% 0; } }
+@keyframes pizza-main { from { opacity: 0; transform: translateX(65%) scale(1.35) rotate(7deg); } 18% { opacity: 1; } to { opacity: 1; transform: translateX(0) scale(1.06) rotate(0); } }
+@keyframes pizza-detail { from { opacity: 0; transform: translate(-65%, 22%) scale(.72) rotate(-18deg); } 25% { opacity: 1; } to { opacity: 1; transform: translate(0) scale(1.04) rotate(-3deg); } }
+@keyframes halo { from { opacity: 0; scale: .6; rotate: -25deg; } to { opacity: .9; scale: 1.1; rotate: 10deg; } }
+@keyframes stamp { from { opacity: 0; scale: 2; translate: -15% 0; filter: blur(.35rem); } to { opacity: 1; scale: 1; translate: 0; filter: blur(0); } }
+@keyframes craving-camera { from { scale: 1.24; translate: 5% -3%; } to { scale: 1.05; translate: -2% 2%; } }
+@keyframes sweep { from { translate: -28% 0; opacity: 0; } 30% { opacity: 1; } to { translate: 28% 0; opacity: 0; } }
+@keyframes pill-in { from { opacity: 0; transform: translateX(30%) scale(.8); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes cta-camera { from { scale: 1.35; translate: 4% -5%; } to { scale: 1.08; translate: 0 0; } }
+@keyframes glass-in { from { opacity: 0; transform: translateY(38%) scale(.94); filter: blur(.6rem); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes logo-in { from { opacity: 0; transform: translateY(-70%) scale(.65) rotate(-8deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+@keyframes button-in { from { opacity: 0; transform: scale(.75); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 50% { transform: scale(1.025); box-shadow: 0 1rem 2.4rem rgba(227, 38, 58, .48), inset 0 1px rgba(255, 255, 255, .32); } }
+
+@media (max-height: 680px) and (min-width: 700px) {
+  .promo-stage { width: min(22rem, calc((100vh - 6rem) * .5625)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-stage * { animation-timing-function: linear !important; }
+}
+
+/* =========================================================
+   DIRECTOR'S CUT — CONTINUOUS COMMERCIAL MOTION
+   Retains the original four-scene structure while replacing
+   poster-like holds with overlapping depth and camera motion.
+========================================================= */
+
+.hook-image {
+  background-image: url("../assets/sobers-pizza/pizzas/meat-lovers.jpg");
+  background-position: 50% 46%;
+  filter: saturate(1.2) contrast(1.13) brightness(.52);
+}
+
+.hook-image::after {
+  background:
+    radial-gradient(circle at 50% 44%, transparent 12%, rgba(5, 6, 8, .2) 44%, rgba(5, 6, 8, .9) 92%),
+    linear-gradient(180deg, rgba(5, 6, 8, .08), rgba(5, 6, 8, .68));
+}
+
+.hook-depth {
+  position: absolute;
+  inset: -8%;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 52%, rgba(227, 38, 58, .16) 53%, transparent 56%);
+}
+
+.hook-pizza {
+  position: absolute;
+  z-index: 2;
+  top: 20%;
+  left: 50%;
+  width: 112%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 50%;
+  box-shadow: 0 2rem 6rem rgba(0, 0, 0, .74), 0 0 4rem rgba(227, 38, 58, .22);
+  transform: translateX(-50%);
+}
+
+.hook-pizza img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  scale: 1.08;
+}
+
+.hook-flash {
+  position: absolute;
+  z-index: 4;
+  inset: -25%;
+  background: conic-gradient(from 210deg, transparent 0 36%, rgba(255, 255, 255, .74) 42%, transparent 48% 100%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.scene-hook .micro-copy,
+.scroll-cue { display: none; }
+
+.kinetic-title {
+  z-index: 5;
+  top: 8%;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  justify-content: center;
+  font-size: clamp(4.6rem, 20vw, 8rem);
+  letter-spacing: -.1em;
+  text-align: center;
+  text-shadow: 0 .25rem 1.5rem rgba(0, 0, 0, .72);
+}
+
+.hook-answer {
+  z-index: 5;
+  right: 7%;
+  bottom: 6.2%;
+  left: 7%;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 999px;
+  background: rgba(9, 10, 12, .58);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .12);
+  backdrop-filter: blur(1rem);
+  text-align: center;
+}
+
+.speed-line { z-index: 5; }
+
+.motion-bridge {
+  position: absolute;
+  z-index: 15;
+  top: -25%;
+  bottom: -25%;
+  width: 34%;
+  opacity: 0;
+  pointer-events: none;
+  rotate: 12deg;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .24), var(--red-hot), transparent);
+  filter: blur(.08rem);
+  mix-blend-mode: screen;
+}
+
+.motion-bridge-one { left: -55%; }
+.motion-bridge-two { right: -55%; rotate: -12deg; }
+
+.scene-product {
+  background:
+    radial-gradient(circle at 78% 27%, rgba(255, 58, 80, .25), transparent 39%),
+    linear-gradient(150deg, #08090b, #171217 62%, #09090b);
+}
+
+.pizza-frame-main {
+  top: 7%;
+  right: -16%;
+  width: 101%;
+  height: 61%;
+  border-radius: 52% 0 0 48%;
+  transform-origin: 62% 48%;
+}
+
+.pizza-frame-detail {
+  z-index: 3;
+  top: 48%;
+  left: -10%;
+  width: 50%;
+  border: 2px solid rgba(255, 255, 255, .22);
+}
+
+.word-stack {
+  z-index: 4;
+  bottom: 7%;
+  text-shadow: 0 .5rem 1.6rem rgba(0, 0, 0, .56);
+}
+
+.scene-caption { z-index: 4; }
+
+.craving-image {
+  background-position: center 55%;
+  transform-origin: 45% 58%;
+}
+
+.craving-depth {
+  position: absolute;
+  z-index: 2;
+  top: 5%;
+  right: -18%;
+  width: 44%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 50%;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .55);
+}
+
+.craving-depth img { width: 100%; height: 100%; object-fit: cover; }
+
+.scene-craving h2 {
+  z-index: 4;
+  right: 7%;
+  bottom: 8%;
+  padding: 1rem 0 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  font-size: clamp(2.25rem, 9vw, 3.8rem);
+}
+
+.scene-craving h2 span { font-weight: 800; letter-spacing: -.06em; }
+.scene-craving h2 em { margin-top: .12em; font-weight: 800; letter-spacing: -.045em; }
+.scene-craving .micro-copy { z-index: 4; bottom: 29%; }
+.flavour-pill { z-index: 4; top: 6%; right: auto; left: 6%; }
+
+.cta-image {
+  filter: saturate(1.2) contrast(1.12) brightness(.82);
+  transform-origin: 50% 42%;
+}
+
+.cta-glass {
+  bottom: 4.2%;
+  padding-top: 1.6rem;
+  border-color: rgba(255, 255, 255, .24);
+  background: linear-gradient(145deg, rgba(24, 25, 28, .9), rgba(8, 9, 11, .79));
+}
+
+.brand-logo { width: clamp(4.8rem, 20vw, 7rem); }
+
+.order-button {
+  min-height: 3.75rem;
+  font-size: .95rem;
+  box-shadow: 0 1rem 2.5rem rgba(227, 38, 58, .42), inset 0 1px rgba(255, 255, 255, .32);
+}
+
+/* Overlapping scene masks make one continuous camera move. */
+.is-playing .scene-hook { animation: scene-hook-v2 15s linear both; }
+.is-playing .scene-product { animation: scene-product-v2 15s linear both; }
+.is-playing .scene-craving { animation: scene-craving-v2 15s linear both; }
+.is-playing .scene-cta { animation: scene-cta-v2 15s linear both; }
+
+.is-playing .hook-image { animation: hook-bg-v2 3.15s linear both; }
+.is-playing .hook-depth { animation: depth-orbit 3.15s linear both; }
+.is-playing .hook-pizza { animation: hook-pizza-v2 3.15s var(--ease-out) both; }
+.is-playing .hook-pizza img { animation: pizza-texture 3.15s linear both; }
+.is-playing .hook-flash { animation: light-pass 1.2s .08s ease-out both; }
+.is-playing .kinetic-title span:first-child { animation: hungry-in .46s .05s var(--ease-out) both; }
+.is-playing .kinetic-title span:nth-child(2) { animation: hungry-in .46s .13s var(--ease-out) both; }
+.is-playing .kinetic-title i { animation: mark-in .42s .28s var(--ease-out) both; }
+.is-playing .hook-answer { animation: rise .48s 1.34s var(--ease-out) both; }
+
+.is-playing .pizza-frame-main { animation: product-camera-v2 4.7s 2.55s linear both; }
+.is-playing .pizza-frame-main img { animation: product-image-v2 4.7s 2.55s linear both; }
+.is-playing .pizza-frame-detail { animation: detail-float-v2 4.7s 2.55s var(--ease-out) both; }
+.is-playing .product-halo { animation: halo-v2 4.7s 2.55s linear both; }
+.is-playing .word-stack strong:first-child { animation: punch-word .38s 3.05s var(--ease-out) both; }
+.is-playing .word-stack strong:nth-child(2) { animation: punch-word .38s 3.52s var(--ease-out) both; }
+.is-playing .word-stack strong:nth-child(3) { animation: punch-word .38s 3.99s var(--ease-out) both; }
+.is-playing .scene-caption { animation: rise .46s 4.35s var(--ease-out) both; }
+
+.is-playing .craving-image { animation: craving-camera-v2 4.5s 6.55s linear both; }
+.is-playing .craving-depth { animation: craving-depth-v2 4.5s 6.55s ease-in-out both; }
+.is-playing .craving-sweep { animation: sweep-v2 1.05s 7s ease-out both; }
+.is-playing .scene-craving .micro-copy { animation: rise .42s 7.15s var(--ease-out) both; }
+.is-playing .scene-craving h2 span { animation: premium-line .55s 7.42s var(--ease-out) both; }
+.is-playing .scene-craving h2 em { animation: premium-line .65s 7.68s var(--ease-out) both; }
+.is-playing .flavour-pill { animation: pill-in .48s 8.1s var(--ease-out) both; }
+
+.is-playing .cta-image { animation: cta-camera-v2 4.65s 10.35s linear both; }
+.is-playing .cta-glass { animation: glass-in-v2 .7s 10.62s var(--ease-out) both; }
+.is-playing .brand-logo { animation: logo-in-v2 .62s 10.82s var(--ease-out) both; }
+.is-playing .cta-glass .micro-copy { animation: rise .4s 11.12s var(--ease-out) both; }
+.is-playing .cta-glass h2 { animation: brand-lock .56s 11.2s var(--ease-out) both; }
+.is-playing .cta-glass > p:not(.micro-copy) { animation: rise .42s 11.42s var(--ease-out) both; }
+.is-playing .order-button { animation: button-in .48s 11.68s var(--ease-out) both, pulse 1.5s 12.55s ease-in-out infinite; }
+.is-playing .cta-footer { animation: rise .45s 10.9s var(--ease-out) both; }
+
+.is-playing .motion-bridge-one { animation: bridge-one 15s linear both; }
+.is-playing .motion-bridge-two { animation: bridge-two 15s linear both; }
+
+@keyframes scene-hook-v2 {
+  0%, 16% { opacity: 1; clip-path: inset(0); }
+  20.8% { opacity: 1; clip-path: inset(0 100% 0 0); }
+  20.9%, 100% { opacity: 0; clip-path: inset(0 100% 0 0); }
+}
+
+@keyframes scene-product-v2 {
+  0%, 16% { opacity: 1; clip-path: inset(0 0 0 100%); }
+  20.8%, 42.5% { opacity: 1; clip-path: inset(0); }
+  47.5% { opacity: 1; clip-path: inset(100% 0 0); }
+  47.6%, 100% { opacity: 0; clip-path: inset(100% 0 0); }
+}
+
+@keyframes scene-craving-v2 {
+  0%, 42.5% { opacity: 1; clip-path: inset(0 0 100%); }
+  47.5%, 68.5% { opacity: 1; clip-path: inset(0); }
+  73.5% { opacity: 1; clip-path: inset(0 0 0 100%); }
+  73.6%, 100% { opacity: 0; clip-path: inset(0 0 0 100%); }
+}
+
+@keyframes scene-cta-v2 {
+  0%, 68.5% { opacity: 1; clip-path: inset(0 100% 0 0); }
+  73.5%, 100% { opacity: 1; clip-path: inset(0); }
+}
+
+@keyframes hook-bg-v2 { from { scale: 1.02; translate: 0 -1%; } to { scale: 1.17; translate: 0 2%; } }
+@keyframes depth-orbit { from { scale: .85; rotate: -10deg; opacity: .25; } to { scale: 1.3; rotate: 18deg; opacity: .7; } }
+@keyframes hook-pizza-v2 {
+  0% { opacity: 0; clip-path: circle(0 at 50% 50%); transform: translateX(-50%) scale(.48) rotate(-20deg); }
+  18% { opacity: 1; clip-path: circle(52% at 50% 50%); }
+  100% { opacity: 1; clip-path: circle(52% at 50% 50%); transform: translateX(-50%) scale(1.08) rotate(7deg); }
+}
+@keyframes pizza-texture { from { scale: 1.3; translate: -3% -3%; } to { scale: 1.08; translate: 2% 2%; } }
+@keyframes light-pass { from { opacity: 0; rotate: -35deg; translate: -45% 0; } 35% { opacity: .9; } to { opacity: 0; rotate: -15deg; translate: 38% 0; } }
+@keyframes hungry-in { from { opacity: 0; transform: translateY(-120%) scaleY(1.7); filter: blur(.3rem); } to { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0); } }
+
+@keyframes product-camera-v2 {
+  0% { opacity: 0; transform: translate(38%, -12%) scale(1.3) rotate(10deg); }
+  13% { opacity: 1; }
+  100% { opacity: 1; transform: translate(-3%, 2%) scale(1.04) rotate(-2deg); }
+}
+@keyframes product-image-v2 { from { scale: 1.28; translate: 4% -3%; } to { scale: 1.02; translate: -3% 3%; } }
+@keyframes detail-float-v2 { 0% { opacity: 0; transform: translate(-60%, 22%) scale(.6) rotate(-22deg); } 18% { opacity: 1; } 100% { opacity: 1; transform: translate(8%, -8%) scale(1.08) rotate(5deg); } }
+@keyframes halo-v2 { from { opacity: 0; transform: scale(.55) rotate(-35deg); } to { opacity: 1; transform: scale(1.2) rotate(18deg); } }
+@keyframes punch-word { from { opacity: 0; transform: translateX(-40%) skewX(-12deg) scale(1.45); filter: blur(.28rem); } to { opacity: 1; transform: translateX(0) skewX(0) scale(1); filter: blur(0); } }
+
+@keyframes craving-camera-v2 { from { scale: 1.26; translate: 8% -5%; } to { scale: 1.06; translate: -4% 3%; } }
+@keyframes craving-depth-v2 { 0% { opacity: 0; transform: translate(65%, -25%) scale(.65) rotate(18deg); } 20% { opacity: 1; } 100% { opacity: 1; transform: translate(-12%, 14%) scale(1.12) rotate(-8deg); } }
+@keyframes sweep-v2 { from { translate: -34% 0; opacity: 0; } 30% { opacity: .8; } to { translate: 34% 0; opacity: 0; } }
+@keyframes premium-line { from { opacity: 0; transform: translateY(110%) skewY(6deg); clip-path: inset(0 0 100%); } to { opacity: 1; transform: translateY(0) skewY(0); clip-path: inset(0); } }
+
+@keyframes cta-camera-v2 { from { scale: 1.32; translate: -4% -5%; filter: saturate(1.35) contrast(1.18); } to { scale: 1.08; translate: 2% 2%; filter: saturate(1.08) contrast(1.08); } }
+@keyframes glass-in-v2 { from { opacity: 0; transform: translateY(28%) scale(.92); filter: blur(.5rem); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes logo-in-v2 { from { opacity: 0; transform: translateY(-55%) scale(.7) rotate(-7deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+@keyframes brand-lock { from { opacity: 0; letter-spacing: .08em; transform: scale(1.25); } to { opacity: 1; letter-spacing: -.065em; transform: scale(1); } }
+
+@keyframes bridge-one {
+  0%, 16% { opacity: 0; translate: 0; }
+  18% { opacity: .85; }
+  21% { opacity: 0; translate: 520% 0; }
+  100% { opacity: 0; translate: 520% 0; }
+}
+
+@keyframes bridge-two {
+  0%, 68% { opacity: 0; translate: 0; }
+  70% { opacity: .75; }
+  74% { opacity: 0; translate: -520% 0; }
+  100% { opacity: 0; translate: -520% 0; }
+}
