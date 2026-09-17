@@ -127,11 +127,15 @@
   }
 
   function renderCart() {
-    $('[data-cart-count]').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const quantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+    $('[data-cart-count]').textContent = quantity;
+    $('[data-mobile-cart-count]').textContent = quantity;
     $('[data-cart-total]').textContent = money(cartTotal());
+    $('[data-mobile-cart-total]').textContent = money(cartTotal());
     $('[data-review-total]').textContent = money(cartTotal());
     $('[data-empty-cart]').classList.toggle('hidden', cart.length > 0);
     $('[data-review-order]').disabled = cart.length === 0;
+    $('[data-open-cart]').disabled = cart.length === 0;
     $('[data-cart-items]').innerHTML = cart.map((item) => `<div class="cart-row"><div><strong>${escapeHtml(item.name)}</strong>${item.optionNames.length ? `<small>${escapeHtml(item.optionNames.join(' · '))}</small>` : ''}<small>${money(item.price)} × ${item.quantity}</small></div><div><button data-cart-minus="${escapeHtml(item.id)}" aria-label="Remove one ${escapeHtml(item.name)}">−</button><button data-cart-plus="${escapeHtml(item.id)}" aria-label="Add one ${escapeHtml(item.name)}">+</button></div></div>`).join('');
   }
 
@@ -148,6 +152,8 @@
     $('[data-place-order]').textContent = 'Place order';
     $('[data-idle-overlay]').classList.remove('active');
     $('[data-idle-overlay]').setAttribute('aria-hidden', 'true');
+    $('.cart-panel').classList.remove('mobile-open');
+    document.body.classList.remove('cart-sheet-open');
     renderCart(); showScreen('welcome');
   }
 
@@ -163,8 +169,10 @@
 
   $('[data-start-order]').onclick = () => { showScreen('ordering'); armIdleTimer(); };
   $('[data-cancel-order]').onclick = resetSession;
-  $('[data-back-menu]').onclick = () => { showScreen('ordering'); armIdleTimer(); };
-  $('[data-review-order]').onclick = () => { showScreen('review'); armIdleTimer(); };
+  $('[data-back-menu]').onclick = () => { showScreen('ordering'); $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); armIdleTimer(); };
+  $('[data-review-order]').onclick = () => { $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); showScreen('review'); armIdleTimer(); };
+  $('[data-open-cart]').onclick = () => { $('.cart-panel').classList.add('mobile-open'); document.body.classList.add('cart-sheet-open'); armIdleTimer(); };
+  $('[data-close-cart]').onclick = () => { $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); };
   $('[data-new-order]').onclick = resetSession;
   $('[data-reset-order]').onclick = resetSession;
   $('[data-continue-order]').onclick = () => { $('[data-idle-overlay]').classList.remove('active'); armIdleTimer(); };
