@@ -113,3 +113,35 @@ button { cursor:pointer; }
   .review-card { padding:20px; border-radius:24px; }
   .review-card h1 { font-size:clamp(2.35rem,12vw,3.4rem); }
 }
+
+/* Keep size choices vertically scrollable above the fixed action area. */
+@media (max-width:1000px) {
+  .option-overlay { align-items:flex-end; padding:10px; }
+  .option-sheet {
+    display:flex; flex-direction:column; width:100%; height:min(88dvh,760px); max-height:88dvh;
+    padding:24px; overflow:hidden; overscroll-behavior:contain; border-radius:28px 28px 18px 18px;
+  }
+  .option-sheet > header { flex:0 0 auto; padding-bottom:12px; }
+  .option-description { flex:0 0 auto; margin:0 0 6px; }
+  .option-groups {
+    flex:1 1 auto; min-height:0; padding:2px 3px 28px 0;
+    overflow-x:hidden; overflow-y:auto; overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch; touch-action:pan-y; scrollbar-gutter:stable;
+  }
+  .option-groups::-webkit-scrollbar { width:6px; }
+  .option-groups::-webkit-scrollbar-thumb { background:rgba(255,255,255,.2); border-radius:99px; }
+  .option-sheet footer {
+    position:static; flex:0 0 auto; margin:0 -24px -24px; padding:17px 24px calc(17px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width:600px) {
+  .option-overlay { padding:5px; }
+  .option-sheet { height:94dvh; max-height:94dvh; padding:19px; border-radius:25px 25px 14px 14px; }
+  .option-sheet h2 { font-size:clamp(1.7rem,8vw,2.3rem); }
+  .option-group { margin:18px 0; }
+  .option-choices { grid-template-columns:1fr 1fr; gap:9px; }
+  .option-choice span { min-height:68px; padding:11px; }
+  .option-sheet footer { margin:0 -19px -19px; padding:14px 19px calc(14px + env(safe-area-inset-bottom)); }
+  .option-sheet footer .primary-action { min-height:56px; padding-inline:18px; }
+}

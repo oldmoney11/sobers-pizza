@@ -71,13 +71,24 @@
       (sizeOrder[left] ?? 100) - (sizeOrder[right] ?? 100));
   }
 
+  function availableChoices(groupKey, choices) {
+    const discontinued = groupKey === 'size' ? new Set(['mini', 'mini_small']) : new Set();
+    return orderedChoices(choices).filter(([choiceKey]) => !discontinued.has(choiceKey));
+  }
+
+  function productStartingPrice(product) {
+    const sizeChoices = product?.options?.size?.[2];
+    const firstSize = sizeChoices ? availableChoices('size', sizeChoices)[0]?.[1] : null;
+    return Number(product?.base_price || 0) + Number(firstSize?.[1] || 0);
+  }
+
   function openOptions(product) {
     optionProduct = product;
     optionSelections = {};
     const groups = Object.entries(product.options || {});
     groups.forEach(([groupKey, group]) => {
       const [, type, choices] = group;
-      if (type === 'radio') optionSelections[groupKey] = orderedChoices(choices)[0]?.[0] || '';
+      if (type === 'radio') optionSelections[groupKey] = availableChoices(groupKey, choices)[0]?.[0] || '';
       if (type === 'checkbox') optionSelections[groupKey] = [];
     });
 
@@ -85,7 +96,7 @@
     $('[data-option-description]').textContent = product.description || 'Made fresh to order.';
     $('[data-option-groups]').innerHTML = groups.map(([groupKey, group]) => {
       const [label, type, choices] = group;
-      return `<fieldset class="option-group"><legend>${escapeHtml(label)}</legend><div class="option-choices">${orderedChoices(choices).map(([choiceKey, choice]) => `<label class="option-choice"><input data-option-input type="${type === 'radio' ? 'radio' : 'checkbox'}" name="option-${escapeHtml(groupKey)}" value="${escapeHtml(choiceKey)}" ${type === 'radio' && optionSelections[groupKey] === choiceKey ? 'checked' : ''}><span><b>${escapeHtml(choice[0])}</b><small>${type === 'radio' ? money(Number(product.base_price) + Number(choice[1])) : `+${money(choice[1])}`}</small></span></label>`).join('')}</div></fieldset>`;
+      return `<fieldset class="option-group"><legend>${escapeHtml(label)}</legend><div class="option-choices">${availableChoices(groupKey, choices).map(([choiceKey, choice]) => `<label class="option-choice"><input data-option-input type="${type === 'radio' ? 'radio' : 'checkbox'}" name="option-${escapeHtml(groupKey)}" value="${escapeHtml(choiceKey)}" ${type === 'radio' && optionSelections[groupKey] === choiceKey ? 'checked' : ''}><span><b>${escapeHtml(choice[0])}</b><small>${type === 'radio' ? money(Number(product.base_price) + Number(choice[1])) : `+${money(choice[1])}`}</small></span></label>`).join('')}</div></fieldset>`;
     }).join('');
     updateOptionTotal();
     $('[data-option-overlay]').classList.add('active');
@@ -122,7 +133,7 @@
   function renderProducts(categorySlug) {
     const category = categories.find((item) => item.slug === categorySlug);
     const visible = category ? products.filter((item) => item.category_id === category.id) : products;
-    $('[data-products]').innerHTML = visible.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(product.base_price)}</strong></div></button>`).join('');
+    $('[data-products]').innerHTML = visible.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(productStartingPrice(product))}</strong></div></button>`).join('');
     $('[data-empty-menu]').classList.toggle('hidden', visible.length > 0);
   }
 

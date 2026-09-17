@@ -480,6 +480,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const money = (amount) => `${BUSINESS.currency}${Number(amount).toFixed(2)}`;
 
+  const availableProductChoices = (groupKey, choices = {}) =>
+    Object.entries(choices).filter(
+      ([choiceKey]) => groupKey !== "size" || !["mini", "mini_small"].includes(choiceKey),
+    );
+
+  const productStartingPrice = (product) => {
+    const sizeChoices = product?.options?.size?.[2];
+    const firstAvailable = sizeChoices
+      ? availableProductChoices("size", sizeChoices).sort((left, right) => {
+          const order = ["small", "medium", "large", "x_large", "regular", "family"];
+          const a = order.indexOf(left[0]);
+          const b = order.indexOf(right[0]);
+          return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
+        })[0]?.[1]
+      : null;
+    return Number(product?.price || 0) + Number(firstAvailable?.[1] || 0);
+  };
+
   const appAssetUrl = (value) => {
     if (!value) {
       return "assets/logo/favicon-512.png";
@@ -903,7 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                     <strong>
                                         From
-                                        ${money(product.price)}
+                                        ${money(productStartingPrice(product))}
                                     </strong>
 
 
@@ -1093,7 +1111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         field.innerHTML = `<legend>${label}</legend>`;
 
         const choiceOrder = ["mini","mini_small","small","medium","large","x_large","regular","family","two","four","seven","eight","twelve","fifteen","twenty_four"];
-        const orderedChoices = Object.entries(choices).sort(([left],[right]) => {
+        const orderedChoices = availableProductChoices(groupKey, choices).sort(([left],[right]) => {
           const a = choiceOrder.indexOf(left), b = choiceOrder.indexOf(right);
           return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
         });
