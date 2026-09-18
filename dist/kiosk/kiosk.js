@@ -72,7 +72,7 @@
   }
 
   function availableChoices(groupKey, choices) {
-    const discontinued = groupKey === 'size' ? new Set(['mini', 'mini_small']) : new Set();
+    const discontinued = groupKey === 'size' ? new Set(['mini']) : new Set();
     return orderedChoices(choices).filter(([choiceKey]) => !discontinued.has(choiceKey));
   }
 

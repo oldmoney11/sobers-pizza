@@ -482,7 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const availableProductChoices = (groupKey, choices = {}) =>
     Object.entries(choices).filter(
-      ([choiceKey]) => groupKey !== "size" || !["mini", "mini_small"].includes(choiceKey),
+      ([choiceKey]) => groupKey !== "size" || choiceKey !== "mini",
     );
 
   const productStartingPrice = (product) => {
