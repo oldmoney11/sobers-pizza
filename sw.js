@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v46";
+const CACHE_NAME = "sobers-pizza-independent-v47";
 const SHELL = [
   "./",
   "./index.html",
@@ -27,6 +27,7 @@ const SHELL = [
   "./kiosk/kiosk.js",
   "./assets/logo/favicon-192.png",
   "./assets/logo/favicon-512.png",
+  "./assets/logo/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {
