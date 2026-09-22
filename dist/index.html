@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
     <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
     <link rel="stylesheet" href="css/sobers-customer.css?v=8" />
-    <link rel="stylesheet" href="css/sobers-polished.css?v=2" />
+    <link rel="stylesheet" href="css/sobers-polished.css?v=3" />
 
     <link rel="preload" as="image" href="assets/sobers-pizza/pizzas/meat-lovers.jpg" fetchpriority="high" />
 
@@ -686,7 +686,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=50")
+            .register("./sw.js?v=51")
             .then((registration) => {
               registration.update();
 
@@ -698,11 +698,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v50")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v51")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v50", "1");
+          sessionStorage.setItem("sobers-pwa-v51", "1");
           location.reload();
         });
       }
