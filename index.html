@@ -19,9 +19,9 @@
     <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
     <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
     <link rel="stylesheet" href="css/sobers-customer.css?v=8" />
-    <link rel="stylesheet" href="css/sobers-polished.css?v=1" />
+    <link rel="stylesheet" href="css/sobers-polished.css?v=2" />
 
-    <link rel="preload" as="image" href="assets/sobers-pizza/hero/sobers-hero.jpg" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/sobers-pizza/pizzas/meat-lovers.jpg" fetchpriority="high" />
 
     <link rel="manifest" href="manifest.json?v=2" />
 
@@ -108,7 +108,7 @@
 ===================================================== -->
 
       <section class="sp-hero">
-        <img src="assets/sobers-pizza/hero/sobers-hero.jpg" alt="Freshly made Sobers Pizza" fetchpriority="high" decoding="async" />
+        <img src="assets/sobers-pizza/pizzas/meat-lovers.jpg" alt="Loaded Sobers Pizza with a fresh cheese pull" fetchpriority="high" decoding="async" />
 
         <div class="sp-hero-overlay"></div>
 
@@ -686,7 +686,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=48")
+            .register("./sw.js?v=49")
             .then((registration) => {
               registration.update();
 
@@ -698,11 +698,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v48")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v49")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v48", "1");
+          sessionStorage.setItem("sobers-pwa-v49", "1");
           location.reload();
         });
       }
