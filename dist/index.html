@@ -686,7 +686,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=49")
+            .register("./sw.js?v=50")
             .then((registration) => {
               registration.update();
 
@@ -698,11 +698,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v49")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v50")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v49", "1");
+          sessionStorage.setItem("sobers-pwa-v50", "1");
           location.reload();
         });
       }

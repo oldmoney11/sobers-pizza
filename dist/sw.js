@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v49";
+const CACHE_NAME = "sobers-pizza-independent-v50";
 const SHELL = [
   "./",
   "./index.html",
@@ -35,7 +35,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => Promise.all(SHELL.map((url) => cache.add(url))))
+      .then((cache) =>
+        Promise.allSettled(
+          SHELL.map((url) =>
+            cache.add(url).catch((error) => {
+              console.warn("Sobers Pizza could not pre-cache:", url, error);
+            }),
+          ),
+        ),
+      )
       .then(() => self.skipWaiting()),
   );
 });
@@ -50,7 +58,9 @@ self.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then((clients) => clients.forEach((client) => client.postMessage({ type: "PWA_UPDATED" }))),
   );
 });
 self.addEventListener("fetch", (event) => {
