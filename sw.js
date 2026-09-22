@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v47";
+const CACHE_NAME = "sobers-pizza-independent-v48";
 const SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const SHELL = [
   "./css/sobers-urban.css",
   "./css/sobers-glass.css",
   "./css/sobers-customer.css",
+  "./css/sobers-polished.css",
   "./JS/sobers-platform-orders.js",
   "./JS/sobers-pizza.js",
   "./JS/sobers-notices.js",
@@ -67,17 +68,27 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+  const destination = event.request.destination;
+  if (destination === "image" || destination === "font") {
+    event.respondWith(
+      caches.match(event.request).then((hit) => {
+        const fresh = fetch(event.request)
+          .then((response) => {
+            if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+            return response;
+          })
+          .catch(() => hit);
+        return hit || fresh;
+      }),
+    );
+    return;
+  }
   event.respondWith(
-    caches.match(event.request).then(
-      (hit) =>
-        hit ||
-        fetch(event.request).then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        }),
-    ),
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+        return response;
+      })
+      .catch(() => caches.match(event.request)),
   );
 });

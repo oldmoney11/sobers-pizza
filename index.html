@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
     <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
     <link rel="stylesheet" href="css/sobers-customer.css?v=8" />
+    <link rel="stylesheet" href="css/sobers-polished.css?v=1" />
+
+    <link rel="preload" as="image" href="assets/sobers-pizza/hero/sobers-hero.jpg" fetchpriority="high" />
 
     <link rel="manifest" href="manifest.json?v=2" />
 
@@ -105,7 +108,7 @@
 ===================================================== -->
 
       <section class="sp-hero">
-        <img src="assets/sobers-pizza/hero/sobers-hero.jpg" alt="Freshly made Sobers Pizza" />
+        <img src="assets/sobers-pizza/hero/sobers-hero.jpg" alt="Freshly made Sobers Pizza" fetchpriority="high" decoding="async" />
 
         <div class="sp-hero-overlay"></div>
 
@@ -116,11 +119,11 @@
             <p class="sp-eyebrow">FRESH FROM THE OVEN</p>
 
             <h1>
-              Pizza with a
-              <em>little attitude.</em>
+              Fresh out the oven.
+              <em>Built differently.</em>
             </h1>
 
-            <span> Big flavour. Crisp crust. Loaded toppings. Made fresh when you order it. </span>
+            <span> Big flavour, crisp crust and loaded toppings—made fresh the moment you order. </span>
 
             <div class="sp-hero-actions">
               <a href="#menu" class="sp-primary-button">
@@ -271,6 +274,8 @@
               <img
                 src="assets/sobers-pizza/brand/chef-sobers.jpg"
                 alt="Sobers Pizza chef preparing fresh pizza"
+                loading="lazy"
+                decoding="async"
               />
 
               <div class="sp-brand-image-overlay"></div>
@@ -298,7 +303,7 @@
 
           <article class="sp-brand-card">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/fresh-dough.jpg" alt="Fresh Sobers Pizza dough" />
+              <img src="assets/sobers-pizza/brand/fresh-dough.jpg" alt="Fresh Sobers Pizza dough" loading="lazy" decoding="async" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -323,7 +328,7 @@
 
           <article class="sp-brand-card">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/pizza-oven.jpg" alt="Sobers Pizza oven" />
+              <img src="assets/sobers-pizza/brand/pizza-oven.jpg" alt="Sobers Pizza oven" loading="lazy" decoding="async" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -350,7 +355,7 @@
 
           <article class="sp-brand-card sp-brand-card-delivery">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/delivery.jpg" alt="Sobers Pizza delivery" />
+              <img src="assets/sobers-pizza/brand/delivery.jpg" alt="Sobers Pizza delivery" loading="lazy" decoding="async" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -522,13 +527,17 @@
     <aside class="sp-cart" id="spCart" aria-hidden="true">
       <header>
         <div>
-          <p>SOBERS PIZZA</p>
+          <p>YOUR OVEN ORDER</p>
 
-          <h2>Your order</h2>
+          <h2>Ready for the oven.</h2>
         </div>
 
         <button type="button" id="spCartClose" aria-label="Close cart">×</button>
       </header>
+
+      <div class="sp-oven-progress" aria-label="Order stages">
+        <span>Review</span><span>Details</span><span>Confirm</span><span>Track</span>
+      </div>
 
       <div class="sp-cart-body">
         <div class="sp-empty" id="spEmpty">
@@ -552,7 +561,7 @@
         <p>Delivery cost is confirmed on WhatsApp.</p>
 
         <button type="button" id="spCheckoutButton">
-          Continue to checkout
+          Review delivery & checkout
           <span>→</span>
         </button>
       </footer>
@@ -667,7 +676,7 @@
     </div>
 
     <script src="JS/sobers-platform-orders.js?v=3"></script>
-    <script src="JS/sobers-pizza.js?v=13"></script>
+    <script src="JS/sobers-pizza.js?v=14"></script>
     <script src="JS/sobers-notices.js?v=2"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=4"></script>
@@ -677,7 +686,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=44")
+            .register("./sw.js?v=48")
             .then((registration) => {
               registration.update();
 
@@ -689,11 +698,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v44")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v48")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v44", "1");
+          sessionStorage.setItem("sobers-pwa-v48", "1");
           location.reload();
         });
       }

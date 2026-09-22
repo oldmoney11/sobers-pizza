@@ -836,6 +836,8 @@ document.addEventListener("DOMContentLoaded", () => {
        RENDER EACH CATEGORY SECTION
     ================================================= */
 
+    let imageRenderIndex = 0;
+
     categories.forEach((category) => {
       const section = document.createElement("section");
 
@@ -866,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ----------------------------------------- */
 
       grouped[category].forEach(([key, product]) => {
+        const imagePriority = imageRenderIndex++;
         const card = document.createElement("article");
 
         card.className = "sp-menu-card";
@@ -877,7 +880,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             <img
                                 src="${appAssetUrl(product.image)}"
                                 alt="${product.name}"
-                                loading="lazy"
+                                loading="${imagePriority < 4 ? "eager" : "lazy"}"
+                                decoding="async"
+                                fetchpriority="${imagePriority < 4 ? "high" : "auto"}"
                             >
 
                             ${
