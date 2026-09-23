@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let branches = [...FALLBACK_BRANCHES];
   let selectedBranch = null;
   let settingsSync = Promise.resolve();
+  let branchNoticeTimer = 0;
 
   function normalizeGhanaNumber(value) {
     let number = String(value || "").replace(/\D/g, "");
@@ -62,6 +63,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone);
     if (number) applyWhatsAppNumber(number);
     document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
+    const branchButton = document.querySelector("#spBranchButton");
+    if (branchButton) {
+      branchButton.title = `Ordering from ${branch.name}. Tap to change.`;
+      branchButton.setAttribute("aria-label", `Ordering from ${branch.name}. Tap to change branch.`);
+      branchButton.classList.add("is-notifying");
+      window.clearTimeout(branchNoticeTimer);
+      branchNoticeTimer = window.setTimeout(() => branchButton.classList.remove("is-notifying"), 2400);
+    }
     document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
     document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
     if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
@@ -129,7 +138,80 @@ document.addEventListener("DOMContentLoaded", () => {
   let initialBranchCode = "";
   try { initialBranchCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
   chooseBranch(branches.find(branch => branch.code === initialBranchCode) || branches[0], false);
-  document.querySelector("#spBranchButton")?.addEventListener("click", openBranchChooser);
+  const branchButton = document.querySelector("#spBranchButton");
+  if (branchButton) {
+    const positionKey = "sobersBranchBubblePosition";
+    let dragStart = null;
+    let dragged = false;
+
+    function placeBranchBubble(side, top) {
+      const margin = 14;
+      const dockClearance = window.innerWidth <= 900 ? 104 : 18;
+      const maxTop = Math.max(margin, window.innerHeight - branchButton.offsetHeight - dockClearance);
+      const safeTop = Math.min(Math.max(Number(top) || window.innerHeight * 0.68, margin), maxTop);
+      branchButton.style.top = `${safeTop}px`;
+      branchButton.style.bottom = "auto";
+      branchButton.style.left = side === "left" ? `${margin}px` : "auto";
+      branchButton.style.right = side === "left" ? "auto" : `${margin}px`;
+      branchButton.dataset.side = side;
+    }
+
+    try {
+      const savedPosition = JSON.parse(localStorage.getItem(positionKey) || "null");
+      if (savedPosition?.side && Number.isFinite(savedPosition?.ratio)) {
+        placeBranchBubble(savedPosition.side, window.innerHeight * savedPosition.ratio);
+      }
+    } catch (_) {}
+
+    branchButton.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      const rect = branchButton.getBoundingClientRect();
+      dragStart = { x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
+      dragged = false;
+      branchButton.setPointerCapture?.(event.pointerId);
+      branchButton.classList.add("is-dragging");
+    });
+
+    branchButton.addEventListener("pointermove", event => {
+      if (!dragStart) return;
+      const dx = event.clientX - dragStart.x;
+      const dy = event.clientY - dragStart.y;
+      if (Math.hypot(dx, dy) > 7) dragged = true;
+      if (!dragged) return;
+      const margin = 10;
+      const dockClearance = window.innerWidth <= 900 ? 104 : 18;
+      const left = Math.min(Math.max(dragStart.left + dx, margin), window.innerWidth - branchButton.offsetWidth - margin);
+      const top = Math.min(Math.max(dragStart.top + dy, margin), window.innerHeight - branchButton.offsetHeight - dockClearance);
+      branchButton.style.left = `${left}px`;
+      branchButton.style.right = "auto";
+      branchButton.style.top = `${top}px`;
+      branchButton.style.bottom = "auto";
+    });
+
+    branchButton.addEventListener("pointerup", event => {
+      if (!dragStart) return;
+      branchButton.releasePointerCapture?.(event.pointerId);
+      branchButton.classList.remove("is-dragging");
+      if (dragged) {
+        const rect = branchButton.getBoundingClientRect();
+        const side = rect.left + rect.width / 2 < window.innerWidth / 2 ? "left" : "right";
+        placeBranchBubble(side, rect.top);
+        try {
+          localStorage.setItem(positionKey, JSON.stringify({ side, ratio: rect.top / window.innerHeight }));
+        } catch (_) {}
+      }
+      dragStart = null;
+    });
+
+    branchButton.addEventListener("click", event => {
+      if (dragged) {
+        event.preventDefault();
+        dragged = false;
+        return;
+      }
+      openBranchChooser();
+    });
+  }
   document.querySelector("#spCheckoutBranch")?.addEventListener("click", openBranchChooser);
   document.querySelector("#spBranchClose")?.addEventListener("click", closeBranchChooser);
 

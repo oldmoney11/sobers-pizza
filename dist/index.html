@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
     <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
     <link rel="stylesheet" href="css/sobers-customer.css?v=8" />
-    <link rel="stylesheet" href="css/sobers-polished.css?v=3" />
+    <link rel="stylesheet" href="css/sobers-polished.css?v=4" />
 
     <link rel="preload" as="image" href="assets/sobers-pizza/pizzas/meat-lovers.jpg" fetchpriority="high" />
 
@@ -74,9 +74,6 @@
       </nav>
 
       <div class="sp-nav-actions">
-        <button type="button" class="sp-branch-button" id="spBranchButton" aria-haspopup="dialog">
-          <span aria-hidden="true">⌖</span><span><small>Ordering from</small><strong id="spBranchLabel">Choose branch</strong></span>
-        </button>
         <button
           type="button"
           class="sp-nav-tool"
@@ -104,6 +101,21 @@
         </button>
       </div>
     </header>
+
+    <button
+      type="button"
+      class="sp-branch-fab"
+      id="spBranchButton"
+      aria-haspopup="dialog"
+      aria-label="Change ordering branch"
+      title="Change ordering branch"
+    >
+      <span class="sp-branch-fab-icon" aria-hidden="true">⌖</span>
+      <span class="sp-branch-fab-label">
+        <small>Ordering from</small>
+        <strong id="spBranchLabel">Choose branch</strong>
+      </span>
+    </button>
 
     <div class="sp-branch-overlay" id="spBranchOverlay" aria-hidden="true">
       <section class="sp-branch-card" role="dialog" aria-modal="true" aria-labelledby="spBranchTitle">
@@ -692,7 +704,7 @@
     </div>
 
     <script src="JS/sobers-platform-orders.js?v=4"></script>
-    <script src="JS/sobers-pizza.js?v=15"></script>
+    <script src="JS/sobers-pizza.js?v=16"></script>
     <script src="JS/sobers-notices.js?v=2"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=4"></script>
@@ -702,7 +714,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=52")
+            .register("./sw.js?v=53")
             .then((registration) => {
               registration.update();
 
@@ -714,11 +726,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v52")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v53")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v52", "1");
+          sessionStorage.setItem("sobers-pwa-v53", "1");
           location.reload();
         });
       }
