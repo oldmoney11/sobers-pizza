@@ -74,6 +74,9 @@
       </nav>
 
       <div class="sp-nav-actions">
+        <button type="button" class="sp-branch-button" id="spBranchButton" aria-haspopup="dialog">
+          <span aria-hidden="true">⌖</span><span><small>Ordering from</small><strong id="spBranchLabel">Choose branch</strong></span>
+        </button>
         <button
           type="button"
           class="sp-nav-tool"
@@ -101,6 +104,16 @@
         </button>
       </div>
     </header>
+
+    <div class="sp-branch-overlay" id="spBranchOverlay" aria-hidden="true">
+      <section class="sp-branch-card" role="dialog" aria-modal="true" aria-labelledby="spBranchTitle">
+        <button type="button" class="sp-branch-close" id="spBranchClose" aria-label="Close branch chooser">×</button>
+        <p>YOUR SOBERS LOCATION</p>
+        <h2 id="spBranchTitle">Where are you ordering from?</h2>
+        <span>Choose the branch that should prepare and receive this order. You can change it anytime.</span>
+        <div class="sp-branch-list" id="spBranchList" aria-live="polite"></div>
+      </section>
+    </div>
 
     <main>
       <!-- =====================================================
@@ -589,6 +602,9 @@
         </span>
 
         <form id="spCheckoutForm">
+          <button type="button" class="sp-checkout-branch" id="spCheckoutBranch">
+            <span>Preparing branch</span><strong id="spCheckoutBranchName">Choose branch</strong><small>Change</small>
+          </button>
           <label>
             Your name
 
@@ -675,8 +691,8 @@
       </section>
     </div>
 
-    <script src="JS/sobers-platform-orders.js?v=3"></script>
-    <script src="JS/sobers-pizza.js?v=14"></script>
+    <script src="JS/sobers-platform-orders.js?v=4"></script>
+    <script src="JS/sobers-pizza.js?v=15"></script>
     <script src="JS/sobers-notices.js?v=2"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=4"></script>
@@ -686,7 +702,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=51")
+            .register("./sw.js?v=52")
             .then((registration) => {
               registration.update();
 
@@ -698,11 +714,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v51")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v52")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v51", "1");
+          sessionStorage.setItem("sobers-pwa-v52", "1");
           location.reload();
         });
       }

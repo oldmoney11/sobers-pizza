@@ -40,8 +40,51 @@ document.addEventListener("DOMContentLoaded", () => {
     whatsappNumber: "233204863743",
     currency: "GH₵",
     storageKey: "sobersPizzaCart",
+    branchStorageKey: "sobersPizzaBranch",
   };
+  const FALLBACK_BRANCHES = [
+    { code: "MAIN-BRANCH", name: "PAKOS Road", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233247836769", is_active: true },
+    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", is_active: true },
+  ];
+  let branches = [...FALLBACK_BRANCHES];
+  let selectedBranch = null;
   let settingsSync = Promise.resolve();
+
+  function normalizeGhanaNumber(value) {
+    let number = String(value || "").replace(/\D/g, "");
+    if (number.startsWith("0")) number = `233${number.slice(1)}`;
+    return number;
+  }
+
+  function chooseBranch(branch, remember = true) {
+    if (!branch) return;
+    selectedBranch = branch;
+    const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone);
+    if (number) applyWhatsAppNumber(number);
+    document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
+    document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
+    document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
+    if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
+  }
+
+  function renderBranches() {
+    const host = document.querySelector("#spBranchList");
+    if (!host) return;
+    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${branch.code}"><span>⌖</span><span><strong>${branch.name}</strong><small>${branch.address || "Order from this location"}</small></span><i>→</i></button>`).join("");
+    host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
+  }
+
+  function openBranchChooser() {
+    const overlay = document.querySelector("#spBranchOverlay");
+    if (!overlay) return;
+    overlay.classList.add("active"); overlay.setAttribute("aria-hidden", "false"); document.body.classList.add("sp-modal-open");
+  }
+
+  function closeBranchChooser() {
+    const overlay = document.querySelector("#spBranchOverlay");
+    if (!overlay || !selectedBranch) return;
+    overlay.classList.remove("active"); overlay.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-open");
+  }
 
   function applyWhatsAppNumber(number) {
     const normalized = String(number || "").replace(/\D/g, "");
@@ -63,18 +106,32 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const [businessRow] = businessResponse.ok ? await businessResponse.json() : [];
       if (!businessRow) return BUSINESS.whatsappNumber;
-      const settingsResponse = await fetch(
-        `${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`,
-        { headers, cache: "no-store" },
-      );
+      const [settingsResponse, branchesResponse] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`, { headers, cache: "no-store" }),
+        fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,is_active&order=name.asc`, { headers, cache: "no-store" }),
+      ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
-      const number = String(settings?.whatsapp_number || "").replace(/\D/g, "");
-      applyWhatsAppNumber(number);
+      const liveBranches = branchesResponse.ok ? await branchesResponse.json() : [];
+      if (liveBranches.length) branches = liveBranches;
+      renderBranches();
+      let savedCode = "";
+      try { savedCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
+      chooseBranch(branches.find(branch => branch.code === savedCode) || branches.find(branch => branch.code === "MAIN-BRANCH") || branches[0], false);
+      if (!savedCode) window.setTimeout(openBranchChooser, 2350);
+      if (!selectedBranch) applyWhatsAppNumber(settings?.whatsapp_number);
     } catch (error) {
       console.warn("Sobers settings could not be refreshed; using the last available number.");
     }
     return BUSINESS.whatsappNumber;
   }
+
+  renderBranches();
+  let initialBranchCode = "";
+  try { initialBranchCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
+  chooseBranch(branches.find(branch => branch.code === initialBranchCode) || branches[0], false);
+  document.querySelector("#spBranchButton")?.addEventListener("click", openBranchChooser);
+  document.querySelector("#spCheckoutBranch")?.addEventListener("click", openBranchChooser);
+  document.querySelector("#spBranchClose")?.addEventListener("click", closeBranchChooser);
 
   /* =====================================================
        SOBERS MENU
@@ -461,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (settingsResponse.ok) {
         const [settings] = await settingsResponse.json();
 
-        if (settings?.whatsapp_number) {
+        if (settings?.whatsapp_number && !selectedBranch) {
           applyWhatsAppNumber(settings.whatsapp_number);
         }
       }
@@ -1621,6 +1678,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const databaseOrder = {
           business_slug: "sobers-pizza",
 
+          branch_code: selectedBranch?.code || "MAIN-BRANCH",
+
           customer_name: customerName,
 
           customer_phone: customerPhone,
@@ -1679,6 +1738,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "*NEW SOBERS PIZZA ORDER*",
 
           orderNumber ? `Order: ${orderNumber}` : "",
+
+          `Branch: ${selectedBranch?.name || "PAKOS Road"}`,
 
           "",
 

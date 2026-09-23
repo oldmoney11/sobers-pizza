@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v51";
+const CACHE_NAME = "sobers-pizza-independent-v52";
 const SHELL = [
   "./",
   "./index.html",
