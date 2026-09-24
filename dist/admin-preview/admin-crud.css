@@ -1,0 +1,155 @@
+.actions {
+  align-items: center;
+}
+
+button.danger {
+  background: #791b20;
+}
+
+dialog {
+  width: min(720px, calc(100% - 28px));
+  max-height: 90vh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--text);
+  overflow: auto;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-card {
+  padding: 24px;
+}
+
+.dialog-card .heading {
+  align-items: start;
+}
+
+.dialog-card h2 {
+  margin: 5px 0;
+}
+
+.icon-button {
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 8px 11px;
+}
+
+.dialog-card .message {
+  padding: 0 20px;
+  margin: 0 0 12px;
+}
+
+.product-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 9px;
+  object-fit: cover;
+  background: #222;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+.option-builder {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.option-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 10px 0;
+}
+
+.option-heading small {
+  display: block;
+  margin-top: 4px;
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 1fr 140px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 8px 0;
+}
+
+.option-row label {
+  margin: 0;
+}
+
+.option-row button {
+  margin-bottom: 1px;
+}
+
+.button-link {
+  display: inline-flex;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 11px 15px;
+  color: white;
+  background: var(--red);
+  font-weight: 700;
+}
+
+.button-link.secondary {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+}
+
+.order-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 22px;
+  margin-bottom: 18px;
+}
+
+.order-meta div {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.order-meta small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.order-items {
+  width: 100%;
+  min-width: 0;
+}
+
+.order-option {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 3px;
+}
+
+@media (max-width: 560px) {
+  .option-row,
+  .order-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.notification-button {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .notification-button {
+    order: 2;
+    width: 100%;
+  }
+}

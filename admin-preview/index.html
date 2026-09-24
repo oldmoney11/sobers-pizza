@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <meta name="theme-color" content="#e51f26" />
+    <title>Sobers Admin</title>
+    <link rel="manifest" href="manifest.json?v=1" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=1" />
+    <link rel="stylesheet" href="platform-admin.css?v=2" />
+    <link rel="stylesheet" href="admin-crud.css?v=1" />
+    <link rel="stylesheet" href="sobers-admin-pro.css?v=1" />
+    <script src="vendor/supabase.min.js?v=1"></script>
+  </head>
+  <body
+    data-business-slug="sobers-pizza"
+    data-business-name="Sobers Pizza"
+    data-admin-theme="sobers"
+  >
+    <section class="login" id="login">
+      <form class="login-card" id="loginForm">
+        <span class="eyebrow">Sobers management</span>
+        <h1>Welcome back.</h1>
+        <p>Sign in with the account assigned to Sobers Pizza.</p>
+        <label>Email<input name="email" type="email" required autocomplete="email" /></label
+        ><label
+          >Password<input
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password" /></label
+        ><button type="submit">Sign in</button
+        ><button class="secondary" type="button" id="forgotPassword">Forgot password?</button
+        ><button class="secondary" type="button" id="showSignup">Create invited account</button>
+        <p class="message" id="loginMessage"></p>
+      </form>
+      <form class="login-card hidden" id="signupForm">
+        <span class="eyebrow">Sobers invitation</span>
+        <h1>Create your account.</h1>
+        <p>Use the email address the platform owner invited.</p>
+        <label>Full name<input name="full_name" required autocomplete="name" /></label
+        ><label>Email<input name="email" type="email" required autocomplete="email" /></label
+        ><label
+          >Password<input
+            name="password"
+            type="password"
+            required
+            minlength="8"
+            autocomplete="new-password" /></label
+        ><button type="submit">Create account</button
+        ><button class="secondary" type="button" id="showLogin">Back to sign in</button>
+        <p class="message" id="signupMessage"></p>
+      </form>
+    </section>
+    <div class="app hidden" id="app">
+      <aside class="sidebar">
+        <div class="brand">SOBERS <span>PIZZA</span></div>
+        <small>Business administration</small>
+        <nav class="nav" id="nav">
+          <button class="active" data-view="overview">Overview</button
+          ><button data-view="orders">Orders</button><button data-view="products">Products</button
+          ><button data-view="categories">Categories</button
+          ><button data-view="notices">Notices</button
+          ><button data-view="branches">Branches</button
+          ><button data-view="payments">Payments</button
+          ><button data-view="settings">Settings</button>
+        </nav>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <strong id="businessName">Sobers Pizza</strong
+            ><small class="muted" id="userName"></small>
+          </div>
+          <label class="branch-scope">Branch<select id="branchFilter"><option value="all">All branches</option></select></label>
+          <button class="secondary" id="signOut">Sign out</button>
+        </header>
+        <div class="content">
+          <section class="view active overview-view" id="overview">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Management centre</span>
+                <h1>Good day, Sobers.</h1>
+                <p class="view-intro">Everything important across your branches, clearly organised in one place.</p>
+              </div>
+              <button data-refresh>Refresh</button>
+            </div>
+            <div class="notice" id="setupNotice">The interface is ready.</div>
+            <div class="overview-scope"><span>Viewing</span><strong id="overviewScopeLabel">All branches</strong><small>Use the branch selector above to focus this dashboard.</small></div>
+            <div class="stats executive-stats">
+              <div class="stat stat-orders"><span>Total orders</span><strong id="statTotal">0</strong><small id="statOrderHint">Across selected scope</small></div>
+              <div class="stat stat-new"><span>Waiting for action</span><strong id="statNew">0</strong><small>New customer orders</small></div>
+              <div class="stat stat-preparing"><span>Active kitchen queue</span><strong id="statPreparing">0</strong><small>Confirmed, preparing or ready</small></div>
+              <div class="stat stat-completed"><span>Completed orders</span><strong id="statCompleted">0</strong><small>Successfully fulfilled</small></div>
+              <div class="stat stat-sales"><span>Recorded order value</span><strong id="statSales">GH₵0.00</strong><small>Cancelled orders excluded</small></div>
+              <div class="stat stat-average"><span>Average order</span><strong id="statAverage">GH₵0.00</strong><small>Average non-cancelled value</small></div>
+              <div class="stat stat-payment"><span>Payment attention</span><strong id="statPaymentPending">0</strong><small>Unpaid, pending or failed</small></div>
+              <div class="stat stat-products"><span>Menu availability</span><strong id="statAvailableProducts">0</strong><small id="statProductHint">Products ready to order</small></div>
+            </div>
+            <div class="overview-grid">
+              <section class="overview-panel branch-performance">
+                <div class="overview-panel-head"><div><span class="eyebrow">Branch performance</span><h2>Locations at a glance</h2></div><button class="secondary overview-link" data-jump-view="branches">Manage branches</button></div>
+                <div class="branch-performance-grid" id="branchPerformance"></div>
+              </section>
+              <section class="overview-panel order-health">
+                <div class="overview-panel-head"><div><span class="eyebrow">Order flow</span><h2>Kitchen status</h2></div></div>
+                <div class="status-breakdown" id="statusBreakdown"></div>
+              </section>
+            </div>
+            <section class="overview-panel recent-activity">
+              <div class="overview-panel-head"><div><span class="eyebrow">Live operations</span><h2>Recent orders</h2></div><button class="secondary overview-link" data-jump-view="orders">View all orders</button></div>
+              <div class="recent-orders" id="overviewRecentOrders"></div>
+            </section>
+          </section>
+          <section class="view" id="orders">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Operations</span>
+                <h1>Orders</h1>
+              </div>
+              <div class="toolbar">
+                <select id="orderFilter">
+                  <option value="all">All statuses</option>
+                  <option>new</option>
+                  <option>confirmed</option>
+                  <option>preparing</option>
+                  <option>ready</option>
+                  <option>completed</option>
+                  <option>cancelled</option></select
+                ><button data-refresh>Refresh</button>
+              </div>
+            </div>
+            <div class="notice hidden" id="liveOrderNotice">
+              A new Sobers order has arrived. The list has been updated.
+            </div>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order</th>
+                      <th>Branch</th>
+                      <th>Customer</th>
+                      <th>Type</th>
+                      <th>Total</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersBody"></tbody>
+                </table>
+                <div class="empty" id="ordersEmpty">No platform orders yet.</div>
+              </div>
+            </div>
+          </section>
+          <section class="view" id="products">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Menu</span>
+                <h1>Products</h1>
+              </div>
+              <button id="newProduct">Add product</button>
+            </div>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Available</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="productsBody"></tbody>
+                </table>
+                <div class="empty" id="productsEmpty">No products loaded.</div>
+              </div>
+            </div>
+          </section>
+          <section class="view" id="categories">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Menu structure</span>
+                <h1>Categories</h1>
+              </div>
+              <button id="newCategory">Add category</button>
+            </div>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Slug</th>
+                      <th>Order</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="categoriesBody"></tbody>
+                </table>
+                <div class="empty" id="categoriesEmpty">No categories loaded.</div>
+              </div>
+            </div>
+          </section>
+          <section class="view" id="notices">
+            <div class="heading"><div><span class="eyebrow">Customer communication</span><h1>Notice board</h1></div><button id="newNotice">Add notice</button></div>
+            <div class="notice">Publish promotions, closures, vacancies and important updates. Expired notices automatically disappear from the customer app.</div>
+            <div class="panel"><div class="table-wrap"><table><thead><tr><th>Notice</th><th>Type</th><th>Schedule</th><th>Status</th><th></th></tr></thead><tbody id="noticesBody"></tbody></table><div class="empty" id="noticesEmpty">No notices published.</div></div></div>
+          </section>
+          <section class="view" id="branches">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Locations</span>
+                <h1>Branches</h1>
+              </div>
+              <button id="newBranch">Add branch</button>
+            </div>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Code</th>
+                      <th>WhatsApp</th>
+                      <th>Address</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="branchesBody"></tbody>
+                </table>
+                <div class="empty" id="branchesEmpty">
+                  Add Sobers' three real branches when their names and addresses are confirmed.
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="view" id="payments">
+            <div class="heading">
+              <div><span class="eyebrow">Trusted checkout</span><h1>Payment methods</h1></div>
+              <button id="newPaymentMethod">Add payment method</button>
+            </div>
+            <div class="notice">Only active methods appear to customers. Never ask customers to pay to a number that is not listed here.</div>
+            <div class="panel"><div class="table-wrap"><table><thead><tr><th>Method</th><th>Provider</th><th>Account</th><th>Status</th><th></th></tr></thead><tbody id="paymentMethodsBody"></tbody></table><div class="empty" id="paymentMethodsEmpty">No payment methods configured.</div></div></div>
+          </section>
+          <section class="view" id="settings">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Configuration</span>
+                <h1>Business settings</h1>
+              </div>
+            </div>
+            <form class="panel" id="settingsForm">
+              <div class="form-grid">
+                <label>Display name<input name="display_name" /></label
+                ><label>WhatsApp number<input name="whatsapp_number" /></label
+                ><label>Phone<input name="phone" /></label
+                ><label>Email<input name="email" type="email" /></label
+                ><label
+                  >Default delivery fee<input
+                    name="default_delivery_fee"
+                    type="number"
+                    min="0"
+                    step="0.01" /></label
+                ><label class="wide"
+                  >Opening hours JSON<textarea name="opening_hours" rows="5">{}</textarea></label
+                ><label><input name="delivery_enabled" type="checkbox" /> Delivery enabled</label
+                ><label><input name="pickup_enabled" type="checkbox" /> Pickup enabled</label>
+              </div>
+              <div class="actions"><button type="submit">Save settings</button></div>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
+    <dialog id="productDialog">
+      <form method="dialog" class="dialog-card" id="productForm">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Catalogue</span>
+            <h2 id="productDialogTitle">Add product</h2>
+          </div>
+          <button class="secondary icon-button" type="button" data-close-dialog="productDialog">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <div class="form-grid">
+          <label>Product name<input name="name" required /></label
+          ><label>Category<select name="category_id" required></select></label
+          ><label
+            >Price (GH₵)<input
+              name="base_price"
+              type="number"
+              min="0"
+              step="0.01"
+              required /></label
+          ><label>Display order<input name="sort_order" type="number" step="1" value="0" /></label
+          ><label class="wide">Description<textarea name="description" rows="3"></textarea></label
+          ><label
+            >Product image<input
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif" /></label
+          ><label>Current image URL<input name="image_url" readonly /></label>
+          <div class="wide option-builder">
+            <div class="option-heading">
+              <div>
+                <strong>Sizes</strong
+                ><small class="muted">Optional choices such as Regular, Large or Family.</small>
+              </div>
+              <button class="secondary" type="button" id="addSize">Add size</button>
+            </div>
+            <div class="notice">Base price should be the cheapest size. Enter each size's complete customer price below.</div><div id="sizeRows"></div>
+            <div class="option-heading">
+              <div>
+                <strong>Extras</strong
+                ><small class="muted">Optional add-ons such as cheese or toppings.</small>
+              </div>
+              <button class="secondary" type="button" id="addExtra">Add extra</button>
+            </div>
+            <div id="extraRows"></div>
+          </div>
+          <label><input name="is_available" type="checkbox" checked /> Available to order</label>
+        </div>
+        <div class="actions">
+          <button class="danger hidden" type="button" id="deleteProduct">Remove product</button
+          ><button class="secondary" type="button" data-close-dialog="productDialog">Cancel</button
+          ><button type="submit">Save product</button>
+        </div>
+        <p class="message" id="productMessage"></p>
+      </form>
+    </dialog>
+    <dialog id="noticeDialog">
+      <form method="dialog" class="dialog-card" id="noticeForm">
+        <input type="hidden" name="id">
+        <div class="heading"><div><span class="eyebrow">Customer notice</span><h2 id="noticeDialogTitle">Add notice</h2></div><button class="secondary icon-button" type="button" data-close-dialog="noticeDialog">×</button></div>
+        <div class="form-grid">
+          <label>Title<input name="title" required maxlength="120"></label><label>Type<select name="notice_type"><option value="announcement">Announcement</option><option value="promotion">Promotion</option><option value="closure">Closure</option><option value="vacancy">Vacancy</option><option value="important">Important update</option></select></label>
+          <label class="wide">Message<textarea name="body" required maxlength="1200" rows="5"></textarea></label><label>Starts<input name="starts_at" type="datetime-local" required></label><label>Expires <small class="muted">Optional</small><input name="ends_at" type="datetime-local"></label>
+          <label>Action label <small class="muted">Optional</small><input name="cta_label" maxlength="40" placeholder="Order now"></label><label>Action link <small class="muted">Optional</small><input name="cta_url" placeholder="https://…"></label><label>Upload flyer/image <small class="muted">JPG, PNG or WebP</small><input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label><label>Existing image URL <small class="muted">Optional</small><input name="image_url" placeholder="https://…"></label>
+          <label>Priority<input name="priority" type="number" min="0" max="100" value="0"></label><label class="check"><input name="is_active" type="checkbox" checked> Visible to customers</label>
+        </div>
+        <div class="actions"><button class="danger hidden" type="button" id="archiveNotice">Archive notice</button><button class="secondary" type="button" data-close-dialog="noticeDialog">Cancel</button><button type="submit">Save notice</button></div><p class="message" id="noticeMessage"></p>
+      </form>
+    </dialog>
+    <dialog id="paymentMethodDialog">
+      <form method="dialog" class="dialog-card" id="paymentMethodForm">
+        <div class="heading"><div><span class="eyebrow">Trusted payment</span><h2 id="paymentMethodDialogTitle">Add payment method</h2></div><button class="secondary icon-button" type="button" data-close-dialog="paymentMethodDialog">×</button></div>
+        <input name="id" type="hidden" />
+        <div class="form-grid">
+          <label>Payment type<select name="method_type" required><option value="cash">Cash</option><option value="mobile_money">Mobile Money</option><option value="card">Card</option><option value="bank_transfer">Bank transfer</option></select></label>
+          <label>Display name<input name="display_name" required placeholder="e.g. MTN Mobile Money" /></label>
+          <label>Provider<input name="provider" placeholder="e.g. MTN" /></label>
+          <label>Account name<input name="account_name" /></label>
+          <label>Account number<input name="account_number" inputmode="tel" /></label>
+          <label>Display order<input name="sort_order" type="number" min="0" value="10" /></label>
+          <label class="wide">Payment instructions<textarea name="instructions" rows="4"></textarea></label>
+          <label><input name="is_active" type="checkbox" checked /> Available to customers</label>
+        </div>
+        <div class="actions"><button class="danger hidden" type="button" id="deactivatePaymentMethod">Deactivate</button><button class="secondary" type="button" data-close-dialog="paymentMethodDialog">Cancel</button><button type="submit">Save payment method</button></div>
+        <p class="message" id="paymentMethodMessage"></p>
+      </form>
+    </dialog>
+    <dialog id="categoryDialog">
+      <form method="dialog" class="dialog-card" id="categoryForm">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Menu structure</span>
+            <h2 id="categoryDialogTitle">Add category</h2>
+          </div>
+          <button class="secondary icon-button" type="button" data-close-dialog="categoryDialog">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <div class="form-grid">
+          <label>Category name<input name="name" required /></label
+          ><label>Display order<input name="sort_order" type="number" step="1" value="0" /></label
+          ><label class="wide">Description<textarea name="description" rows="3"></textarea></label
+          ><label><input name="is_active" type="checkbox" checked /> Visible on menu</label>
+        </div>
+        <div class="actions">
+          <button class="danger hidden" type="button" id="deleteCategory">Remove category</button
+          ><button class="secondary" type="button" data-close-dialog="categoryDialog">Cancel</button
+          ><button type="submit">Save category</button>
+        </div>
+        <p class="message" id="categoryMessage"></p>
+      </form>
+    </dialog>
+    <dialog id="branchDialog">
+      <form method="dialog" class="dialog-card" id="branchForm">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Location</span>
+            <h2 id="branchDialogTitle">Add branch</h2>
+          </div>
+          <button class="secondary icon-button" type="button" data-close-dialog="branchDialog">
+            ×
+          </button>
+        </div>
+        <input name="id" type="hidden" />
+        <div class="form-grid">
+          <label>Branch name<input name="name" required /></label
+          ><label>Branch code<input name="code" required /></label
+          ><label>Phone<input name="phone" /></label
+          ><label>WhatsApp<input name="whatsapp_number" /></label
+          ><label class="wide">Address<textarea name="address" rows="3"></textarea></label
+          ><label><input name="is_active" type="checkbox" checked /> Branch active</label>
+        </div>
+        <div class="actions">
+          <button class="danger hidden" type="button" id="deleteBranch">Remove branch</button
+          ><button class="secondary" type="button" data-close-dialog="branchDialog">Cancel</button
+          ><button type="submit">Save branch</button>
+        </div>
+        <p class="message" id="branchMessage"></p>
+      </form>
+    </dialog>
+    <dialog id="orderDialog">
+      <div class="dialog-card">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Order details</span>
+            <h2 id="orderDialogTitle">Order</h2>
+          </div>
+          <button class="secondary icon-button" type="button" data-close-dialog="orderDialog">
+            ×
+          </button>
+        </div>
+        <div id="orderDetail"></div>
+        <div class="actions">
+          <a class="button-link secondary" id="orderCall" href="#">Call customer</a
+          ><a class="button-link" id="orderWhatsApp" href="#" target="_blank" rel="noopener"
+            >WhatsApp customer</a
+          >
+        </div>
+      </div>
+    </dialog>
+    <dialog id="passwordDialog">
+      <form method="dialog" class="dialog-card" id="passwordForm">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Account security</span>
+            <h2 id="passwordTitle">Reset your password</h2>
+          </div>
+          <button class="secondary icon-button" type="button" data-close-dialog="passwordDialog">
+            ×
+          </button>
+        </div>
+        <p id="passwordHelp">We will email you a secure password-reset link.</p>
+        <label>Email<input name="email" type="email" autocomplete="email" /></label
+        ><label class="hidden"
+          >New password<input
+            name="new_password"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+        /></label>
+        <div class="actions">
+          <button class="secondary" type="button" data-close-dialog="passwordDialog">Cancel</button
+          ><button type="submit" id="passwordSubmit">Send reset link</button>
+        </div>
+        <p class="message" id="passwordMessage"></p>
+      </form>
+    </dialog>
+    <script src="platform-config.js?v=4"></script>
+    <script src="business-admin.js?v=9"></script>
+    <script src="admin-pwa.js?v=12"></script>
+  </body>
+</html>

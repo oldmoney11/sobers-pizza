@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "Sobers Pizza Admin",
+  "short_name": "Sobers Admin",
+  "description": "Manage Sobers Pizza orders, products and business settings.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090909",
+  "theme_color": "#e51f26",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
