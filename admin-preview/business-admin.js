@@ -111,7 +111,7 @@
     async function loadAll() {
         if (!business) return;
         const [orderResult, productResult, categoryResult, branchResult, settingsResult, paymentResult, noticeResult] = await Promise.all([
-            db.from("platform_orders").select("*").eq("business_id", business.id).order("created_at", { ascending: false }),
+            db.from("platform_orders").select("*").eq("business_id", business.id).order("created_at", { ascending: false }).limit(500),
             db.from("products").select("*,categories(name)").eq("business_id", business.id).eq("is_active", true).order("sort_order"),
             db.from("categories").select("*").eq("business_id", business.id).order("sort_order"),
             db.from("branches").select("*").eq("business_id", business.id).order("name"),

@@ -37,19 +37,24 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   const BUSINESS = {
-    whatsappNumber: "233204863743",
+    whatsappNumber: "233542704084",
+    defaultWhatsAppNumber: "233542704084",
     currency: "GH₵",
     storageKey: "sobersPizzaCart",
     branchStorageKey: "sobersPizzaBranch",
   };
   const FALLBACK_BRANCHES = [
-    { code: "MAIN-BRANCH", name: "PAKOS Road", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233247836769", is_active: true },
+    { code: "MAIN-BRANCH", name: "PAKOS Road", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", is_active: true },
     { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", is_active: true },
   ];
   let branches = [...FALLBACK_BRANCHES];
   let selectedBranch = null;
   let settingsSync = Promise.resolve();
   let branchNoticeTimer = 0;
+
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[character]);
 
   function normalizeGhanaNumber(value) {
     let number = String(value || "").replace(/\D/g, "");
@@ -60,8 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function chooseBranch(branch, remember = true) {
     if (!branch) return;
     selectedBranch = branch;
-    const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone);
-    if (number) applyWhatsAppNumber(number);
+    const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
+    applyWhatsAppNumber(number);
     document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
     const branchButton = document.querySelector("#spBranchButton");
     if (branchButton) {
@@ -79,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBranches() {
     const host = document.querySelector("#spBranchList");
     if (!host) return;
-    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${branch.code}"><span>⌖</span><span><strong>${branch.name}</strong><small>${branch.address || "Order from this location"}</small></span><i>→</i></button>`).join("");
+    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}"><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "Order from this location")}</small></span><i>→</i></button>`).join("");
     host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
   }
 
@@ -120,6 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,is_active&order=name.asc`, { headers, cache: "no-store" }),
       ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
+      const settingsNumber = normalizeGhanaNumber(settings?.whatsapp_number);
+      if (settingsNumber) BUSINESS.defaultWhatsAppNumber = settingsNumber;
       const liveBranches = branchesResponse.ok ? await branchesResponse.json() : [];
       if (liveBranches.length) branches = liveBranches;
       renderBranches();
@@ -127,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try { savedCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
       chooseBranch(branches.find(branch => branch.code === savedCode) || branches.find(branch => branch.code === "MAIN-BRANCH") || branches[0], false);
       if (!savedCode) window.setTimeout(openBranchChooser, 2350);
-      if (!selectedBranch) applyWhatsAppNumber(settings?.whatsapp_number);
     } catch (error) {
       console.warn("Sobers settings could not be refreshed; using the last available number.");
     }
@@ -628,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sizeChoices = product?.options?.size?.[2];
     const firstAvailable = sizeChoices
       ? availableProductChoices("size", sizeChoices).sort((left, right) => {
-          const order = ["small", "medium", "large", "x_large", "regular", "family"];
+          const order = ["mini_small", "small", "medium", "large", "x_large", "regular", "family"];
           const a = order.indexOf(left[0]);
           const b = order.indexOf(right[0]);
           return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
