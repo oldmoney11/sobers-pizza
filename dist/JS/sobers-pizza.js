@@ -1801,8 +1801,14 @@ document.addEventListener("DOMContentLoaded", () => {
           ? window.SobersPlatformOrders.submit(databaseOrder)
           : Promise.resolve({ saved: false, queued: false, result: null });
 
-        await settingsSync;
-        const [, databaseResult] = await Promise.all([syncBusinessSettings(), databasePromise]);
+        // The branch number is already loaded when the app starts and whenever
+        // the customer changes branch. Do not make checkout wait on another
+        // settings request. Give the order API a short opportunity to return an
+        // official reference, then open WhatsApp immediately on slower networks.
+        const databaseResult = await Promise.race([
+          databasePromise,
+          new Promise((resolve) => window.setTimeout(() => resolve({ saved: false, queued: true, result: null }), 900)),
+        ]);
 
         const orderNumber = databaseResult.result?.order_number || "";
 
