@@ -494,7 +494,12 @@
 
     if (new URLSearchParams(location.search).has("preview")) {
         business = { id: "preview", name: businessLabel }; $("#login").classList.add("hidden"); $("#app").classList.remove("hidden"); $("#userName").textContent = "Preview mode";
-        categories = [{id:"c1",name:"Featured",slug:"featured",description:`Featured ${businessLabel} products`,sort_order:1,is_active:true}];
-        products = [{id:"p1",category_id:"c1",name:"Signature product",description:"Example product for dashboard preview.",base_price:100,sort_order:1,is_available:true,is_active:true,options:{},categories:{name:"Featured"}}]; branches=[]; paymentMethods=[]; orders=[]; renderProducts(); renderCategories(); renderBranches(); renderPaymentMethods(); renderOrders(); renderStats(); $("#setupNotice").textContent = "Visual preview only — sample data is not saved.";
+        categories = [{id:"c1",name:"Pizza",slug:"pizza",description:"Sobers signature pizzas",sort_order:1,is_active:true},{id:"c2",name:"Sides",slug:"sides",description:"Sides and extras",sort_order:2,is_active:true}];
+        products = [
+            {id:"p1",category_id:"c1",name:"Pepperoni Pizza",description:"Mozzarella, pepperoni and Sobers tomato sauce.",base_price:60,image_url:"assets/sobers-pizza/pizzas/pepperoni.jpg",sort_order:1,is_available:true,is_active:true,options:{},categories:{name:"Pizza"}},
+            {id:"p2",category_id:"c1",name:"BBQ Chicken Pizza",description:"Smoky barbecue chicken with a rich cheese finish.",base_price:80,image_url:"assets/sobers-pizza/pizzas/bbq-chicken.jpg",sort_order:2,is_available:true,is_active:true,options:{},categories:{name:"Pizza"}},
+            {id:"p3",category_id:"c1",name:"Meat Lover Pizza",description:"A generous, loaded meat selection.",base_price:50,image_url:"assets/sobers-pizza/pizzas/meat-lovers.jpg",sort_order:3,is_available:true,is_active:true,options:{},categories:{name:"Pizza"}},
+            {id:"p4",category_id:"c2",name:"Loaded Fries",description:"Crispy fries finished with Sobers loaded toppings.",base_price:60,image_url:"assets/sobers-pizza/sides/loaded-fries.jpg",sort_order:4,is_available:true,is_active:true,options:{},categories:{name:"Sides"}}
+        ]; branches=[]; paymentMethods=[]; orders=[]; renderProducts(); renderCategories(); renderBranches(); renderPaymentMethods(); renderOrders(); renderStats(); $("#setupNotice").textContent = "Visual preview only — sample data is not saved.";
     } else session();
 })();

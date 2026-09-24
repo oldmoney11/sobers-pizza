@@ -2,7 +2,7 @@ window.RichRepublicConfig = Object.freeze({
     supabaseUrl: "https://inthadecmxmbqexufzpe.supabase.co",
     supabasePublishableKey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
     sobersSlug: "sobers-pizza",
-    customerAppBaseUrl: "https://soberspizza.com/"
+    customerAppBaseUrl: "https://sobers-pizza-owner-preview.richmondmorgan37.chatgpt.site/"
 });
 
 window.RichRepublicSupabase = window.supabase.createClient(
