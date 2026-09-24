@@ -37,6 +37,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify(order),
+      keepalive: true,
     });
 
     const body = await response.json().catch(() => null);

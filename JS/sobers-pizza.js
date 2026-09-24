@@ -1787,30 +1787,15 @@ document.addEventListener("DOMContentLoaded", () => {
           })),
         };
 
-        // Open the destination synchronously while the submit gesture is still
-        // active. Mobile browsers may block a new window opened after awaits.
-        const whatsappWindow = window.open("about:blank", "_blank");
-
-        if (whatsappWindow) {
-          whatsappWindow.opener = null;
-          whatsappWindow.document.title = "Preparing Sobers order";
-          whatsappWindow.document.body.textContent = "Preparing your WhatsApp order…";
-        }
-
         const databasePromise = window.SobersPlatformOrders
           ? window.SobersPlatformOrders.submit(databaseOrder)
           : Promise.resolve({ saved: false, queued: false, result: null });
+        // Do not await the database here. Mobile browsers can refuse a delayed
+        // redirect to WhatsApp even when an intermediate tab was opened during
+        // the tap. The save continues in the background.
+        void databasePromise;
 
-        // The branch number is already loaded when the app starts and whenever
-        // the customer changes branch. Do not make checkout wait on another
-        // settings request. Give the order API a short opportunity to return an
-        // official reference, then open WhatsApp immediately on slower networks.
-        const databaseResult = await Promise.race([
-          databasePromise,
-          new Promise((resolve) => window.setTimeout(() => resolve({ saved: false, queued: true, result: null }), 900)),
-        ]);
-
-        const orderNumber = databaseResult.result?.order_number || "";
+        const orderNumber = "";
 
         /* =========================================
                        CREATE WHATSAPP ORDER MESSAGE
@@ -1867,11 +1852,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const whatsappURL =
           `https://wa.me/${BUSINESS.whatsappNumber}` + `?text=${encodeURIComponent(message)}`;
 
-        if (whatsappWindow) {
-          whatsappWindow.location.replace(whatsappURL);
-        } else {
-          window.location.href = whatsappURL;
-        }
+        const whatsappWindow = window.open(whatsappURL, "_blank", "noopener");
+        if (!whatsappWindow) window.location.assign(whatsappURL);
 
         /* =========================================
                        CLEAR CART
@@ -1879,13 +1861,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clearCartAfterOrder();
 
-        alert(
-          databaseResult.saved
-            ? "Your order has been saved. WhatsApp will open so you can send it to Sobers Pizza."
-            : databaseResult.queued
-              ? "WhatsApp will open now. The online copy will retry automatically when your connection returns."
-              : "WhatsApp will open now. We could not confirm the database copy, so please send the WhatsApp message to complete your order.",
-        );
       } catch (error) {
         console.error("Sobers Pizza checkout error:", error);
 
