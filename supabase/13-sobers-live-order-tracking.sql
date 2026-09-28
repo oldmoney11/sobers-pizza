@@ -1,6 +1,8 @@
 -- Sobers Pizza: instant customer tracking references and live status lookup.
 -- Safe to run more than once. This migration is mirrored from staging/supabase.
 
+drop function if exists public.create_public_order_v2(text,text,text,public.fulfilment_type,text,text,jsonb,text,text);
+
 create or replace function public.create_public_order_v2(
     business_slug text,
     customer_name text,
@@ -10,7 +12,7 @@ create or replace function public.create_public_order_v2(
     customer_note text default null,
     requested_items jsonb default '[]'::jsonb,
     branch_code text default null,
-    client_request_id text default null
+    client_request_id uuid default null
 )
 returns table (order_id uuid, order_number text, order_total numeric)
 language plpgsql
@@ -20,9 +22,9 @@ as $$
 declare
     existing_order public.platform_orders%rowtype;
     created_order record;
-    clean_request_id text := upper(trim(coalesce(client_request_id, '')));
+    clean_request_id uuid := client_request_id;
 begin
-    if clean_request_id !~ '^WEB-[A-Z0-9-]{8,40}$' then
+    if clean_request_id is null then
         raise exception 'A valid customer tracking reference is required';
     end if;
 
@@ -58,8 +60,8 @@ begin
 end;
 $$;
 
-revoke all on function public.create_public_order_v2(text,text,text,public.fulfilment_type,text,text,jsonb,text,text) from public;
-grant execute on function public.create_public_order_v2(text,text,text,public.fulfilment_type,text,text,jsonb,text,text) to anon, authenticated;
+revoke all on function public.create_public_order_v2(text,text,text,public.fulfilment_type,text,text,jsonb,text,uuid) from public;
+grant execute on function public.create_public_order_v2(text,text,text,public.fulfilment_type,text,text,jsonb,text,uuid) to anon, authenticated;
 
 create or replace function public.track_public_order(
     p_business_slug text,
@@ -87,7 +89,7 @@ begin
       and b.status = 'active'
       and (
         upper(trim(o.order_number)) = upper(trim(p_order_number))
-        or upper(trim(coalesce(o.client_request_id, ''))) = upper(trim(p_order_number))
+        or lower(o.client_request_id::text) = lower(trim(p_order_number))
       )
       and regexp_replace(coalesce(o.customer_phone, ''), '\D', '', 'g') =
           regexp_replace(coalesce(p_customer_phone, ''), '\D', '', 'g')

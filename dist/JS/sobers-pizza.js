@@ -1726,7 +1726,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const note = String(form.get("note") || "").trim();
 
-        const clientReference = `WEB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        const clientReference = window.crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (character) =>
+          (character ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> character / 4).toString(16)
+        );
 
         if (!customerName) {
           alert("Please enter your name.");
