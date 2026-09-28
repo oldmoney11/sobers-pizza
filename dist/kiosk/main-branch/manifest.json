@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Sobers Pizza Main Branch Kiosk",
+  "name": "Sobers Pizza Town Branch Kiosk",
   "short_name": "Sobers Kiosk",
-  "description": "Sobers Pizza Main Branch self-service ordering kiosk.",
+  "description": "Sobers Pizza Town Branch self-service ordering kiosk.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

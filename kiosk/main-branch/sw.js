@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "sobers-main-branch-kiosk-v3";
+const CACHE_NAME = "sobers-main-branch-kiosk-v4";
 const APP_SHELL = [
   "./",
   "./index.html",

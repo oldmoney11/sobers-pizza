@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     branchStorageKey: "sobersPizzaBranch",
   };
   const FALLBACK_BRANCHES = [
-    { code: "MAIN-BRANCH", name: "PAKOS Road", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", is_active: true },
+    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", is_active: true },
     { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", is_active: true },
   ];
   let branches = [...FALLBACK_BRANCHES];
@@ -1828,7 +1828,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           `Live tracking: ${trackingURL}`,
 
-          `Branch: ${selectedBranch?.name || "PAKOS Road"}`,
+          `Branch: ${selectedBranch?.name || "Town"}`,
 
           "",
 
