@@ -234,7 +234,7 @@
     }
     function renderBranches() {
         $("#branchesEmpty").classList.toggle("hidden", branches.length > 0);
-        $("#branchesBody").innerHTML = branches.map(branch => `<tr><td>${esc(branch.name)}</td><td>${esc(branch.code)}</td><td>${esc(branch.whatsapp_number || "")}</td><td>${esc(branch.address || "")}</td><td><span class="badge ${branch.is_active ? "active" : "inactive"}">${branch.is_active ? "Active" : "Inactive"}</span></td><td><button class="secondary" data-branch-edit="${branch.id}">Edit</button></td></tr>`).join("");
+        $("#branchesBody").innerHTML = branches.map(branch => `<tr><td>${esc(branch.name)}</td><td>${esc(branch.code)}</td><td>${esc(branch.whatsapp_number || "")}</td><td><span class="badge ${branch.accepting_orders === false ? "inactive" : "active"}">${branch.accepting_orders === false ? "Paused" : "Accepting"}</span></td><td>${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min</td><td>${esc(branch.address || "")}</td><td><span class="badge ${branch.is_active ? "active" : "inactive"}">${branch.is_active ? "Active" : "Inactive"}</span></td><td><button class="secondary" data-branch-edit="${branch.id}">Edit</button></td></tr>`).join("");
     }
     function renderPaymentMethods() {
         $("#paymentMethodsEmpty").classList.toggle("hidden", paymentMethods.length > 0);
@@ -321,7 +321,7 @@
         $("#noticeDialogTitle").textContent = item ? "Edit notice" : "Add notice"; $("#archiveNotice").classList.toggle("hidden", !item); $("#noticeMessage").textContent = ""; openDialog("noticeDialog");
     }
     function editBranch(branch = null) {
-        const form = $("#branchForm"); form.reset(); ["id","name","code","phone","whatsapp_number","address"].forEach(key => form.elements[key].value = branch?.[key] || ""); form.elements.is_active.checked = branch?.is_active ?? true;
+        const form = $("#branchForm"); form.reset(); ["id","name","code","phone","whatsapp_number","address"].forEach(key => form.elements[key].value = branch?.[key] || ""); form.elements.prep_min_minutes.value = branch?.prep_min_minutes ?? 20; form.elements.prep_max_minutes.value = branch?.prep_max_minutes ?? 30; form.elements.accepting_orders.checked = branch?.accepting_orders ?? true; form.elements.is_active.checked = branch?.is_active ?? true;
         $("#branchDialogTitle").textContent = branch ? "Edit branch" : "Add branch"; $("#deleteBranch").classList.toggle("hidden", !branch); $("#branchMessage").textContent = ""; openDialog("branchDialog");
     }
     function editPaymentMethod(method = null) {
@@ -383,7 +383,9 @@
     };
     $("#branchForm").onsubmit = async event => {
         event.preventDefault(); const form = event.target; const id = form.elements.id.value; $("#branchMessage").textContent = "Saving branch…";
-        const payload = { business_id: business.id, name: form.elements.name.value.trim(), code: form.elements.code.value.trim().toUpperCase(), phone: form.elements.phone.value.trim() || null, whatsapp_number: form.elements.whatsapp_number.value.trim() || null, address: form.elements.address.value.trim() || null, is_active: form.elements.is_active.checked };
+        const prepMin = Number(form.elements.prep_min_minutes.value || 20); const prepMax = Number(form.elements.prep_max_minutes.value || 30);
+        if (prepMax < prepMin) return $("#branchMessage").textContent = "Maximum preparation time must be greater than or equal to the minimum.";
+        const payload = { business_id: business.id, name: form.elements.name.value.trim(), code: form.elements.code.value.trim().toUpperCase(), phone: form.elements.phone.value.trim() || null, whatsapp_number: form.elements.whatsapp_number.value.trim() || null, address: form.elements.address.value.trim() || null, accepting_orders: form.elements.accepting_orders.checked, prep_min_minutes: prepMin, prep_max_minutes: prepMax, is_active: form.elements.is_active.checked };
         const result = id ? await db.from("branches").update(payload).eq("id", id).eq("business_id", business.id) : await db.from("branches").insert(payload);
         if (result.error) return $("#branchMessage").textContent = result.error.message; closeDialog("branchDialog"); await loadAll();
     };

@@ -25,9 +25,17 @@
     $("#receiptNumber").textContent = order.order_number;
     $("#receiptStatus").textContent = statusLabel(order);
     $("#orderProgress").innerHTML = statuses.map((status, index) => `<div class="progress-step ${index <= current ? "done" : ""} ${index === current ? "current" : ""}"><span class="step" title="${esc(status)}"></span><small>${esc(labels[index])}</small></div>`).join("");
-    $("#receiptMeta").innerHTML = `<div><small>Order type</small><strong>${esc(order.fulfilment.replace(/_/g, " "))}</strong></div><div><small>Payment</small><strong>${esc(order.payment_status)}</strong></div><div><small>Last updated</small><strong>${new Date(order.updated_at || order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div>`;
+    const prep = order.prep_min_minutes && order.prep_max_minutes ? `${order.prep_min_minutes}–${order.prep_max_minutes} min` : "Confirming";
+    $("#receiptMeta").innerHTML = `<div><small>Branch</small><strong>${esc(order.branch_name || "Sobers Pizza")}</strong></div><div><small>Estimated prep</small><strong>${esc(prep)}</strong></div><div><small>Order type</small><strong>${esc(order.fulfilment.replace(/_/g, " "))}</strong></div><div><small>Payment</small><strong>${esc(order.payment_status)}</strong></div><div><small>Last updated</small><strong>${new Date(order.updated_at || order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div>`;
     $("#receiptItems").innerHTML = (order.items || []).map((item) => `<div class="item"><div><b>${Number(item.quantity)} × ${esc(item.name)}</b></div><strong>${money(item.line_total)}</strong></div>`).join("");
     $("#receiptTotal").textContent = money(order.total);
+    const contact = $("#branchContact");
+    const whatsapp = String(order.branch_whatsapp_number || order.branch_phone || "").replace(/\D/g, "").replace(/^0/, "233");
+    if (whatsapp) {
+      contact.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello Sobers Pizza ${order.branch_name || ""}, I need help with order ${order.order_number}.`)}`;
+      contact.textContent = `Contact ${order.branch_name || "this branch"} on WhatsApp`;
+      contact.classList.remove("hidden");
+    } else contact.classList.add("hidden");
     $("#trackMessage").textContent = "";
     $("#liveState").textContent = ["completed", "cancelled"].includes(order.status) ? "Tracking complete" : "Live updates on · checking automatically";
     $("#receipt").classList.remove("hidden");

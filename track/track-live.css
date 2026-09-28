@@ -4,6 +4,9 @@
 .progress-step.done .step { background: var(--red); }
 .progress-step.current .step { box-shadow: 0 0 0 4px rgba(239,35,60,.15); }
 .progress-step.current small { color: var(--cream); font-weight: 800; }
+.contact { display: flex; align-items: center; justify-content: center; min-height: 48px; margin: 18px 0 0; padding: 12px 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; background: rgba(255,255,255,.07); color: var(--cream); font-weight: 800; text-align: center; text-decoration: none; }
+.contact:hover { border-color: rgba(239,35,60,.65); background: rgba(239,35,60,.14); }
+.contact.hidden { display: none; }
 @media (max-width: 620px) {
   input { font-size: 16px; }
   .progress { gap: 5px; }

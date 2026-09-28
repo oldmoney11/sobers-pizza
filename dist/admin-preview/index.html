@@ -228,6 +228,8 @@
                       <th>Name</th>
                       <th>Code</th>
                       <th>WhatsApp</th>
+                      <th>Online orders</th>
+                      <th>Prep time</th>
                       <th>Address</th>
                       <th>Status</th>
                     </tr>
@@ -410,7 +412,10 @@
           ><label>Branch code<input name="code" required /></label
           ><label>Phone<input name="phone" /></label
           ><label>WhatsApp <small>Editable branch contact</small><input name="whatsapp_number" /></label
+          ><label>Minimum prep time <small>Minutes</small><input name="prep_min_minutes" type="number" min="5" max="180" value="20" /></label
+          ><label>Maximum prep time <small>Minutes</small><input name="prep_max_minutes" type="number" min="5" max="240" value="30" /></label
           ><label class="wide">Address<textarea name="address" rows="3"></textarea></label
+          ><label><input name="accepting_orders" type="checkbox" checked /> Accepting online orders</label
           ><label><input name="is_active" type="checkbox" checked /> Branch active</label>
         </div>
         <div class="actions">
@@ -469,7 +474,7 @@
       </form>
     </dialog>
     <script src="platform-config.js?v=5"></script>
-    <script src="business-admin.js?v=10"></script>
+    <script src="business-admin.js?v=11"></script>
     <script src="admin-pwa.js?v=13"></script>
   </body>
 </html>

@@ -1011,6 +1011,30 @@ select:focus-visible {
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.4);
 }
 
+.sp-menu-card.is-sold-out {
+  opacity: 0.66;
+}
+
+.sp-menu-card.is-sold-out:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sp-menu-card.is-sold-out .sp-menu-image img {
+  filter: grayscale(0.45) brightness(0.68);
+}
+
+.sp-menu-badge-soldout {
+  background: rgba(18, 18, 18, 0.92);
+}
+
+.sp-menu-card footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.72);
+}
+
 /* =========================================================
    MENU IMAGE
 ========================================================= */

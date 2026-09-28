@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     branchStorageKey: "sobersPizzaBranch",
   };
   const FALLBACK_BRANCHES = [
-    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", is_active: true },
-    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", is_active: true },
+    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
   ];
   let branches = [...FALLBACK_BRANCHES];
   let selectedBranch = null;
@@ -77,6 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
       branchNoticeTimer = window.setTimeout(() => branchButton.classList.remove("is-notifying"), 2400);
     }
     document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
+    const checkoutMeta = document.querySelector("#spCheckoutBranchMeta");
+    if (checkoutMeta) checkoutMeta.textContent = branch.accepting_orders === false
+      ? "Online orders are paused"
+      : `Usually ready in ${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`;
     document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
     if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
   }
@@ -84,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBranches() {
     const host = document.querySelector("#spBranchList");
     if (!host) return;
-    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}"><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "Order from this location")}</small></span><i>→</i></button>`).join("");
+    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "Order from this location")} · ${branch.accepting_orders === false ? "Orders paused" : `${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`).join("");
     host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
   }
 
@@ -122,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!businessRow) return BUSINESS.whatsappNumber;
       const [settingsResponse, branchesResponse] = await Promise.all([
         fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`, { headers, cache: "no-store" }),
-        fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,is_active&order=name.asc`, { headers, cache: "no-store" }),
+        fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,accepting_orders,prep_min_minutes,prep_max_minutes,is_active&order=name.asc`, { headers, cache: "no-store" }),
       ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
       const settingsNumber = normalizeGhanaNumber(settings?.whatsapp_number);
@@ -564,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const [productsResponse, settingsResponse] = await Promise.all([
         fetch(
-          `${supabaseUrl}/rest/v1/products?business_id=eq.${businessRow.id}&is_active=eq.true&is_available=eq.true&select=slug,name,description,image_url,base_price,options,sort_order,categories!inner(slug,name,is_active)&categories.is_active=eq.true&order=sort_order.asc`,
+          `${supabaseUrl}/rest/v1/products?business_id=eq.${businessRow.id}&is_active=eq.true&select=slug,name,description,image_url,base_price,options,sort_order,is_available,categories!inner(slug,name,is_active)&categories.is_active=eq.true&order=sort_order.asc`,
           { headers },
         ),
         fetch(
@@ -594,6 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
           image: product.image_url || "assets/logo/favicon-512.png",
           description: product.description || "",
           options: product.options || {},
+          available: product.is_available !== false,
         };
       });
 
@@ -1016,7 +1021,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const imagePriority = imageRenderIndex++;
         const card = document.createElement("article");
 
-        card.className = "sp-menu-card";
+        card.className = `sp-menu-card${product.available === false ? " is-sold-out" : ""}`;
 
         card.innerHTML = `
 
@@ -1031,7 +1036,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             >
 
                             ${
-                              product.featured
+                              product.available === false
+                                ? `<span class="sp-menu-badge sp-menu-badge-soldout">SOLD OUT</span>`
+                                : product.featured
                                 ? `
                                         <span
                                             class="sp-menu-badge"
@@ -1078,8 +1085,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <button
                                         type="button"
                                         data-product="${key}"
+                                        ${product.available === false ? "disabled" : ""}
                                     >
-                                        View & Order
+                                        ${product.available === false ? "Sold out" : "View & Order"}
                                     </button>
 
                                 </footer>
@@ -1357,7 +1365,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   function addProduct() {
-    if (!activeProduct) {
+    if (!activeProduct || activeProduct.available === false) {
       return;
     }
 
@@ -1444,6 +1452,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cart.length) {
       alert("Your cart is empty.");
 
+      return;
+    }
+
+    if (!selectedBranch || selectedBranch.accepting_orders === false) {
+      alert("Online orders are currently paused for this branch. Please choose another branch.");
+      openBranchChooser();
       return;
     }
 
