@@ -29,7 +29,7 @@
 
   async function send(order) {
     const customerToken = window.SobersCustomerAuth?.getAccessToken?.();
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_public_order`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_public_order_v2`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_KEY,

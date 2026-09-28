@@ -1726,6 +1726,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const note = String(form.get("note") || "").trim();
 
+        const clientReference = `WEB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+
         if (!customerName) {
           alert("Please enter your name.");
 
@@ -1768,6 +1770,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
           branch_code: selectedBranch?.code || "MAIN-BRANCH",
 
+          client_request_id: clientReference,
+
           customer_name: customerName,
 
           customer_phone: customerPhone,
@@ -1795,7 +1799,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // the tap. The save continues in the background.
         void databasePromise;
 
-        const orderNumber = "";
+        const orderNumber = clientReference;
+
+        const trackingURL = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}track/#ref=${encodeURIComponent(clientReference)}&phone=${encodeURIComponent(normalizedCustomerPhone)}`;
 
         /* =========================================
                        CREATE WHATSAPP ORDER MESSAGE
@@ -1817,6 +1823,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "*NEW SOBERS PIZZA ORDER*",
 
           orderNumber ? `Order: ${orderNumber}` : "",
+
+          `Live tracking: ${trackingURL}`,
 
           `Branch: ${selectedBranch?.name || "PAKOS Road"}`,
 

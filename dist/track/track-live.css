@@ -1,0 +1,11 @@
+.live-state { display: block; color: #82e6ae; font-weight: 750; }
+.progress-step { display: grid; gap: 8px; min-width: 0; }
+.progress-step small { overflow: hidden; color: var(--muted); font-size: .72rem; text-overflow: ellipsis; }
+.progress-step.done .step { background: var(--red); }
+.progress-step.current .step { box-shadow: 0 0 0 4px rgba(239,35,60,.15); }
+.progress-step.current small { color: var(--cream); font-weight: 800; }
+@media (max-width: 620px) {
+  input { font-size: 16px; }
+  .progress { gap: 5px; }
+  .progress-step small { font-size: .62rem; }
+}
