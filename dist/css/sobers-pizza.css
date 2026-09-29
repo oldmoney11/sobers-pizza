@@ -1011,30 +1011,6 @@ select:focus-visible {
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.4);
 }
 
-.sp-menu-card.is-sold-out {
-  opacity: 0.66;
-}
-
-.sp-menu-card.is-sold-out:hover {
-  transform: none;
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.sp-menu-card.is-sold-out .sp-menu-image img {
-  filter: grayscale(0.45) brightness(0.68);
-}
-
-.sp-menu-badge-soldout {
-  background: rgba(18, 18, 18, 0.92);
-}
-
-.sp-menu-card footer button:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.72);
-}
-
 /* =========================================================
    MENU IMAGE
 ========================================================= */
@@ -2576,8 +2552,7 @@ select:focus-visible {
 
   color: var(--sp-white);
 
-  /* 16px prevents iOS Safari from zooming the whole page on focus. */
-  font-size: 16px;
+  font-size: 11px;
 
   transition:
     border-color var(--sp-transition),
@@ -3470,33 +3445,11 @@ select:focus-visible {
   .sp-checkout {
     width: 100%;
 
-    max-height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px);
 
     padding: 28px 17px;
 
     border-radius: 21px 21px 0 0;
-
-    overscroll-behavior: contain;
-
-    scroll-padding-top: 90px;
-
-    scroll-padding-bottom: max(150px, env(safe-area-inset-bottom));
-
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .sp-checkout input,
-  .sp-checkout textarea,
-  .sp-checkout select,
-  .sp-profile-card input,
-  .sp-profile-card textarea {
-    font-size: 16px;
-  }
-
-  .sp-checkout input:focus,
-  .sp-checkout textarea:focus,
-  .sp-checkout select:focus {
-    scroll-margin-block: 110px 180px;
   }
 
   .sp-checkout h2 {

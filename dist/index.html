@@ -14,22 +14,13 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="css/sobers-pizza.css?v=18" />
+    <link rel="stylesheet" href="css/sobers-pizza.css?v=17" />
     <link rel="stylesheet" href="css/sobers-vibrant.css?v=11" />
     <link rel="stylesheet" href="css/sobers-urban.css?v=10" />
     <link rel="stylesheet" href="css/sobers-glass.css?v=9" />
-    <link rel="stylesheet" href="css/sobers-customer.css?v=8" />
-    <link rel="stylesheet" href="css/sobers-polished.css?v=4" />
+    <link rel="stylesheet" href="css/sobers-customer.css?v=7" />
 
-    <link rel="preload" as="image" href="assets/sobers-pizza/pizzas/meat-lovers.jpg" fetchpriority="high" />
-
-    <link rel="manifest" href="manifest.json?v=2" />
-
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="assets/logo/apple-touch-icon.png"
-    />
+    <link rel="manifest" href="manifest.json?v=1" />
 
     <meta name="theme-color" content="#10131a" />
 
@@ -40,8 +31,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
     <meta name="apple-mobile-web-app-title" content="Sobers Pizza" />
-
-    <meta name="format-detection" content="telephone=no" />
   </head>
 
   <body id="top">
@@ -102,38 +91,13 @@
       </div>
     </header>
 
-    <button
-      type="button"
-      class="sp-branch-fab"
-      id="spBranchButton"
-      aria-haspopup="dialog"
-      aria-label="Change ordering branch"
-      title="Change ordering branch"
-    >
-      <span class="sp-branch-fab-icon" aria-hidden="true">⌖</span>
-      <span class="sp-branch-fab-label">
-        <small>Ordering from</small>
-        <strong id="spBranchLabel">Choose branch</strong>
-      </span>
-    </button>
-
-    <div class="sp-branch-overlay" id="spBranchOverlay" aria-hidden="true">
-      <section class="sp-branch-card" role="dialog" aria-modal="true" aria-labelledby="spBranchTitle">
-        <button type="button" class="sp-branch-close" id="spBranchClose" aria-label="Close branch chooser">×</button>
-        <p>YOUR SOBERS LOCATION</p>
-        <h2 id="spBranchTitle">Where are you ordering from?</h2>
-        <span>Choose the branch that should prepare and receive this order. You can change it anytime.</span>
-        <div class="sp-branch-list" id="spBranchList" aria-live="polite"></div>
-      </section>
-    </div>
-
     <main>
       <!-- =====================================================
      HERO
 ===================================================== -->
 
       <section class="sp-hero">
-        <img src="assets/sobers-pizza/pizzas/meat-lovers.jpg" alt="Loaded Sobers Pizza with a fresh cheese pull" fetchpriority="high" decoding="async" />
+        <img src="assets/sobers-pizza/hero/sobers-hero.jpg" alt="Freshly made Sobers Pizza" />
 
         <div class="sp-hero-overlay"></div>
 
@@ -144,11 +108,11 @@
             <p class="sp-eyebrow">FRESH FROM THE OVEN</p>
 
             <h1>
-              Fresh out the oven.
-              <em>Built differently.</em>
+              Pizza with a
+              <em>little attitude.</em>
             </h1>
 
-            <span> Big flavour, crisp crust and loaded toppings—made fresh the moment you order. </span>
+            <span> Big flavour. Crisp crust. Loaded toppings. Made fresh when you order it. </span>
 
             <div class="sp-hero-actions">
               <a href="#menu" class="sp-primary-button">
@@ -299,8 +263,6 @@
               <img
                 src="assets/sobers-pizza/brand/chef-sobers.jpg"
                 alt="Sobers Pizza chef preparing fresh pizza"
-                loading="lazy"
-                decoding="async"
               />
 
               <div class="sp-brand-image-overlay"></div>
@@ -328,7 +290,7 @@
 
           <article class="sp-brand-card">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/fresh-dough.jpg" alt="Fresh Sobers Pizza dough" loading="lazy" decoding="async" />
+              <img src="assets/sobers-pizza/brand/fresh-dough.jpg" alt="Fresh Sobers Pizza dough" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -353,7 +315,7 @@
 
           <article class="sp-brand-card">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/pizza-oven.jpg" alt="Sobers Pizza oven" loading="lazy" decoding="async" />
+              <img src="assets/sobers-pizza/brand/pizza-oven.jpg" alt="Sobers Pizza oven" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -380,7 +342,7 @@
 
           <article class="sp-brand-card sp-brand-card-delivery">
             <div class="sp-brand-image">
-              <img src="assets/sobers-pizza/brand/delivery.jpg" alt="Sobers Pizza delivery" loading="lazy" decoding="async" />
+              <img src="assets/sobers-pizza/brand/delivery.jpg" alt="Sobers Pizza delivery" />
 
               <div class="sp-brand-image-overlay"></div>
             </div>
@@ -465,7 +427,7 @@
 
           <a href="track/"> Track order </a>
 
-          <a href="../../index.html" title="Open the Rich Republic Explore Ghana ecosystem"> Explore Ghana </a>
+          <a href="https://rich-republic-owner-preview.richmondmorgan37.chatgpt.site/" title="Open the Rich Republic Explore Ghana ecosystem"> Explore Ghana </a>
 
           <a
             href="https://wa.me/233204863743"
@@ -483,7 +445,7 @@
           <span> © 2026 Sobers Pizza </span>
         </div>
 
-        <div class="sp-powered-by">POWERED BY <span>RICH REPUBLIC</span></div>
+        <a class="sp-powered-by" href="https://rich-republic-owner-preview.richmondmorgan37.chatgpt.site/">POWERED BY <span>RICH REPUBLIC</span></a>
       </footer>
     </main>
 
@@ -552,17 +514,13 @@
     <aside class="sp-cart" id="spCart" aria-hidden="true">
       <header>
         <div>
-          <p>YOUR OVEN ORDER</p>
+          <p>SOBERS PIZZA</p>
 
-          <h2>Ready for the oven.</h2>
+          <h2>Your order</h2>
         </div>
 
         <button type="button" id="spCartClose" aria-label="Close cart">×</button>
       </header>
-
-      <div class="sp-oven-progress" aria-label="Order stages">
-        <span>Review</span><span>Details</span><span>Confirm</span><span>Track</span>
-      </div>
 
       <div class="sp-cart-body">
         <div class="sp-empty" id="spEmpty">
@@ -586,7 +544,7 @@
         <p>Delivery cost is confirmed on WhatsApp.</p>
 
         <button type="button" id="spCheckoutButton">
-          Review delivery & checkout
+          Continue to checkout
           <span>→</span>
         </button>
       </footer>
@@ -614,9 +572,6 @@
         </span>
 
         <form id="spCheckoutForm">
-          <button type="button" class="sp-checkout-branch" id="spCheckoutBranch">
-            <span>Preparing branch</span><strong id="spCheckoutBranchName">Choose branch</strong><small id="spCheckoutBranchMeta">Change</small>
-          </button>
           <label>
             Your name
 
@@ -703,8 +658,8 @@
       </section>
     </div>
 
-    <script src="JS/sobers-platform-orders.js?v=6"></script>
-    <script src="JS/sobers-pizza.js?v=21"></script>
+    <script src="JS/sobers-platform-orders.js?v=3"></script>
+    <script src="JS/sobers-pizza.js?v=12"></script>
     <script src="JS/sobers-notices.js?v=2"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=4"></script>
@@ -714,7 +669,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=53")
+            .register("./sw.js?v=44")
             .then((registration) => {
               registration.update();
 
@@ -726,11 +681,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v53")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v44")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v53", "1");
+          sessionStorage.setItem("sobers-pwa-v44", "1");
           location.reload();
         });
       }
