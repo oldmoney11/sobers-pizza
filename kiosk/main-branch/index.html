@@ -9,7 +9,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="../../assets/logo/favicon-192.png" />
     <link rel="apple-touch-icon" href="../../assets/logo/favicon-192.png" />
-    <link rel="stylesheet" href="../kiosk.css?v=2" />
+    <link rel="stylesheet" href="../kiosk.css?v=3" />
   </head>
   <body>
     <main class="kiosk-shell">
@@ -94,10 +94,10 @@
       </section>
     </div>
     <script src="../kiosk-config.js?v=2"></script>
-    <script src="../kiosk.js?v=6"></script>
+    <script src="../kiosk.js?v=7"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=2").then(registration => registration.update()).catch(console.error));
+        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=3").then(registration => registration.update()).catch(console.error));
       }
     </script>
   </body>

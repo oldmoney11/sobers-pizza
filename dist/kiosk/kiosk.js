@@ -125,20 +125,35 @@
       products = cached?.products || [];
     }
     renderCategories();
-    renderProducts('all');
+    renderProducts();
   }
 
   function renderCategories() {
-    $('[data-categories]').innerHTML = [{ slug: 'all', name: 'All menu' }, ...categories]
+    const populatedCategories = categories.filter((category) => products.some((product) => product.category_id === category.id));
+    $('[data-categories]').innerHTML = [{ slug: 'all', name: 'All menu' }, ...populatedCategories]
       .map((category, index) => `<button class="${index === 0 ? 'active' : ''}" data-category="${escapeHtml(category.slug)}">${escapeHtml(category.name)}</button>`)
       .join('');
   }
 
-  function renderProducts(categorySlug) {
-    const category = categories.find((item) => item.slug === categorySlug);
-    const visible = category ? products.filter((item) => item.category_id === category.id) : products;
-    $('[data-products]').innerHTML = visible.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(productStartingPrice(product))}</strong></div></button>`).join('');
-    $('[data-empty-menu]').classList.toggle('hidden', visible.length > 0);
+  function renderProducts() {
+    const populatedCategories = categories
+      .map((category) => ({
+        ...category,
+        items: products.filter((product) => product.category_id === category.id),
+      }))
+      .filter((category) => category.items.length);
+
+    $('[data-products]').innerHTML = populatedCategories.map((category) => `
+      <section class="menu-category" data-category-section="${escapeHtml(category.slug)}">
+        <header class="menu-category-heading">
+          <div><p class="eyebrow">SOBERS MENU</p><h3>${escapeHtml(category.name)}</h3></div>
+          <span>${category.items.length} ${category.items.length === 1 ? 'item' : 'items'}</span>
+        </header>
+        <div class="category-product-row" aria-label="${escapeHtml(category.name)} products">
+          ${category.items.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(productStartingPrice(product))}</strong></div></button>`).join('')}
+        </div>
+      </section>`).join('');
+    $('[data-empty-menu]').classList.toggle('hidden', populatedCategories.length > 0);
   }
 
   function renderCart() {
@@ -191,7 +206,16 @@
   $('[data-new-order]').onclick = resetSession;
   $('[data-reset-order]').onclick = resetSession;
   $('[data-continue-order]').onclick = () => { $('[data-idle-overlay]').classList.remove('active'); armIdleTimer(); };
-  $('[data-categories]').onclick = (event) => { const button = event.target.closest('[data-category]'); if (!button) return; $$('[data-category]').forEach((item) => item.classList.toggle('active', item === button)); renderProducts(button.dataset.category); armIdleTimer(); };
+  $('[data-categories]').onclick = (event) => {
+    const button = event.target.closest('[data-category]');
+    if (!button) return;
+    $$('[data-category]').forEach((item) => item.classList.toggle('active', item === button));
+    const target = button.dataset.category === 'all'
+      ? $('[data-products]')
+      : $$('[data-category-section]').find((section) => section.dataset.categorySection === button.dataset.category);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    armIdleTimer();
+  };
   $('[data-products]').onclick = (event) => {
     const button = event.target.closest('[data-product]');
     if (!button) return;
