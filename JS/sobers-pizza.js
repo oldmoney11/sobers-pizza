@@ -657,7 +657,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return value;
     }
 
-    return value.replace(/^\/+/, "");
+    const localPath = value.replace(/^\/+/, "");
+
+    // Generated menu artwork is shipped as WebP for much faster mobile loads.
+    // Existing Supabase records may still contain the historic PNG paths.
+    return localPath.replace(
+      /^(assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i,
+      "$1.webp",
+    );
   };
 
   /* =====================================================

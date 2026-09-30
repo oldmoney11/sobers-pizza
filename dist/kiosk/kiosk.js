@@ -23,7 +23,11 @@
     if (!value) return fallback;
     try {
       const appRoot = new URL('../../', window.location.href);
-      const url = new URL(value, appRoot);
+      const optimizedValue = String(value).replace(
+        /^(\/?assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i,
+        '$1.webp',
+      );
+      const url = new URL(optimizedValue, appRoot);
       return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.href) : fallback;
     } catch (_) {
       return fallback;
@@ -71,13 +75,24 @@
       (sizeOrder[left] ?? 100) - (sizeOrder[right] ?? 100));
   }
 
+  function availableChoices(groupKey, choices) {
+    const discontinued = groupKey === 'size' ? new Set(['mini']) : new Set();
+    return orderedChoices(choices).filter(([choiceKey]) => !discontinued.has(choiceKey));
+  }
+
+  function productStartingPrice(product) {
+    const sizeChoices = product?.options?.size?.[2];
+    const firstSize = sizeChoices ? availableChoices('size', sizeChoices)[0]?.[1] : null;
+    return Number(product?.base_price || 0) + Number(firstSize?.[1] || 0);
+  }
+
   function openOptions(product) {
     optionProduct = product;
     optionSelections = {};
     const groups = Object.entries(product.options || {});
     groups.forEach(([groupKey, group]) => {
       const [, type, choices] = group;
-      if (type === 'radio') optionSelections[groupKey] = orderedChoices(choices)[0]?.[0] || '';
+      if (type === 'radio') optionSelections[groupKey] = availableChoices(groupKey, choices)[0]?.[0] || '';
       if (type === 'checkbox') optionSelections[groupKey] = [];
     });
 
@@ -85,7 +100,7 @@
     $('[data-option-description]').textContent = product.description || 'Made fresh to order.';
     $('[data-option-groups]').innerHTML = groups.map(([groupKey, group]) => {
       const [label, type, choices] = group;
-      return `<fieldset class="option-group"><legend>${escapeHtml(label)}</legend><div class="option-choices">${orderedChoices(choices).map(([choiceKey, choice]) => `<label class="option-choice"><input data-option-input type="${type === 'radio' ? 'radio' : 'checkbox'}" name="option-${escapeHtml(groupKey)}" value="${escapeHtml(choiceKey)}" ${type === 'radio' && optionSelections[groupKey] === choiceKey ? 'checked' : ''}><span><b>${escapeHtml(choice[0])}</b><small>${type === 'radio' ? money(Number(product.base_price) + Number(choice[1])) : `+${money(choice[1])}`}</small></span></label>`).join('')}</div></fieldset>`;
+      return `<fieldset class="option-group"><legend>${escapeHtml(label)}</legend><div class="option-choices">${availableChoices(groupKey, choices).map(([choiceKey, choice]) => `<label class="option-choice"><input data-option-input type="${type === 'radio' ? 'radio' : 'checkbox'}" name="option-${escapeHtml(groupKey)}" value="${escapeHtml(choiceKey)}" ${type === 'radio' && optionSelections[groupKey] === choiceKey ? 'checked' : ''}><span><b>${escapeHtml(choice[0])}</b><small>${type === 'radio' ? money(Number(product.base_price) + Number(choice[1])) : `+${money(choice[1])}`}</small></span></label>`).join('')}</div></fieldset>`;
     }).join('');
     updateOptionTotal();
     $('[data-option-overlay]').classList.add('active');
@@ -122,16 +137,20 @@
   function renderProducts(categorySlug) {
     const category = categories.find((item) => item.slug === categorySlug);
     const visible = category ? products.filter((item) => item.category_id === category.id) : products;
-    $('[data-products]').innerHTML = visible.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(product.base_price)}</strong></div></button>`).join('');
+    $('[data-products]').innerHTML = visible.map((product) => `<button class="product-card" data-product="${escapeHtml(product.id)}"><img src="${safeImageUrl(product.image_url)}" alt=""><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.description || 'Made fresh to order.')}</p><strong>From ${money(productStartingPrice(product))}</strong></div></button>`).join('');
     $('[data-empty-menu]').classList.toggle('hidden', visible.length > 0);
   }
 
   function renderCart() {
-    $('[data-cart-count]').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const quantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+    $('[data-cart-count]').textContent = quantity;
+    $('[data-mobile-cart-count]').textContent = quantity;
     $('[data-cart-total]').textContent = money(cartTotal());
+    $('[data-mobile-cart-total]').textContent = money(cartTotal());
     $('[data-review-total]').textContent = money(cartTotal());
     $('[data-empty-cart]').classList.toggle('hidden', cart.length > 0);
     $('[data-review-order]').disabled = cart.length === 0;
+    $('[data-open-cart]').disabled = cart.length === 0;
     $('[data-cart-items]').innerHTML = cart.map((item) => `<div class="cart-row"><div><strong>${escapeHtml(item.name)}</strong>${item.optionNames.length ? `<small>${escapeHtml(item.optionNames.join(' · '))}</small>` : ''}<small>${money(item.price)} × ${item.quantity}</small></div><div><button data-cart-minus="${escapeHtml(item.id)}" aria-label="Remove one ${escapeHtml(item.name)}">−</button><button data-cart-plus="${escapeHtml(item.id)}" aria-label="Add one ${escapeHtml(item.name)}">+</button></div></div>`).join('');
   }
 
@@ -148,6 +167,8 @@
     $('[data-place-order]').textContent = 'Place order';
     $('[data-idle-overlay]').classList.remove('active');
     $('[data-idle-overlay]').setAttribute('aria-hidden', 'true');
+    $('.cart-panel').classList.remove('mobile-open');
+    document.body.classList.remove('cart-sheet-open');
     renderCart(); showScreen('welcome');
   }
 
@@ -163,8 +184,10 @@
 
   $('[data-start-order]').onclick = () => { showScreen('ordering'); armIdleTimer(); };
   $('[data-cancel-order]').onclick = resetSession;
-  $('[data-back-menu]').onclick = () => { showScreen('ordering'); armIdleTimer(); };
-  $('[data-review-order]').onclick = () => { showScreen('review'); armIdleTimer(); };
+  $('[data-back-menu]').onclick = () => { showScreen('ordering'); $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); armIdleTimer(); };
+  $('[data-review-order]').onclick = () => { $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); showScreen('review'); armIdleTimer(); };
+  $('[data-open-cart]').onclick = () => { $('.cart-panel').classList.add('mobile-open'); document.body.classList.add('cart-sheet-open'); armIdleTimer(); };
+  $('[data-close-cart]').onclick = () => { $('.cart-panel').classList.remove('mobile-open'); document.body.classList.remove('cart-sheet-open'); };
   $('[data-new-order]').onclick = resetSession;
   $('[data-reset-order]').onclick = resetSession;
   $('[data-continue-order]').onclick = () => { $('[data-idle-overlay]').classList.remove('active'); armIdleTimer(); };

@@ -23,7 +23,11 @@
     if (!value) return fallback;
     try {
       const appRoot = new URL('../../', window.location.href);
-      const url = new URL(value, appRoot);
+      const optimizedValue = String(value).replace(
+        /^(\/?assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i,
+        '$1.webp',
+      );
+      const url = new URL(optimizedValue, appRoot);
       return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.href) : fallback;
     } catch (_) {
       return fallback;

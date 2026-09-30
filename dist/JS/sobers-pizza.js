@@ -37,11 +37,72 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   const BUSINESS = {
-    whatsappNumber: "233204863743",
+    whatsappNumber: "233542704084",
+    defaultWhatsAppNumber: "233542704084",
     currency: "GH₵",
     storageKey: "sobersPizzaCart",
+    branchStorageKey: "sobersPizzaBranch",
   };
+  const FALLBACK_BRANCHES = [
+    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+  ];
+  let branches = [...FALLBACK_BRANCHES];
+  let selectedBranch = null;
   let settingsSync = Promise.resolve();
+  let branchNoticeTimer = 0;
+
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[character]);
+
+  function normalizeGhanaNumber(value) {
+    let number = String(value || "").replace(/\D/g, "");
+    if (number.startsWith("0")) number = `233${number.slice(1)}`;
+    return number;
+  }
+
+  function chooseBranch(branch, remember = true) {
+    if (!branch) return;
+    selectedBranch = branch;
+    const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
+    applyWhatsAppNumber(number);
+    document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
+    const branchButton = document.querySelector("#spBranchButton");
+    if (branchButton) {
+      branchButton.title = `Ordering from ${branch.name}. Tap to change.`;
+      branchButton.setAttribute("aria-label", `Ordering from ${branch.name}. Tap to change branch.`);
+      branchButton.classList.add("is-notifying");
+      window.clearTimeout(branchNoticeTimer);
+      branchNoticeTimer = window.setTimeout(() => branchButton.classList.remove("is-notifying"), 2400);
+    }
+    document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
+    const checkoutMeta = document.querySelector("#spCheckoutBranchMeta");
+    if (checkoutMeta) checkoutMeta.textContent = branch.accepting_orders === false
+      ? "Online orders are paused"
+      : `Usually ready in ${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`;
+    document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
+    if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
+  }
+
+  function renderBranches() {
+    const host = document.querySelector("#spBranchList");
+    if (!host) return;
+    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "Order from this location")} · ${branch.accepting_orders === false ? "Orders paused" : `${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`).join("");
+    host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
+  }
+
+  function openBranchChooser() {
+    const overlay = document.querySelector("#spBranchOverlay");
+    if (!overlay) return;
+    overlay.classList.add("active"); overlay.setAttribute("aria-hidden", "false"); document.body.classList.add("sp-modal-open");
+  }
+
+  function closeBranchChooser() {
+    const overlay = document.querySelector("#spBranchOverlay");
+    if (!overlay || !selectedBranch) return;
+    overlay.classList.remove("active"); overlay.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-open");
+  }
 
   function applyWhatsAppNumber(number) {
     const normalized = String(number || "").replace(/\D/g, "");
@@ -63,18 +124,106 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const [businessRow] = businessResponse.ok ? await businessResponse.json() : [];
       if (!businessRow) return BUSINESS.whatsappNumber;
-      const settingsResponse = await fetch(
-        `${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`,
-        { headers, cache: "no-store" },
-      );
+      const [settingsResponse, branchesResponse] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`, { headers, cache: "no-store" }),
+        fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,accepting_orders,prep_min_minutes,prep_max_minutes,is_active&order=name.asc`, { headers, cache: "no-store" }),
+      ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
-      const number = String(settings?.whatsapp_number || "").replace(/\D/g, "");
-      applyWhatsAppNumber(number);
+      const settingsNumber = normalizeGhanaNumber(settings?.whatsapp_number);
+      if (settingsNumber) BUSINESS.defaultWhatsAppNumber = settingsNumber;
+      const liveBranches = branchesResponse.ok ? await branchesResponse.json() : [];
+      if (liveBranches.length) branches = liveBranches;
+      renderBranches();
+      let savedCode = "";
+      try { savedCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
+      chooseBranch(branches.find(branch => branch.code === savedCode) || branches.find(branch => branch.code === "MAIN-BRANCH") || branches[0], false);
+      if (!savedCode) window.setTimeout(openBranchChooser, 2350);
     } catch (error) {
       console.warn("Sobers settings could not be refreshed; using the last available number.");
     }
     return BUSINESS.whatsappNumber;
   }
+
+  renderBranches();
+  let initialBranchCode = "";
+  try { initialBranchCode = localStorage.getItem(BUSINESS.branchStorageKey) || ""; } catch (_) {}
+  chooseBranch(branches.find(branch => branch.code === initialBranchCode) || branches[0], false);
+  const branchButton = document.querySelector("#spBranchButton");
+  if (branchButton) {
+    const positionKey = "sobersBranchBubblePosition";
+    let dragStart = null;
+    let dragged = false;
+
+    function placeBranchBubble(side, top) {
+      const margin = 14;
+      const dockClearance = window.innerWidth <= 900 ? 104 : 18;
+      const maxTop = Math.max(margin, window.innerHeight - branchButton.offsetHeight - dockClearance);
+      const safeTop = Math.min(Math.max(Number(top) || window.innerHeight * 0.68, margin), maxTop);
+      branchButton.style.top = `${safeTop}px`;
+      branchButton.style.bottom = "auto";
+      branchButton.style.left = side === "left" ? `${margin}px` : "auto";
+      branchButton.style.right = side === "left" ? "auto" : `${margin}px`;
+      branchButton.dataset.side = side;
+    }
+
+    try {
+      const savedPosition = JSON.parse(localStorage.getItem(positionKey) || "null");
+      if (savedPosition?.side && Number.isFinite(savedPosition?.ratio)) {
+        placeBranchBubble(savedPosition.side, window.innerHeight * savedPosition.ratio);
+      }
+    } catch (_) {}
+
+    branchButton.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      const rect = branchButton.getBoundingClientRect();
+      dragStart = { x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
+      dragged = false;
+      branchButton.setPointerCapture?.(event.pointerId);
+      branchButton.classList.add("is-dragging");
+    });
+
+    branchButton.addEventListener("pointermove", event => {
+      if (!dragStart) return;
+      const dx = event.clientX - dragStart.x;
+      const dy = event.clientY - dragStart.y;
+      if (Math.hypot(dx, dy) > 7) dragged = true;
+      if (!dragged) return;
+      const margin = 10;
+      const dockClearance = window.innerWidth <= 900 ? 104 : 18;
+      const left = Math.min(Math.max(dragStart.left + dx, margin), window.innerWidth - branchButton.offsetWidth - margin);
+      const top = Math.min(Math.max(dragStart.top + dy, margin), window.innerHeight - branchButton.offsetHeight - dockClearance);
+      branchButton.style.left = `${left}px`;
+      branchButton.style.right = "auto";
+      branchButton.style.top = `${top}px`;
+      branchButton.style.bottom = "auto";
+    });
+
+    branchButton.addEventListener("pointerup", event => {
+      if (!dragStart) return;
+      branchButton.releasePointerCapture?.(event.pointerId);
+      branchButton.classList.remove("is-dragging");
+      if (dragged) {
+        const rect = branchButton.getBoundingClientRect();
+        const side = rect.left + rect.width / 2 < window.innerWidth / 2 ? "left" : "right";
+        placeBranchBubble(side, rect.top);
+        try {
+          localStorage.setItem(positionKey, JSON.stringify({ side, ratio: rect.top / window.innerHeight }));
+        } catch (_) {}
+      }
+      dragStart = null;
+    });
+
+    branchButton.addEventListener("click", event => {
+      if (dragged) {
+        event.preventDefault();
+        dragged = false;
+        return;
+      }
+      openBranchChooser();
+    });
+  }
+  document.querySelector("#spCheckoutBranch")?.addEventListener("click", openBranchChooser);
+  document.querySelector("#spBranchClose")?.addEventListener("click", closeBranchChooser);
 
   /* =====================================================
        SOBERS MENU
@@ -419,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const [productsResponse, settingsResponse] = await Promise.all([
         fetch(
-          `${supabaseUrl}/rest/v1/products?business_id=eq.${businessRow.id}&is_active=eq.true&is_available=eq.true&select=slug,name,description,image_url,base_price,options,sort_order,categories!inner(slug,name,is_active)&categories.is_active=eq.true&order=sort_order.asc`,
+          `${supabaseUrl}/rest/v1/products?business_id=eq.${businessRow.id}&is_active=eq.true&select=slug,name,description,image_url,base_price,options,sort_order,is_available,categories!inner(slug,name,is_active)&categories.is_active=eq.true&order=sort_order.asc`,
           { headers },
         ),
         fetch(
@@ -449,6 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
           image: product.image_url || "assets/logo/favicon-512.png",
           description: product.description || "",
           options: product.options || {},
+          available: product.is_available !== false,
         };
       });
 
@@ -461,7 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (settingsResponse.ok) {
         const [settings] = await settingsResponse.json();
 
-        if (settings?.whatsapp_number) {
+        if (settings?.whatsapp_number && !selectedBranch) {
           applyWhatsAppNumber(settings.whatsapp_number);
         }
       }
@@ -480,6 +630,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const money = (amount) => `${BUSINESS.currency}${Number(amount).toFixed(2)}`;
 
+  const availableProductChoices = (groupKey, choices = {}) =>
+    Object.entries(choices).filter(
+      ([choiceKey]) => groupKey !== "size" || choiceKey !== "mini",
+    );
+
+  const productStartingPrice = (product) => {
+    const sizeChoices = product?.options?.size?.[2];
+    const firstAvailable = sizeChoices
+      ? availableProductChoices("size", sizeChoices).sort((left, right) => {
+          const order = ["mini_small", "small", "medium", "large", "x_large", "regular", "family"];
+          const a = order.indexOf(left[0]);
+          const b = order.indexOf(right[0]);
+          return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
+        })[0]?.[1]
+      : null;
+    return Number(product?.price || 0) + Number(firstAvailable?.[1] || 0);
+  };
+
   const appAssetUrl = (value) => {
     if (!value) {
       return "assets/logo/favicon-512.png";
@@ -489,7 +657,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return value;
     }
 
-    return value.replace(/^\/+/, "");
+    const localPath = value.replace(/^\/+/, "");
+
+    // Generated menu artwork is shipped as WebP for much faster mobile loads.
+    // Existing Supabase records may still contain the historic PNG paths.
+    return localPath.replace(
+      /^(assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i,
+      "$1.webp",
+    );
   };
 
   /* =====================================================
@@ -818,6 +993,8 @@ document.addEventListener("DOMContentLoaded", () => {
        RENDER EACH CATEGORY SECTION
     ================================================= */
 
+    let imageRenderIndex = 0;
+
     categories.forEach((category) => {
       const section = document.createElement("section");
 
@@ -848,9 +1025,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ----------------------------------------- */
 
       grouped[category].forEach(([key, product]) => {
+        const imagePriority = imageRenderIndex++;
         const card = document.createElement("article");
 
-        card.className = "sp-menu-card";
+        card.className = `sp-menu-card${product.available === false ? " is-sold-out" : ""}`;
 
         card.innerHTML = `
 
@@ -859,11 +1037,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             <img
                                 src="${appAssetUrl(product.image)}"
                                 alt="${product.name}"
-                                loading="lazy"
+                                loading="${imagePriority < 4 ? "eager" : "lazy"}"
+                                decoding="async"
+                                fetchpriority="${imagePriority < 4 ? "high" : "auto"}"
                             >
 
                             ${
-                              product.featured
+                              product.available === false
+                                ? `<span class="sp-menu-badge sp-menu-badge-soldout">SOLD OUT</span>`
+                                : product.featured
                                 ? `
                                         <span
                                             class="sp-menu-badge"
@@ -903,15 +1085,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                     <strong>
                                         From
-                                        ${money(product.price)}
+                                        ${money(productStartingPrice(product))}
                                     </strong>
 
 
                                     <button
                                         type="button"
                                         data-product="${key}"
+                                        ${product.available === false ? "disabled" : ""}
                                     >
-                                        View & Order
+                                        ${product.available === false ? "Sold out" : "View & Order"}
                                     </button>
 
                                 </footer>
@@ -1093,7 +1276,7 @@ document.addEventListener("DOMContentLoaded", () => {
         field.innerHTML = `<legend>${label}</legend>`;
 
         const choiceOrder = ["mini","mini_small","small","medium","large","x_large","regular","family","two","four","seven","eight","twelve","fifteen","twenty_four"];
-        const orderedChoices = Object.entries(choices).sort(([left],[right]) => {
+        const orderedChoices = availableProductChoices(groupKey, choices).sort(([left],[right]) => {
           const a = choiceOrder.indexOf(left), b = choiceOrder.indexOf(right);
           return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
         });
@@ -1189,7 +1372,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   function addProduct() {
-    if (!activeProduct) {
+    if (!activeProduct || activeProduct.available === false) {
       return;
     }
 
@@ -1276,6 +1459,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cart.length) {
       alert("Your cart is empty.");
 
+      return;
+    }
+
+    if (!selectedBranch || selectedBranch.accepting_orders === false) {
+      alert("Online orders are currently paused for this branch. Please choose another branch.");
+      openBranchChooser();
       return;
     }
 
@@ -1558,6 +1747,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const note = String(form.get("note") || "").trim();
 
+        const clientReference = window.crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (character) =>
+          (character ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> character / 4).toString(16)
+        );
+
         if (!customerName) {
           alert("Please enter your name.");
 
@@ -1598,6 +1791,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const databaseOrder = {
           business_slug: "sobers-pizza",
 
+          branch_code: selectedBranch?.code || "MAIN-BRANCH",
+
+          client_request_id: clientReference,
+
           customer_name: customerName,
 
           customer_phone: customerPhone,
@@ -1617,24 +1814,17 @@ document.addEventListener("DOMContentLoaded", () => {
           })),
         };
 
-        // Open the destination synchronously while the submit gesture is still
-        // active. Mobile browsers may block a new window opened after awaits.
-        const whatsappWindow = window.open("about:blank", "_blank");
-
-        if (whatsappWindow) {
-          whatsappWindow.opener = null;
-          whatsappWindow.document.title = "Preparing Sobers order";
-          whatsappWindow.document.body.textContent = "Preparing your WhatsApp order…";
-        }
-
         const databasePromise = window.SobersPlatformOrders
           ? window.SobersPlatformOrders.submit(databaseOrder)
           : Promise.resolve({ saved: false, queued: false, result: null });
+        // Do not await the database here. Mobile browsers can refuse a delayed
+        // redirect to WhatsApp even when an intermediate tab was opened during
+        // the tap. The save continues in the background.
+        void databasePromise;
 
-        await settingsSync;
-        const [, databaseResult] = await Promise.all([syncBusinessSettings(), databasePromise]);
+        const orderNumber = clientReference;
 
-        const orderNumber = databaseResult.result?.order_number || "";
+        const trackingURL = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}track/#ref=${encodeURIComponent(clientReference)}&phone=${encodeURIComponent(normalizedCustomerPhone)}`;
 
         /* =========================================
                        CREATE WHATSAPP ORDER MESSAGE
@@ -1656,6 +1846,10 @@ document.addEventListener("DOMContentLoaded", () => {
           "*NEW SOBERS PIZZA ORDER*",
 
           orderNumber ? `Order: ${orderNumber}` : "",
+
+          `Live tracking: ${trackingURL}`,
+
+          `Branch: ${selectedBranch?.name || "Town"}`,
 
           "",
 
@@ -1689,11 +1883,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const whatsappURL =
           `https://wa.me/${BUSINESS.whatsappNumber}` + `?text=${encodeURIComponent(message)}`;
 
-        if (whatsappWindow) {
-          whatsappWindow.location.replace(whatsappURL);
-        } else {
-          window.location.href = whatsappURL;
-        }
+        const whatsappWindow = window.open(whatsappURL, "_blank", "noopener");
+        if (!whatsappWindow) window.location.assign(whatsappURL);
 
         /* =========================================
                        CLEAR CART
@@ -1701,13 +1892,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clearCartAfterOrder();
 
-        alert(
-          databaseResult.saved
-            ? "Your order has been saved. WhatsApp will open so you can send it to Sobers Pizza."
-            : databaseResult.queued
-              ? "WhatsApp will open now. The online copy will retry automatically when your connection returns."
-              : "WhatsApp will open now. We could not confirm the database copy, so please send the WhatsApp message to complete your order.",
-        );
       } catch (error) {
         console.error("Sobers Pizza checkout error:", error);
 

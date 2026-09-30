@@ -10,7 +10,9 @@
             const direct = new URL(value);
             if (["http:", "https:", "data:", "blob:"].includes(direct.protocol)) return direct.href;
         } catch (_) {}
-        const path = String(value).replace(/^\.?\//, "");
+        const path = String(value)
+            .replace(/^\.?\//, "")
+            .replace(/^(assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i, "$1.webp");
         const local = ["127.0.0.1", "localhost"].includes(location.hostname);
         const base = local
             ? new URL("../../independent-apps/sobers-pizza/", location.href)
