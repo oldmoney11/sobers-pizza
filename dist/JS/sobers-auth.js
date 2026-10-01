@@ -82,8 +82,19 @@
     if (!session?.user) return;
     const id = await getBusinessId();
     const rows = await request(`/rest/v1/customer_favourites?user_id=eq.${session.user.id}&business_id=eq.${id}&select=product_key,product_name,image_url,price_label`);
-    const favourites = rows.map(row => ({ key: row.product_key, name: row.product_name, image: row.image_url, price: row.price_label }));
+    const localFavourites = read(FAVOURITES_KEY, []);
+    const remoteFavourites = rows.map(row => ({ key: row.product_key, name: row.product_name, image: row.image_url, price: row.price_label }));
+    const favourites = [...remoteFavourites];
+    localFavourites.forEach(item => { if (!favourites.some(saved => saved.key === item.key)) favourites.push(item); });
     write(FAVOURITES_KEY, favourites);
+    const missingRemotely = localFavourites.filter(item => !remoteFavourites.some(saved => saved.key === item.key));
+    if (missingRemotely.length) {
+      await request("/rest/v1/customer_favourites?on_conflict=user_id,business_id,product_key", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify(missingRemotely.map(item => ({ user_id: session.user.id, business_id: id, product_key: item.key, product_name: item.name, image_url: item.image, price_label: item.price }))),
+      });
+    }
     $$('[data-favourite-key]').forEach(button => { const saved = favourites.some(item => item.key === button.dataset.favouriteKey); const symbol = saved ? '♥' : '♡'; button.classList.toggle('saved', saved); if (button.textContent !== symbol) button.textContent = symbol; });
   }
 
@@ -101,8 +112,16 @@
     host.innerHTML = '<div class="sp-empty-state"><span>◌</span><h3>Loading purchases…</h3></div>';
     try {
       const statuses = tab === "active" ? "new,confirmed,preparing,ready" : "completed,cancelled";
-      const orders = await request(`/rest/v1/platform_orders?customer_user_id=eq.${session.user.id}&status=in.(${statuses})&select=id,order_number,status,total,created_at,fulfilment&order=created_at.desc&limit=30`);
-      host.innerHTML = orders.length ? `<div class="sp-favourite-list">${orders.map(order => `<div class="sp-favourite-row"><div><b>${order.order_number}</b><small>${new Date(order.created_at).toLocaleDateString()} · ${order.fulfilment} · ${order.status}</small></div><strong>GH₵${Number(order.total || 0).toFixed(2)}</strong></div>`).join("")}</div>` : `<div class="sp-empty-state"><span>${tab === "active" ? "🛵" : "▤"}</span><h3>No ${tab} orders</h3><p>Your signed-in Sobers orders will appear here.</p><button type="button" data-go-menu>Browse menu</button></div>`;
+      const remoteOrders = await request(`/rest/v1/platform_orders?customer_user_id=eq.${session.user.id}&status=in.(${statuses})&select=id,order_number,client_request_id,status,total,created_at,fulfilment&order=created_at.desc&limit=30`);
+      const localOrders = window.SobersPurchases?.getLocalOrders?.() || [];
+      const allOrders = [...localOrders];
+      remoteOrders.forEach(remote => {
+        const index = allOrders.findIndex(local => local.id === remote.id || (remote.client_request_id && local.client_request_id === remote.client_request_id));
+        if (index >= 0) allOrders[index] = { ...allOrders[index], ...remote, synced: true };
+        else allOrders.push({ ...remote, synced: true });
+      });
+      write("sobersCustomerOrdersV1", allOrders);
+      window.SobersPurchases?.render?.(tab);
     } catch (error) { host.innerHTML = `<div class="sp-empty-state"><span>!</span><h3>Could not load purchases</h3><p>${error.message}</p></div>`; }
   }
 

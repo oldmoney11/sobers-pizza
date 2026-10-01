@@ -3,10 +3,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const $$ = (selector, root = document) => [...(root || document).querySelectorAll(selector)];
   const read = (key, fallback) => { try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; } catch (_) { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {} };
-  const KEYS = { onboarded: "sobersCustomerOnboardedV1", prefs: "sobersCustomerPrefsV1", profile: "sobersCustomerProfileV1", favourites: "sobersCustomerFavouritesV1" };
+  const KEYS = { onboarded: "sobersCustomerOnboardedV1", prefs: "sobersCustomerPrefsV1", profile: "sobersCustomerProfileV1", favourites: "sobersCustomerFavouritesV1", orders: "sobersCustomerOrdersV1" };
   let prefs = read(KEYS.prefs, { mood: "", promos: true, location: false });
   let profile = read(KEYS.profile, {});
   let favourites = read(KEYS.favourites, []);
+  let orders = read(KEYS.orders, []);
 
   const onboarding = $("#spOnboarding");
   let step = 0;
@@ -67,11 +68,39 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tab === "favourites") {
       if (!favourites.length) { host.innerHTML = '<div class="sp-empty-state"><span>♡</span><h3>No favourites yet</h3><p>Tap the heart on any menu item to keep your cravings close.</p><button type="button" data-go-menu>Find a favourite</button></div>'; }
       else { host.innerHTML = `<div class="sp-favourite-list">${favourites.map(item => `<div class="sp-favourite-row"><img src="${item.image}" alt=""><div><b>${item.name}</b><small>${item.price}</small></div><button type="button" data-remove-favourite="${item.key}" aria-label="Remove ${item.name}">×</button></div>`).join("")}</div>`; }
+    } else if (["active", "history"].includes(tab)) {
+      orders = read(KEYS.orders, []);
+      const activeStatuses = ["new", "confirmed", "preparing", "ready", "pending"];
+      const visibleOrders = orders
+        .filter(order => tab === "active" ? activeStatuses.includes(String(order.status || "new").toLowerCase()) : !activeStatuses.includes(String(order.status || "new").toLowerCase()))
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      if (visibleOrders.length) {
+        host.innerHTML = `<div class="sp-purchase-list">${visibleOrders.map(order => {
+          const status = String(order.status || "new").toLowerCase();
+          const label = status === "new" ? "Order received" : status.replace(/\b\w/g, letter => letter.toUpperCase());
+          const reference = order.order_number || order.client_request_id || "Sobers order";
+          const tracking = order.tracking_url ? `<a class="sp-order-track" href="${order.tracking_url}">Track order →</a>` : "";
+          return `<article class="sp-purchase-card"><div class="sp-purchase-card__top"><div><small>${new Date(order.created_at).toLocaleString()}</small><h3>${reference}</h3></div><span data-order-status="${status}">${label}</span></div><div class="sp-purchase-card__meta"><span>${order.branch_name || "Sobers Pizza"}</span><span>${order.fulfilment || "Order"}</span><strong>GH₵${Number(order.total || 0).toFixed(2)}</strong></div>${tracking}</article>`;
+        }).join("")}</div>`;
+      } else {
+        const copy = purchaseCopy[tab] || purchaseCopy.active;
+        host.innerHTML = `<div class="sp-empty-state"><span>${copy[0]}</span><h3>${copy[1]}</h3><p>${copy[2]}</p><button type="button" data-go-menu>Browse menu</button></div>`;
+      }
     } else {
       const copy = purchaseCopy[tab] || purchaseCopy.active;
       host.innerHTML = `<div class="sp-empty-state"><span>${copy[0]}</span><h3>${copy[1]}</h3><p>${copy[2]}</p><button type="button" data-go-menu>Browse menu</button></div>`;
     }
   }
+  window.SobersPurchases = {
+    getLocalOrders: () => read(KEYS.orders, []),
+    render: renderPurchases,
+    refresh: () => {
+      orders = read(KEYS.orders, []);
+      const activeTab = $('[data-purchase-tab].active')?.dataset.purchaseTab || "active";
+      if (!shell?.hidden) renderPurchases(activeTab);
+    },
+  };
+  window.addEventListener("sobers:orders-updated", () => window.SobersPurchases.refresh());
   $$('[data-purchase-tab]').forEach(button => button.addEventListener("click", () => renderPurchases(button.dataset.purchaseTab)));
   $("#spPurchaseContent")?.addEventListener("click", event => {
     if (event.target.closest('[data-go-menu]')) { closePanel(); $("#menu")?.scrollIntoView({ behavior: "smooth" }); }

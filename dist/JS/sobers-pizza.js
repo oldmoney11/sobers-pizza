@@ -1826,6 +1826,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const trackingURL = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}track/#ref=${encodeURIComponent(clientReference)}&phone=${encodeURIComponent(normalizedCustomerPhone)}`;
 
+        window.SobersPlatformOrders?.saveCustomerOrder?.({
+          client_request_id: clientReference,
+          order_number: clientReference,
+          status: "new",
+          total,
+          created_at: new Date().toISOString(),
+          fulfilment,
+          branch_code: selectedBranch?.code || "MAIN-BRANCH",
+          branch_name: selectedBranch?.name || "Town",
+          tracking_url: trackingURL,
+          customer_phone: normalizedCustomerPhone,
+          items: cart.map(item => ({ name: item.name, quantity: Number(item.qty), price: Number(item.price), options: item.options || {} })),
+          synced: false,
+        });
+
         /* =========================================
                        CREATE WHATSAPP ORDER MESSAGE
                     ========================================= */
