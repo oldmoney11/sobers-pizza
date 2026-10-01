@@ -251,6 +251,26 @@ html[data-sp-theme="light"] .sp-product-assurance span{border-color:rgba(65,47,3
   .sp-product-visual__caption{bottom:14px;left:16px}.sp-product-visual__tag{top:13px;left:13px}
 }
 
+/* Final mobile sizing layout: only choices scroll; purchase action never leaves view. */
+@media(max-width:720px){
+  html[data-sp-theme] .sp-options-heavy .sp-product-visual{height:145px;flex:0 0 145px}
+  html[data-sp-theme] .sp-options-heavy .sp-product-visual__caption{display:none}
+  html[data-sp-theme] .sp-options-heavy .sp-product-visual__tag{top:12px;left:12px}
+  html[data-sp-theme] .sp-options-heavy .sp-product-body{display:grid;min-height:0;grid-template-rows:auto auto auto minmax(0,1fr) auto;padding:12px 14px max(10px,env(safe-area-inset-bottom));overflow:hidden}
+  html[data-sp-theme] .sp-options-heavy .sp-product-body>p{margin:0 0 3px}
+  html[data-sp-theme] .sp-options-heavy .sp-product-modal h2{margin-bottom:4px;font-size:1.55rem}
+  html[data-sp-theme] .sp-options-heavy .sp-product-description{display:block;overflow:hidden;margin:0 0 7px;white-space:nowrap;text-overflow:ellipsis;font-size:.72rem}
+  html[data-sp-theme] .sp-options-heavy .sp-product-assurance{display:none}
+  html[data-sp-theme] .sp-options-heavy .sp-option-groups{min-height:0;max-height:none;overflow-y:auto!important;padding:2px 4px 10px 0}
+  html[data-sp-theme] .sp-options-heavy .sp-modal-bottom{position:relative;bottom:auto;display:flex;min-height:64px;margin:0;padding:10px 0 0;background:#0f1013;box-shadow:0 -12px 24px rgba(15,16,19,.96)}
+  html[data-sp-theme="light"] .sp-options-heavy .sp-modal-bottom{background:#fffaf4;box-shadow:0 -12px 24px rgba(255,250,244,.98)}
+}
+
+@media(max-width:720px) and (max-height:700px){
+  html[data-sp-theme] .sp-options-heavy .sp-product-visual{height:115px;flex-basis:115px}
+  html[data-sp-theme] .sp-options-heavy .sp-option-groups label{min-height:44px}
+}
+
 /* Sobers Promise — clear trust hierarchy and focused actions. */
 html[data-sp-theme] .sp-story{position:relative;overflow:hidden;gap:clamp(28px,5vw,70px);padding:clamp(22px,4.5vw,58px);border-radius:34px}
 html[data-sp-theme] .sp-story:before{content:"";position:absolute;inset:-35% auto auto -12%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(229,31,42,.16),transparent 68%);pointer-events:none}
