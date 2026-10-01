@@ -604,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       liveProducts.forEach((product) => {
         MENU[product.slug] = {
-          name: product.name,
+          name: product.slug === "walch-473ml" ? "Welch's 473ml" : product.name,
           price: Number(product.base_price),
           featured: false,
           category: product.categories.slug,

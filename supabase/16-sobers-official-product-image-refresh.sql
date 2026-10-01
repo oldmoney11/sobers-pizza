@@ -19,3 +19,11 @@ from public.businesses b,
 where b.id = p.business_id
   and b.slug = 'sobers-pizza'
   and p.slug = v.slug;
+
+update public.products p
+set name = 'Welch''s 473ml',
+    updated_at = now()
+from public.businesses b
+where b.id = p.business_id
+  and b.slug = 'sobers-pizza'
+  and p.slug = 'walch-473ml';

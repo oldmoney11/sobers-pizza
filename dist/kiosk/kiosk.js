@@ -120,7 +120,7 @@
         fetch(`${config.supabaseUrl}/rest/v1/products?business_id=eq.${business.id}&is_active=eq.true&is_available=eq.true&select=id,category_id,slug,name,description,image_url,base_price,options,sort_order&order=sort_order.asc`, { headers, cache: 'no-store' }),
       ]);
       categories = await categoryResponse.json();
-      products = (await productResponse.json()).map(product => ({ ...product, image_url: officialProductImages[product.slug] || product.image_url }));
+      products = (await productResponse.json()).map(product => ({ ...product, name: product.slug === 'walch-473ml' ? "Welch's 473ml" : product.name, image_url: officialProductImages[product.slug] || product.image_url }));
       localStorage.setItem('sobersKioskCatalog', JSON.stringify({ categories, products }));
     } catch (error) {
       const cached = JSON.parse(localStorage.getItem('sobersKioskCatalog') || 'null');
