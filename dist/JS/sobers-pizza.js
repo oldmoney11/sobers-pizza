@@ -1283,6 +1283,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (groups) {
       groups.innerHTML = "";
 
+      let totalChoices = 0;
+
       Object.entries(activeProduct.options || {}).forEach(([groupKey, groupData]) => {
         const [label, type, choices] = groupData;
 
@@ -1295,6 +1297,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const a = choiceOrder.indexOf(left), b = choiceOrder.indexOf(right);
           return (a < 0 ? 999 : a) - (b < 0 ? 999 : b);
         });
+        totalChoices += orderedChoices.length;
         orderedChoices.forEach(([choiceKey, choiceData], choiceIndex) => {
           const [name, extra] = choiceData;
 
@@ -1347,6 +1350,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       productModal.classList.toggle("sp-simple-product", !groups.children.length);
+      productModal.classList.toggle("sp-options-heavy", totalChoices >= 5);
     }
 
     updateProductTotal();
