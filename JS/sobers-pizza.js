@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 115,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/pepperoni.jpg",
+      image: "assets/sobers-pizza/official-products/pepperoni-pizza.png",
       description: "Loaded with pepperoni, mozzarella and rich tomato sauce.",
       options: {
         size: [
@@ -589,13 +589,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
       Object.keys(MENU).forEach((key) => delete MENU[key]);
 
+      const officialImages = {
+        "pepperoni-pizza": "assets/sobers-pizza/official-products/pepperoni-pizza.png",
+        "ceres-1l": "assets/sobers-pizza/official-products/ceres-red-grape.png",
+        "don-simon-1l": "assets/sobers-pizza/official-products/don-simon-multifruits.png",
+        "heineken-500ml": "assets/sobers-pizza/official-products/heineken.png",
+        "kiss-cider-500ml": "assets/sobers-pizza/official-products/kiss-cider.png",
+        "malta-guinness-330ml": "assets/sobers-pizza/official-products/malta-guinness.png",
+        "tampico-500ml": "assets/sobers-pizza/official-products/tampico-citrus-punch.png",
+        "tampico-1l": "assets/sobers-pizza/official-products/tampico-citrus-punch.png",
+        "walch-473ml": "assets/sobers-pizza/official-products/welchs-grape.png",
+        "can-drink": "assets/sobers-pizza/official-products/canned-drinks.png",
+      };
+
       liveProducts.forEach((product) => {
         MENU[product.slug] = {
           name: product.name,
           price: Number(product.base_price),
           featured: false,
           category: product.categories.slug,
-          image: product.image_url || "assets/logo/favicon-512.png",
+          image: officialImages[product.slug] || product.image_url || "assets/logo/favicon-512.png",
           description: product.description || "",
           options: product.options || {},
           available: product.is_available !== false,

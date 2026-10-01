@@ -4,6 +4,7 @@
     const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
     const money = value => `GH₵${Number(value || 0).toFixed(2)}`;
     const slugify = value => String(value || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const officialProductImages = {"pepperoni-pizza":"assets/sobers-pizza/official-products/pepperoni-pizza.png","ceres-1l":"assets/sobers-pizza/official-products/ceres-red-grape.png","don-simon-1l":"assets/sobers-pizza/official-products/don-simon-multifruits.png","heineken-500ml":"assets/sobers-pizza/official-products/heineken.png","kiss-cider-500ml":"assets/sobers-pizza/official-products/kiss-cider.png","malta-guinness-330ml":"assets/sobers-pizza/official-products/malta-guinness.png","tampico-500ml":"assets/sobers-pizza/official-products/tampico-citrus-punch.png","tampico-1l":"assets/sobers-pizza/official-products/tampico-citrus-punch.png","walch-473ml":"assets/sobers-pizza/official-products/welchs-grape.png","can-drink":"assets/sobers-pizza/official-products/canned-drinks.png"};
     const productImageUrl = value => {
         if (!value) return "";
         try {
@@ -223,7 +224,7 @@
     }
     function renderProducts() {
         $("#productsEmpty").classList.toggle("hidden", products.length > 0);
-        $("#productsBody").innerHTML = products.map(product => `<tr><td>${product.image_url ? `<img class="product-thumb" src="${esc(productImageUrl(product.image_url))}" alt="${esc(product.name)}">` : ""}<strong>${esc(product.name)}</strong><br><small class="muted">${esc(product.description)}</small></td><td>${esc(product.categories?.name || "Uncategorised")}</td><td>${money(product.base_price)}</td><td><button class="secondary" data-product-toggle="${product.id}" data-value="${product.is_available}">${product.is_available ? "Available" : "Unavailable"}</button></td><td><button class="secondary" data-product-edit="${product.id}">Edit</button></td></tr>`).join("");
+        $("#productsBody").innerHTML = products.map(product => { const image = officialProductImages[product.slug] || product.image_url; return `<tr><td>${image ? `<img class="product-thumb" src="${esc(productImageUrl(image))}" alt="${esc(product.name)}">` : ""}<strong>${esc(product.name)}</strong><br><small class="muted">${esc(product.description)}</small></td><td>${esc(product.categories?.name || "Uncategorised")}</td><td>${money(product.base_price)}</td><td><button class="secondary" data-product-toggle="${product.id}" data-value="${product.is_available}">${product.is_available ? "Available" : "Unavailable"}</button></td><td><button class="secondary" data-product-edit="${product.id}">Edit</button></td></tr>`; }).join("");
     }
     function renderCategories() {
         $("#categoriesEmpty").classList.toggle("hidden", categories.length > 0);

@@ -5,6 +5,9 @@
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const headers = { apikey: config.publishableKey, Authorization: `Bearer ${config.publishableKey}` };
   let products = [];
+  const officialProductImages = {
+    'pepperoni-pizza':'../../assets/sobers-pizza/official-products/pepperoni-pizza.png','ceres-1l':'../../assets/sobers-pizza/official-products/ceres-red-grape.png','don-simon-1l':'../../assets/sobers-pizza/official-products/don-simon-multifruits.png','heineken-500ml':'../../assets/sobers-pizza/official-products/heineken.png','kiss-cider-500ml':'../../assets/sobers-pizza/official-products/kiss-cider.png','malta-guinness-330ml':'../../assets/sobers-pizza/official-products/malta-guinness.png','tampico-500ml':'../../assets/sobers-pizza/official-products/tampico-citrus-punch.png','tampico-1l':'../../assets/sobers-pizza/official-products/tampico-citrus-punch.png','walch-473ml':'../../assets/sobers-pizza/official-products/welchs-grape.png','can-drink':'../../assets/sobers-pizza/official-products/canned-drinks.png'
+  };
   let categories = [];
   let cart = [];
   let idleTimer;
@@ -117,7 +120,7 @@
         fetch(`${config.supabaseUrl}/rest/v1/products?business_id=eq.${business.id}&is_active=eq.true&is_available=eq.true&select=id,category_id,slug,name,description,image_url,base_price,options,sort_order&order=sort_order.asc`, { headers, cache: 'no-store' }),
       ]);
       categories = await categoryResponse.json();
-      products = await productResponse.json();
+      products = (await productResponse.json()).map(product => ({ ...product, image_url: officialProductImages[product.slug] || product.image_url }));
       localStorage.setItem('sobersKioskCatalog', JSON.stringify({ categories, products }));
     } catch (error) {
       const cached = JSON.parse(localStorage.getItem('sobersKioskCatalog') || 'null');

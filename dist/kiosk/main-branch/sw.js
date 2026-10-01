@@ -1,13 +1,13 @@
 "use strict";
 
-const CACHE_NAME = "sobers-main-branch-kiosk-v5";
+const CACHE_NAME = "sobers-main-branch-kiosk-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "../kiosk.css?v=3",
   "../kiosk-config.js?v=2",
-  "../kiosk.js?v=7",
+  "../kiosk.js?v=8",
   "../../assets/logo/favicon-192.png",
   "../../assets/logo/favicon-512.png"
 ];
