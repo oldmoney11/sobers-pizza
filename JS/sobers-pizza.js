@@ -590,6 +590,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Object.keys(MENU).forEach((key) => delete MENU[key]);
 
       const officialImages = {
+        "chicken-pizza-pie": "assets/sobers-pizza/official-products/chicken-pizza-pie.png",
         "pepperoni-pizza": "assets/sobers-pizza/official-products/pepperoni-pizza.png",
         "ceres-1l": "assets/sobers-pizza/official-products/ceres-red-grape.png",
         "don-simon-1l": "assets/sobers-pizza/official-products/don-simon-multifruits.png",

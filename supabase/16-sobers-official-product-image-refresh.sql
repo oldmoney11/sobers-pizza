@@ -5,6 +5,7 @@ set image_url = v.image_url,
     updated_at = now()
 from public.businesses b,
 (values
+ ('chicken-pizza-pie','assets/sobers-pizza/official-products/chicken-pizza-pie.png'),
  ('pepperoni-pizza','assets/sobers-pizza/official-products/pepperoni-pizza.png'),
  ('ceres-1l','assets/sobers-pizza/official-products/ceres-red-grape.png'),
  ('don-simon-1l','assets/sobers-pizza/official-products/don-simon-multifruits.png'),

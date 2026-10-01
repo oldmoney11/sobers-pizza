@@ -6,6 +6,7 @@
   const headers = { apikey: config.publishableKey, Authorization: `Bearer ${config.publishableKey}` };
   let products = [];
   const officialProductImages = {
+    'chicken-pizza-pie':'../../assets/sobers-pizza/official-products/chicken-pizza-pie.png',
     'pepperoni-pizza':'../../assets/sobers-pizza/official-products/pepperoni-pizza.png','ceres-1l':'../../assets/sobers-pizza/official-products/ceres-red-grape.png','don-simon-1l':'../../assets/sobers-pizza/official-products/don-simon-multifruits.png','heineken-500ml':'../../assets/sobers-pizza/official-products/heineken.png','kiss-cider-500ml':'../../assets/sobers-pizza/official-products/kiss-cider.png','malta-guinness-330ml':'../../assets/sobers-pizza/official-products/malta-guinness.png','tampico-500ml':'../../assets/sobers-pizza/official-products/tampico-citrus-punch.png','tampico-1l':'../../assets/sobers-pizza/official-products/tampico-citrus-punch.png','walch-473ml':'../../assets/sobers-pizza/official-products/welchs-grape.png','can-drink':'../../assets/sobers-pizza/official-products/canned-drinks.png'
   };
   let categories = [];
