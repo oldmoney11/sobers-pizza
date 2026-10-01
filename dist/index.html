@@ -707,14 +707,14 @@
     <script src="JS/sobers-pizza.js?v=23"></script>
     <script src="JS/sobers-notices.js?v=2"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
-    <script src="JS/sobers-customer.js?v=5"></script>
+    <script src="JS/sobers-customer.js?v=6"></script>
     <script src="JS/sobers-auth.js?v=2"></script>
 
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=61")
+            .register("./sw.js?v=62")
             .then((registration) => {
               registration.update();
 
@@ -726,11 +726,11 @@
         });
 
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v61")) {
+          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v62")) {
             return;
           }
 
-          sessionStorage.setItem("sobers-pwa-v61", "1");
+          sessionStorage.setItem("sobers-pwa-v62", "1");
           location.reload();
         });
       }

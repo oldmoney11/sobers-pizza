@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const titles = { rewards: "Slice Rewards", purchases: "My Purchases", account: "My Account" };
     $("#spCustomerPanelTitle").textContent = titles[name] || "My Sobers";
     $$('[data-customer-panel]').forEach(item => item.classList.toggle("active", item.dataset.customerPanel === name));
-    if (name === "purchases") renderPurchases("active");
+    if (name === "purchases") { renderPurchases("active"); refreshOrderStatuses(); }
     if (name === "account") renderProfile();
   }
   function closePanel() { if (!shell) return; shell.hidden = true; shell.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-lock"); }
@@ -90,6 +90,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const copy = purchaseCopy[tab] || purchaseCopy.active;
       host.innerHTML = `<div class="sp-empty-state"><span>${copy[0]}</span><h3>${copy[1]}</h3><p>${copy[2]}</p><button type="button" data-go-menu>Browse menu</button></div>`;
     }
+  }
+  async function refreshOrderStatuses() {
+    const savedOrders = read(KEYS.orders, []).filter(order => order.client_request_id && order.customer_phone).slice(-20);
+    if (!savedOrders.length || navigator.onLine === false) return;
+    const refreshed = await Promise.all(savedOrders.map(async order => {
+      try {
+        const response = await fetch("https://inthadecmxmbqexufzpe.supabase.co/rest/v1/rpc/track_public_order", {
+          method: "POST",
+          headers: { apikey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80", "Content-Type": "application/json" },
+          body: JSON.stringify({ p_business_slug: "sobers-pizza", p_order_number: order.client_request_id, p_customer_phone: order.customer_phone }),
+        });
+        if (!response.ok) return order;
+        const current = await response.json();
+        return current ? { ...order, order_number: current.order_number || order.order_number, status: current.status || order.status, total: Number(current.total ?? order.total), fulfilment: current.fulfilment || order.fulfilment, branch_name: current.branch_name || order.branch_name, updated_at: current.updated_at || order.updated_at, synced: true } : order;
+      } catch (_) { return order; }
+    }));
+    const allOrders = read(KEYS.orders, []);
+    refreshed.forEach(current => {
+      const index = allOrders.findIndex(order => order.client_request_id === current.client_request_id);
+      if (index >= 0) allOrders[index] = current;
+    });
+    write(KEYS.orders, allOrders);
+    orders = allOrders;
+    const activeTab = $('[data-purchase-tab].active')?.dataset.purchaseTab || "active";
+    renderPurchases(activeTab);
   }
   window.SobersPurchases = {
     getLocalOrders: () => read(KEYS.orders, []),
