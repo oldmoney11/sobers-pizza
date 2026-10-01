@@ -715,12 +715,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 ×
             </button>
 
-            <img
-                src=""
-                alt=""
-            >
+            <div class="sp-product-visual">
+                <img src="" alt="">
+                <span class="sp-product-visual__tag">MADE FRESH</span>
+                <div class="sp-product-visual__caption">
+                    <small>YOUR SOBERS PICK</small>
+                    <strong class="sp-product-visual__category">SOBERS PIZZA</strong>
+                </div>
+            </div>
 
-            <div>
+            <div class="sp-product-body">
 
                 <p>SOBERS PIZZA</p>
 
@@ -729,6 +733,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span
                     class="sp-product-description"
                 ></span>
+
+                <div class="sp-product-assurance" aria-label="Product highlights">
+                    <span>🔥 Made fresh</span>
+                    <span>✓ Built your way</span>
+                </div>
 
                 <div
                     class="sp-option-groups"
@@ -1251,6 +1260,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const groups = productModal.querySelector(".sp-option-groups");
 
+    const category = productModal.querySelector(".sp-product-visual__category");
+
     if (image) {
       image.src = appAssetUrl(activeProduct.image);
 
@@ -1263,6 +1274,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (description) {
       description.textContent = activeProduct.description;
+    }
+
+    if (category) {
+      category.textContent = String(activeProduct.category || "Sobers favourite").replace(/[-_]/g, " ").toUpperCase();
     }
 
     if (groups) {
@@ -1330,6 +1345,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         groups.appendChild(field);
       });
+
+      productModal.classList.toggle("sp-simple-product", !groups.children.length);
     }
 
     updateProductTotal();
