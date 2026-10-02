@@ -125,6 +125,19 @@
     } catch (error) { host.innerHTML = `<div class="sp-empty-state"><span>!</span><h3>Could not load purchases</h3><p>${error.message}</p></div>`; }
   }
 
+  async function syncRemoteOrders() {
+    if (!session?.user) return;
+    const remoteOrders = await request(`/rest/v1/platform_orders?customer_user_id=eq.${session.user.id}&select=id,order_number,client_request_id,status,total,created_at,fulfilment&order=created_at.desc&limit=100`);
+    const allOrders = [...(window.SobersPurchases?.getLocalOrders?.() || [])];
+    remoteOrders.forEach(remote => {
+      const index = allOrders.findIndex(local => local.id === remote.id || (remote.client_request_id && local.client_request_id === remote.client_request_id));
+      if (index >= 0) allOrders[index] = { ...allOrders[index], ...remote, synced: true };
+      else allOrders.push({ ...remote, synced: true });
+    });
+    write("sobersCustomerOrdersV1", allOrders);
+    window.dispatchEvent(new CustomEvent("sobers:orders-updated"));
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     $("[data-auth-open]")?.addEventListener("click", openAuth);
     $("[data-auth-close]")?.addEventListener("click", closeAuth);
@@ -137,7 +150,7 @@
           if (!result.access_token) { message.className = "sp-auth-success"; message.textContent = "Account created. Confirm the email, then sign in."; setMode("signin"); return; }
           session = result; write(PROFILE_KEY, { name: String(data.get("full_name") || "").trim(), phone: "", address: "" });
         } else session = await request("/auth/v1/token?grant_type=password", { method: "POST", body: JSON.stringify({ email: String(data.get("email")).trim(), password: String(data.get("password")) }) });
-        write(SESSION_KEY, session); await loadProfile(); await loadFavourites(); closeAuth(); showAccountState();
+        write(SESSION_KEY, session); await loadProfile(); await loadFavourites(); await syncRemoteOrders(); closeAuth(); showAccountState();
       } catch (error) { message.className = "sp-auth-error"; message.textContent = error.message; }
     });
     $("[data-auth-signout]")?.addEventListener("click", async () => { try { await request("/auth/v1/logout", { method: "POST" }); } catch (_) {} session = null; write(SESSION_KEY, null); showAccountState(); });
@@ -145,6 +158,8 @@
     $("#spMenuGrid")?.addEventListener("click", event => { const heart = event.target.closest("[data-favourite-key]"); if (heart) setTimeout(() => syncFavourite(heart).catch(console.warn), 0); }, true);
     $$('[data-purchase-tab]').forEach(button => button.addEventListener("click", () => setTimeout(() => renderOrders(button.dataset.purchaseTab), 0)));
     $("[data-customer-panel='purchases']")?.addEventListener("click", () => setTimeout(() => renderOrders("active"), 0));
-    await refresh(); showAccountState(); if (session?.user) { await loadProfile().catch(console.warn); await loadFavourites().catch(console.warn); }
+    $("[data-customer-panel='rewards']")?.addEventListener("click", () => syncRemoteOrders().catch(console.warn));
+    window.SobersAuth = { syncOrders: () => syncRemoteOrders() };
+    await refresh(); showAccountState(); if (session?.user) { await loadProfile().catch(console.warn); await loadFavourites().catch(console.warn); await syncRemoteOrders().catch(console.warn); }
   });
 })();
