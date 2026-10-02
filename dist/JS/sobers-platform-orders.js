@@ -5,6 +5,17 @@
   const SUPABASE_KEY = "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80";
   const PENDING_KEY = "sobersPendingDatabaseOrders";
   const CUSTOMER_ORDERS_KEY = "sobersCustomerOrdersV1";
+  const SUBMIT_GUARD_KEY = "sobersOrderSubmitGuardV1";
+
+  function enforceLocalSubmitGuard() {
+    const now = Date.now();
+    let attempts = [];
+    try { attempts = JSON.parse(sessionStorage.getItem(SUBMIT_GUARD_KEY) || "[]"); } catch (_) {}
+    attempts = Array.isArray(attempts) ? attempts.filter((time) => now - Number(time) < 300000) : [];
+    if (attempts.length >= 5) throw new Error("Too many order attempts. Please wait a few minutes and try again.");
+    attempts.push(now);
+    try { sessionStorage.setItem(SUBMIT_GUARD_KEY, JSON.stringify(attempts)); } catch (_) {}
+  }
 
   function customerOrders() {
     try {
@@ -45,6 +56,7 @@
   }
 
   async function send(order) {
+    enforceLocalSubmitGuard();
     const customerToken = window.SobersCustomerAuth?.getAccessToken?.();
     const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_public_order_v2`, {
       method: "POST",

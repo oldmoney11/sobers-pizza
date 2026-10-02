@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="robots" content="noindex,nofollow,noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="theme-color" content="#e51f26" />
     <title>Sobers Admin</title>
     <link rel="manifest" href="manifest.json?v=1" />
@@ -16,6 +18,7 @@
   <body
     data-business-slug="sobers-pizza"
     data-business-name="Sobers Pizza"
+    data-allow-preview="false"
     data-admin-theme="sobers"
   >
     <section class="login" id="login">
@@ -474,7 +477,7 @@
       </form>
     </dialog>
     <script src="platform-config.js?v=5"></script>
-    <script src="business-admin.js?v=16"></script>
+    <script src="business-admin.js?v=17"></script>
     <script src="admin-pwa.js?v=13"></script>
   </body>
 </html>

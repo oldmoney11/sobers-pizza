@@ -8,6 +8,7 @@
   const money = (value) => `GH₵${Number(value || 0).toFixed(2)}`;
   let pollTimer = 0;
   let activeLookup = null;
+  let lastManualLookupAt = 0;
 
   function statusLabel(order) {
     if (order.status === "cancelled") return "Cancelled";
@@ -74,6 +75,12 @@
   }
 
   async function submit(reference, phone, automatic = false) {
+    const now = Date.now();
+    if (!automatic && now - lastManualLookupAt < 3000) {
+      $("#trackMessage").textContent = "Please wait a moment before checking again.";
+      return;
+    }
+    if (!automatic) lastManualLookupAt = now;
     const button = $("#trackForm button");
     button.disabled = true;
     $("#trackMessage").textContent = automatic ? "Connecting to your live order…" : "Checking your order…";

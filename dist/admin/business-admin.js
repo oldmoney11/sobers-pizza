@@ -33,6 +33,16 @@
     const businessSlug = dashboard.businessSlug;
     const businessLabel = dashboard.businessName || "Business";
     let notificationButton = null;
+    const ADMIN_IDLE_LIMIT = 30 * 60 * 1000;
+    let lastAdminActivity = Date.now();
+
+    ["pointerdown", "keydown", "touchstart"].forEach(eventName => document.addEventListener(eventName, () => { lastAdminActivity = Date.now(); }, { passive: true }));
+    window.setInterval(async () => {
+        if (!business || Date.now() - lastAdminActivity < ADMIN_IDLE_LIMIT) return;
+        await db.auth.signOut();
+        business = null;
+        showError("Your secure session expired after 30 minutes of inactivity. Please sign in again.");
+    }, 60000);
 
     function mountNotificationControl() {
         const topbar = document.querySelector(".topbar");
@@ -496,7 +506,7 @@
     }
     db.auth.onAuthStateChange(event => { if (event === "PASSWORD_RECOVERY") setTimeout(() => openPasswordDialog(true), 0); });
 
-    if (new URLSearchParams(location.search).has("preview")) {
+    if (document.body.dataset.allowPreview === "true" && new URLSearchParams(location.search).has("preview")) {
         business = { id: "preview", name: businessLabel }; $("#login").classList.add("hidden"); $("#app").classList.remove("hidden"); $("#userName").textContent = "Preview mode";
         categories = [{id:"c1",name:"Pizza",slug:"pizza",description:"Sobers signature pizzas",sort_order:1,is_active:true},{id:"c2",name:"Sides",slug:"sides",description:"Sides and extras",sort_order:2,is_active:true}];
         products = [
