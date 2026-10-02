@@ -494,7 +494,7 @@
       <a href="#menu"><span>▦</span><small>Menu</small></a>
       <button type="button" data-customer-panel="rewards"><span>✦</span><small>Rewards</small></button>
       <button type="button" data-customer-panel="purchases"><span>▤</span><small>Purchases</small></button>
-      <button type="button" data-customer-panel="account"><span>●</span><small>Account</small></button>
+      <button type="button" data-customer-panel="account"><span>●</span><small>Account</small><b class="sp-notice-count" data-notice-count hidden>0</b></button>
     </nav>
 
     <div class="sp-customer-shell" id="spCustomerShell" hidden aria-hidden="true">
@@ -502,7 +502,7 @@
       <section class="sp-customer-panel" role="dialog" aria-modal="true" aria-labelledby="spCustomerPanelTitle">
         <header><div><p>SOBERS SPACE</p><h2 id="spCustomerPanelTitle">My Sobers</h2></div><button type="button" data-customer-close aria-label="Close">×</button></header>
         <div class="sp-customer-view" data-panel-view="rewards">
-          <div class="sp-reward-hero"><span>SLICE REWARDS</span><h3>Every order gets you closer.</h3><p>Earn a slice stamp for every completed order.</p><div class="sp-slice-meter" aria-label="0 of 6 slice stamps"><i></i><i></i><i></i><i></i><i></i><i></i></div><small>6 stamps unlock a Sobers reward.</small></div>
+          <div class="sp-reward-hero"><span>SLICE REWARDS</span><h3>Every completed order gets you closer.</h3><p id="spRewardCopy">Complete an order to earn your first slice stamp.</p><div class="sp-slice-meter" aria-label="0 of 6 slice stamps"><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="spRewardStatus">0 of 6 stamps earned on this device.</small></div>
           <h3 class="sp-panel-heading">Make today fun</h3>
           <div class="sp-challenge-grid"><button type="button" data-surprise-me><span>🎲</span><b>Surprise me</b><small>Let Sobers pick a craving</small></button><button type="button" data-filter="promo-packs"><span>🔥</span><b>Deal hunter</b><small>See live value packs</small></button></div>
         </div>
@@ -516,11 +516,11 @@
           <button class="sp-account-action" type="button" data-profile-edit><span>◉</span><div><b>My details</b><small>Name, phone and delivery address</small></div><i>›</i></button>
           <h3 class="sp-panel-heading">Preferences</h3>
           <button class="sp-account-action" type="button" data-account-theme><span>◐</span><div><b>Appearance</b><small id="spAccountThemeText">Use light or dark mode</small></div><i>›</i></button>
-          <button class="sp-account-action" type="button" data-notification-preference><span>◌</span><div><b>Notifications</b><small>Promos and important order updates</small></div><i>›</i></button>
+          <button class="sp-account-action" type="button" data-notification-preference><span>◌</span><div><b>Notifications</b><small id="spNotificationStatus">Tap to enable promos and important updates</small></div><i>›</i></button>
           <button class="sp-account-action" type="button" data-location-preference><span>⌖</span><div><b>Delivery location</b><small id="spLocationStatus">Off — optional</small></div><i>›</i></button>
           <h3 class="sp-panel-heading">Support & privacy</h3>
           <button class="sp-account-action" type="button" data-open-legal="terms"><span>§</span><div><b>Terms and policies</b><small>How Sobers serves you</small></div><i>›</i></button>
-          <a class="sp-account-action" href="#notices" data-customer-close><span>!</span><div><b>Notices</b><small>Updates directly from Sobers</small></div><i>›</i></a>
+          <a class="sp-account-action" href="#notices" data-customer-close><span>!</span><div><b>Notices</b><small>Updates directly from Sobers</small></div><b class="sp-inline-notice-count" data-notice-count hidden>0</b><i>›</i></a>
           <button class="sp-account-action sp-signout" type="button" data-auth-signout hidden><span>↪</span><div><b>Sign out</b><small>Guest ordering will still work</small></div><i>›</i></button>
         </div>
       </section>
@@ -707,16 +707,16 @@
 
     <script src="JS/sobers-platform-orders.js?v=8"></script>
     <script src="JS/sobers-pizza.js?v=30"></script>
-    <script src="JS/sobers-notices.js?v=2"></script>
+    <script src="JS/sobers-notices.js?v=3"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
-    <script src="JS/sobers-customer.js?v=6"></script>
+    <script src="JS/sobers-customer.js?v=7"></script>
     <script src="JS/sobers-auth.js?v=2"></script>
 
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("./sw.js?v=70")
+            .register("./sw.js?v=72")
             .then((registration) => {
               registration.update();
 

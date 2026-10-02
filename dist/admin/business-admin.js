@@ -242,7 +242,8 @@
     function renderNotices() {
         $("#noticesEmpty").classList.toggle("hidden", notices.length > 0);
         const format = value => value ? new Date(value).toLocaleString() : "No expiry";
-        $("#noticesBody").innerHTML = notices.map(item => `<tr><td><strong>${esc(item.title)}</strong><br><small class="muted">${esc(item.body)}</small></td><td>${esc(item.notice_type.replace(/_/g, " "))}</td><td>${esc(format(item.starts_at))}<br><small class="muted">to ${esc(format(item.ends_at))}</small></td><td><span class="badge ${item.is_active ? "active" : "inactive"}">${item.is_active ? "Visible" : "Hidden"}</span></td><td><button class="secondary" data-notice-edit="${item.id}">Edit</button></td></tr>`).join("");
+        const state = item => { const now = Date.now(); if (!item.is_active) return ["inactive","Hidden"]; if (new Date(item.starts_at).getTime() > now) return ["inactive","Scheduled"]; if (item.ends_at && new Date(item.ends_at).getTime() < now) return ["inactive","Expired"]; return ["active","Live"]; };
+        $("#noticesBody").innerHTML = notices.map(item => { const [tone,label] = state(item); return `<tr><td><strong>${esc(item.title)}</strong><br><small class="muted">${esc(item.body)}</small></td><td>${esc(item.notice_type.replace(/_/g, " "))}</td><td>${esc(format(item.starts_at))}<br><small class="muted">to ${esc(format(item.ends_at))}</small></td><td><span class="badge ${tone}">${label}</span></td><td><button class="secondary" data-notice-toggle="${item.id}" data-value="${item.is_active}">${item.is_active ? "Hide" : "Publish"}</button> <button class="secondary" data-notice-edit="${item.id}">Edit</button></td></tr>`; }).join("");
     }
     function renderBranches() {
         $("#branchesEmpty").classList.toggle("hidden", branches.length > 0);
@@ -423,7 +424,7 @@
 
     $("#newProduct").onclick = () => categories.length ? editProduct() : alert("Create a category before adding a product.");
     $("#newNotice").onclick = () => editNotice();
-    $("#noticesBody").onclick = event => { const button = event.target.closest("[data-notice-edit]"); if (button) editNotice(notices.find(item => item.id === button.dataset.noticeEdit)); };
+    $("#noticesBody").onclick = async event => { const edit = event.target.closest("[data-notice-edit]"); if (edit) return editNotice(notices.find(item => item.id === edit.dataset.noticeEdit)); const toggle = event.target.closest("[data-notice-toggle]"); if (!toggle) return; toggle.disabled = true; const { error } = await db.from("business_notices").update({ is_active: toggle.dataset.value !== "true" }).eq("id", toggle.dataset.noticeToggle).eq("business_id", business.id); if (error) alert(error.message); await loadAll(); };
     $("#archiveNotice").onclick = async () => { const id = $("#noticeForm").elements.id.value; if (!confirm("Archive this notice? It will disappear from the customer app.")) return; const { error } = await db.from("business_notices").update({ is_active:false }).eq("id", id).eq("business_id", business.id); if (error) return $("#noticeMessage").textContent = error.message; closeDialog("noticeDialog"); await loadAll(); };
     $("#newCategory").onclick = () => editCategory(); $("#newBranch").onclick = () => editBranch(); $("#newPaymentMethod").onclick = () => editPaymentMethod();
     $("#addSize").onclick = () => addOptionRow($("#sizeRows")); $("#addExtra").onclick = () => addOptionRow($("#extraRows"));

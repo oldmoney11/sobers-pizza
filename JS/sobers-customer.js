@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#spCustomerPanelTitle").textContent = titles[name] || "My Sobers";
     $$('[data-customer-panel]').forEach(item => item.classList.toggle("active", item.dataset.customerPanel === name));
     if (name === "purchases") { renderPurchases("active"); refreshOrderStatuses(); }
+    if (name === "rewards") { renderRewards(); refreshOrderStatuses(); }
     if (name === "account") renderProfile();
   }
   function closePanel() { if (!shell) return; shell.hidden = true; shell.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-lock"); }
@@ -115,6 +116,20 @@ document.addEventListener("DOMContentLoaded", () => {
     orders = allOrders;
     const activeTab = $('[data-purchase-tab].active')?.dataset.purchaseTab || "active";
     renderPurchases(activeTab);
+    renderRewards();
+  }
+  function renderRewards() {
+    orders = read(KEYS.orders, []);
+    const completed = orders.filter(order => String(order.status || "").toLowerCase() === "completed").length;
+    const stamps = completed % 6;
+    const rewards = Math.floor(completed / 6);
+    const displayStamps = completed > 0 && stamps === 0 ? 6 : stamps;
+    const meter = $(".sp-slice-meter"); if (!meter) return;
+    $$("i", meter).forEach((slice, index) => slice.classList.toggle("earned", index < displayStamps));
+    meter.setAttribute("aria-label", `${displayStamps} of 6 slice stamps`);
+    const status = $("#spRewardStatus"); const copy = $("#spRewardCopy");
+    if (status) status.textContent = rewards > 0 ? `${rewards} reward${rewards === 1 ? "" : "s"} unlocked · ${stamps} stamp${stamps === 1 ? "" : "s"} toward the next.` : `${stamps} of 6 stamps earned on this device.`;
+    if (copy) copy.textContent = rewards > 0 ? "You have earned a Sobers reward. Show this screen when confirming your next order." : stamps ? `${6 - stamps} more completed order${6 - stamps === 1 ? "" : "s"} to unlock a reward.` : "Complete an order to earn your first slice stamp.";
   }
   window.SobersPurchases = {
     getLocalOrders: () => read(KEYS.orders, []),
@@ -154,11 +169,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const menuObserver = new MutationObserver(injectHearts); if ($("#spMenuGrid")) menuObserver.observe($("#spMenuGrid"), { childList: true, subtree: true }); setTimeout(injectHearts, 200);
 
   $('[data-surprise-me]')?.addEventListener("click", () => { const choices = ['pizza','shawarma','loaded-fries','promo-packs']; openMenuFilter(choices[Math.floor(Math.random() * choices.length)]); });
+  $('[data-panel-view="rewards"] [data-filter]')?.addEventListener("click", event => openMenuFilter(event.currentTarget.dataset.filter));
   $('[data-account-theme]')?.addEventListener("click", () => $("#spThemeButton")?.click());
   $('[data-notification-preference]')?.addEventListener("click", async () => {
     if (!("Notification" in window)) return alert("Notifications are not supported on this device.");
-    const result = await Notification.requestPermission(); prefs.promos = result === "granted"; write(KEYS.prefs, prefs);
+    const result = await Notification.requestPermission(); prefs.promos = result === "granted"; write(KEYS.prefs, prefs); renderNotificationPreference();
+    if (result === "granted") window.SobersNotices?.testNotification();
   });
+  function renderNotificationPreference() {
+    const status = $("#spNotificationStatus"); if (!status) return;
+    if (!("Notification" in window)) status.textContent = "Not supported by this browser";
+    else if (Notification.permission === "granted") status.textContent = "On — promos and important updates";
+    else if (Notification.permission === "denied") status.textContent = "Blocked in browser settings";
+    else status.textContent = "Tap to enable promos and important updates";
+  }
   function requestLocation() {
     if (!navigator.geolocation) return alert("Location is not supported on this device.");
     const status = $("#spLocationStatus"); if (status) status.textContent = "Checking permission…";
@@ -175,4 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $$('[data-open-legal="terms"]').forEach(button => button.addEventListener("click", () => { window.location.href = "legal/terms.html"; }));
   $$('[data-open-legal="privacy"]').forEach(button => button.addEventListener("click", () => { window.location.href = "legal/privacy.html"; }));
   renderProfile();
+  renderNotificationPreference();
+  renderRewards();
 });

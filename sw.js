@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v71";
+const CACHE_NAME = "sobers-pizza-independent-v72";
 const SHELL = [
   "./",
   "./index.html",
@@ -48,6 +48,15 @@ self.addEventListener("install", (event) => {
       )
       .then(() => self.skipWaiting()),
   );
+});
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "./#notices", self.location.origin).href;
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
+    const existing = clients.find(client => client.url.startsWith(self.location.origin));
+    if (existing) { existing.navigate(target); return existing.focus(); }
+    return self.clients.openWindow(target);
+  }));
 });
 self.addEventListener("activate", (event) => {
   event.waitUntil(
