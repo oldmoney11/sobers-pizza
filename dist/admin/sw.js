@@ -1,4 +1,4 @@
-const CACHE = "sobers-admin-v15",
+const CACHE = "sobers-admin-v16",
   SHELL = [
     "./",
     "./index.html",
@@ -12,6 +12,7 @@ const CACHE = "sobers-admin-v15",
     "./admin-pwa.js",
     "./vendor/supabase.min.js",
     "./assets/icon-192.png",
+    "./assets/icon-512.png",
   ];
 self.addEventListener("install", (e) =>
   e.waitUntil(
