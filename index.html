@@ -607,13 +607,17 @@
       >
         <button type="button" id="spCheckoutClose" aria-label="Close checkout">×</button>
 
-        <p>SOBERS PIZZA</p>
-
-        <h2 id="spCheckoutTitle">Almost there.</h2>
-
-        <span>
-          Send your order to Sobers Pizza on WhatsApp and we will confirm everything with you.
-        </span>
+        <div class="sp-checkout-intro">
+          <div class="sp-checkout-brand" aria-hidden="true">
+            <span>S</span>
+            <div><b>SOBERS</b><small>PIZZA</small></div>
+          </div>
+          <div class="sp-checkout-heading">
+            <p>FINAL STEP · FRESHLY MADE</p>
+            <h2 id="spCheckoutTitle">Almost there.</h2>
+            <span>Share your details, then send your order to the selected Sobers branch for confirmation.</span>
+          </div>
+        </div>
 
         <form id="spCheckoutForm">
           <button type="button" class="sp-checkout-branch" id="spCheckoutBranch">
