@@ -125,10 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const [businessRow] = businessResponse.ok ? await businessResponse.json() : [];
       if (!businessRow) return BUSINESS.whatsappNumber;
       const [settingsResponse, branchesResponse] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number&limit=1`, { headers, cache: "no-store" }),
+        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number,default_delivery_fee&limit=1`, { headers, cache: "no-store" }),
         fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,accepting_orders,prep_min_minutes,prep_max_minutes,is_active&order=name.asc`, { headers, cache: "no-store" }),
       ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
+      BUSINESS.deliveryFee = Math.max(0, Number(settings?.default_delivery_fee || 0));
+      updateCheckoutCosts();
       const settingsNumber = normalizeGhanaNumber(settings?.whatsapp_number);
       if (settingsNumber) BUSINESS.defaultWhatsAppNumber = settingsNumber;
       const liveBranches = branchesResponse.ok ? await branchesResponse.json() : [];
@@ -1537,6 +1539,8 @@ document.addEventListener("DOMContentLoaded", () => {
     checkoutOverlay.setAttribute("aria-hidden", "false");
 
     document.body.classList.add("sp-modal-open");
+    updateCheckoutCosts();
+    checkoutForm?.elements.name?.focus();
   }
 
   function closeCheckout() {
@@ -1568,6 +1572,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (checkoutForm) {
       checkoutForm.reset();
+      try { sessionStorage.removeItem("sobersCheckoutDraft"); } catch(_){}
     }
 
     closeCheckout();
@@ -1771,6 +1776,30 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   const checkoutForm = $("#spCheckoutForm");
+  function updateCheckoutCosts() {
+    const fee = document.querySelector("#spDeliveryFee");
+    const grand = document.querySelector("#spEstimatedTotal");
+    if (!fee || !grand) return;
+    const delivery = document.querySelector("#spCheckoutForm input[name=fulfilment]:checked")?.value === "Delivery";
+    const subtotal = cart.reduce((sum,item)=>sum+Number(item.price)*Number(item.qty),0);
+    fee.textContent = delivery ? money(BUSINESS.deliveryFee || 0) + " · confirm with branch" : "No delivery fee";
+    grand.textContent = money(subtotal + (delivery ? BUSINESS.deliveryFee || 0 : 0));
+  }
+  checkoutForm?.addEventListener("change", updateCheckoutCosts);
+  window.addEventListener("sobers:orders-updated", event => {
+    const receipt=event.detail;
+    const signature=JSON.stringify(cart.map(item=>({product_key:item.key,quantity:Number(item.qty),selected_options:item.options||{}})));
+    if(receipt?.confirmation === "received" && receipt.cart_signature === signature && receipt.branch_code === selectedBranch?.code) clearCartAfterOrder();
+  });
+  try { const draft=JSON.parse(sessionStorage.getItem("sobersCheckoutDraft")||"null"); if(draft && Date.now()-draft.saved<86400000) for(const name of ["name","phone","address","note"]) if(checkoutForm?.elements[name]) checkoutForm.elements[name].value=draft[name]||""; } catch(_){}
+  checkoutForm?.addEventListener("input",()=>{const draft={saved:Date.now()};for(const name of ["name","phone","address","note"])draft[name]=checkoutForm.elements[name]?.value||"";try{sessionStorage.setItem("sobersCheckoutDraft",JSON.stringify(draft));}catch(_){}});
+  document.querySelector("#spCheckoutOverlay")?.addEventListener("keydown", event => {
+    if (event.key !== "Tab") return;
+    const controls = [...document.querySelectorAll("#spCheckoutOverlay button:not(:disabled), #spCheckoutOverlay input, #spCheckoutOverlay textarea")].filter(node=>node.getClientRects().length);
+    const first=controls[0],last=controls[controls.length-1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
 
   if (checkoutForm) {
     checkoutForm.addEventListener("submit", async (event) => {
@@ -1786,9 +1815,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (submitButton) {
         submitButton.disabled = true;
+        checkoutForm.setAttribute("aria-busy", "true");
       }
 
       try {
+        await syncBusinessSettings();
+        if (selectedBranch?.accepting_orders === false) {
+          document.querySelector("#spCheckoutStatus").textContent = "This branch has paused orders. Please choose another branch.";
+          return;
+        }
         const form = new FormData(event.target);
 
         const total = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
@@ -1870,32 +1905,8 @@ document.addEventListener("DOMContentLoaded", () => {
           })),
         };
 
-        const databasePromise = window.SobersPlatformOrders
-          ? window.SobersPlatformOrders.submit(databaseOrder)
-          : Promise.resolve({ saved: false, queued: false, result: null });
-        // Do not await the database here. Mobile browsers can refuse a delayed
-        // redirect to WhatsApp even when an intermediate tab was opened during
-        // the tap. The save continues in the background.
-        void databasePromise;
-
         const orderNumber = clientReference;
-
         const trackingURL = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}track/#ref=${encodeURIComponent(clientReference)}&phone=${encodeURIComponent(normalizedCustomerPhone)}`;
-
-        window.SobersPlatformOrders?.saveCustomerOrder?.({
-          client_request_id: clientReference,
-          order_number: clientReference,
-          status: "new",
-          total,
-          created_at: new Date().toISOString(),
-          fulfilment,
-          branch_code: selectedBranch?.code || "MAIN-BRANCH",
-          branch_name: selectedBranch?.name || "Town",
-          tracking_url: trackingURL,
-          customer_phone: normalizedCustomerPhone,
-          items: cart.map(item => ({ name: item.name, quantity: Number(item.qty), price: Number(item.price), options: item.options || {} })),
-          synced: false,
-        });
 
         /* =========================================
                        CREATE WHATSAPP ORDER MESSAGE
@@ -1930,7 +1941,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           `*Subtotal: ${money(total)}*`,
 
-          "Delivery fee: to be confirmed",
+          fulfilment === "Delivery" ? `Delivery fee: ${money(BUSINESS.deliveryFee || 0)} (confirm with branch)` : "Pickup: no delivery fee",
 
           "",
 
@@ -1954,14 +1965,37 @@ document.addEventListener("DOMContentLoaded", () => {
         const whatsappURL =
           `https://wa.me/${BUSINESS.whatsappNumber}` + `?text=${encodeURIComponent(message)}`;
 
-        const whatsappWindow = window.open(whatsappURL, "_blank", "noopener");
-        if (!whatsappWindow) window.location.assign(whatsappURL);
+        const progress = document.querySelector("#spCheckoutStatus");
+        if (progress) progress.textContent = "Sending your order… Please keep this screen open.";
+        const outcome = await window.SobersPlatformOrders.submit(databaseOrder, {
+          client_request_id: clientReference,
+          order_number: clientReference,
+          status: "new",
+          total,
+          created_at: new Date().toISOString(),
+          fulfilment,
+          branch_code: selectedBranch?.code || "MAIN-BRANCH",
+          branch_name: selectedBranch?.name || "Town",
+          tracking_url: trackingURL,
+          customer_phone: normalizedCustomerPhone,
+          items: cart.map(item => ({ name: item.name, quantity: Number(item.qty), price: Number(item.price), options: item.options || {} })),
+          synced: false,
+          whatsapp_url: whatsappURL,
+          cart_signature: JSON.stringify(databaseOrder.requested_items),
+        });
+        if (outcome.saved) clearCartAfterOrder();
+        closeCheckout();
+        window.SobersPlatformOrders.showReceipt(outcome.receipt);
+        // Same-tab navigation avoids popup blockers after the asynchronous confirmation.
+        if (outcome.saved && /^https:\/\/wa\.me\/\d+\?/.test(outcome.receipt.whatsapp_url || "")) {
+          window.location.assign(outcome.receipt.whatsapp_url);
+        }
 
         /* =========================================
                        CLEAR CART
                     ========================================= */
 
-        clearCartAfterOrder();
+
 
       } catch (error) {
         console.error("Sobers Pizza checkout error:", error);
@@ -1970,6 +2004,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } finally {
         if (submitButton) {
           submitButton.disabled = false;
+          checkoutForm.setAttribute("aria-busy", "false");
         }
       }
     });

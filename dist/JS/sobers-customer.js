@@ -3,11 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const $$ = (selector, root = document) => [...(root || document).querySelectorAll(selector)];
   const read = (key, fallback) => { try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; } catch (_) { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {} };
+  const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   const KEYS = { onboarded: "sobersCustomerOnboardedV1", prefs: "sobersCustomerPrefsV1", profile: "sobersCustomerProfileV1", favourites: "sobersCustomerFavouritesV1", orders: "sobersCustomerOrdersV1" };
   let prefs = read(KEYS.prefs, { mood: "", promos: true, location: false });
   let profile = read(KEYS.profile, {});
   let favourites = read(KEYS.favourites, []);
-  let orders = read(KEYS.orders, []);
+  let orders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
 
   const onboarding = $("#spOnboarding");
   let step = 0;
@@ -70,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!favourites.length) { host.innerHTML = '<div class="sp-empty-state"><span>♡</span><h3>No favourites yet</h3><p>Tap the heart on any menu item to keep your cravings close.</p><button type="button" data-go-menu>Find a favourite</button></div>'; }
       else { host.innerHTML = `<div class="sp-favourite-list">${favourites.map(item => `<div class="sp-favourite-row"><img src="${item.image}" alt=""><div><b>${item.name}</b><small>${item.price}</small></div><button type="button" data-remove-favourite="${item.key}" aria-label="Remove ${item.name}">×</button></div>`).join("")}</div>`; }
     } else if (["active", "history"].includes(tab)) {
-      orders = read(KEYS.orders, []);
+      orders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
       const activeStatuses = ["new", "confirmed", "preparing", "ready", "pending"];
       const visibleOrders = orders
         .filter(order => tab === "active" ? activeStatuses.includes(String(order.status || "new").toLowerCase()) : !activeStatuses.includes(String(order.status || "new").toLowerCase()))
@@ -78,10 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (visibleOrders.length) {
         host.innerHTML = `<div class="sp-purchase-list">${visibleOrders.map(order => {
           const status = String(order.status || "new").toLowerCase();
-          const label = status === "new" ? "Order received" : status.replace(/\b\w/g, letter => letter.toUpperCase());
+          const label = order.confirmation && !order.synced ? ({sending:"Sending…",offline:"Saved offline",unconfirmed:"Not confirmed",rejected:"Needs attention"}[order.confirmation] || "Not confirmed") : status === "new" ? "Received · awaiting branch" : status.replace(/\b\w/g, letter => letter.toUpperCase());
           const reference = order.order_number || order.client_request_id || "Sobers order";
-          const tracking = order.tracking_url ? `<a class="sp-order-track" href="${order.tracking_url}">Track order →</a>` : "";
-          return `<article class="sp-purchase-card"><div class="sp-purchase-card__top"><div><small>${new Date(order.created_at).toLocaleString()}</small><h3>${reference}</h3></div><span data-order-status="${status}">${label}</span></div><div class="sp-purchase-card__meta"><span>${order.branch_name || "Sobers Pizza"}</span><span>${order.fulfilment || "Order"}</span><strong>GH₵${Number(order.total || 0).toFixed(2)}</strong></div>${tracking}</article>`;
+          const tracking = order.client_request_id ? `<button type="button" class="sp-order-track" data-order-receipt="${escape(order.client_request_id)}">View receipt / tracking →</button>` : "";
+          return `<article class="sp-purchase-card"><div class="sp-purchase-card__top"><div><small>${new Date(order.created_at).toLocaleString()}</small><h3>${escape(reference)}</h3></div><span data-order-status="${status}">${escape(label)}</span></div><div class="sp-purchase-card__meta"><span>${escape(order.branch_name || "Sobers Pizza")}</span><span>${escape(order.fulfilment || "Order")}</span><strong>GH₵${Number(order.total || 0).toFixed(2)}</strong></div>${tracking}</article>`;
         }).join("")}</div>`;
       } else {
         const copy = purchaseCopy[tab] || purchaseCopy.active;
@@ -93,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   async function refreshOrderStatuses() {
-    const savedOrders = read(KEYS.orders, []).filter(order => order.client_request_id && order.customer_phone).slice(-20);
+    const savedOrders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, [])).filter(order => order.client_request_id && order.customer_phone).slice(-20);
     if (!savedOrders.length || navigator.onLine === false) return;
     const refreshed = await Promise.all(savedOrders.map(async order => {
       try {
@@ -104,10 +105,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (!response.ok) return order;
         const current = await response.json();
-        return current ? { ...order, order_number: current.order_number || order.order_number, status: current.status || order.status, total: Number(current.total ?? order.total), fulfilment: current.fulfilment || order.fulfilment, branch_name: current.branch_name || order.branch_name, updated_at: current.updated_at || order.updated_at, synced: true } : order;
+        return current ? { ...order, order_number: current.order_number || order.order_number, status: current.status || order.status, total: Number(current.total ?? order.total), fulfilment: current.fulfilment || order.fulfilment, branch_name: current.branch_name || order.branch_name, updated_at: current.updated_at || order.updated_at, synced: true, confirmation: "received", request: null } : order;
       } catch (_) { return order; }
     }));
-    const allOrders = read(KEYS.orders, []);
+    const allOrders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
     refreshed.forEach(current => {
       const index = allOrders.findIndex(order => order.client_request_id === current.client_request_id);
       if (index >= 0) allOrders[index] = current;
@@ -119,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderRewards();
   }
   function renderRewards() {
-    orders = read(KEYS.orders, []);
+    orders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
     const completed = orders.filter(order => String(order.status || "").toLowerCase() === "completed").length;
     const stamps = completed % 6;
     const rewards = Math.floor(completed / 6);
@@ -132,10 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (copy) copy.textContent = rewards > 0 ? "You have earned a Sobers reward. Show this screen when confirming your next order." : stamps ? `${6 - stamps} more completed order${6 - stamps === 1 ? "" : "s"} to unlock a reward.` : "Complete an order to earn your first slice stamp.";
   }
   window.SobersPurchases = {
-    getLocalOrders: () => read(KEYS.orders, []),
+    getLocalOrders: () => (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, [])),
     render: renderPurchases,
     refresh: () => {
-      orders = read(KEYS.orders, []);
+      orders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
       const activeTab = $('[data-purchase-tab].active')?.dataset.purchaseTab || "active";
       if (!shell?.hidden) renderPurchases(activeTab);
     },
@@ -144,6 +145,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $$('[data-purchase-tab]').forEach(button => button.addEventListener("click", () => renderPurchases(button.dataset.purchaseTab)));
   $("#spPurchaseContent")?.addEventListener("click", event => {
     if (event.target.closest('[data-go-menu]')) { closePanel(); $("#menu")?.scrollIntoView({ behavior: "smooth" }); }
+    const receiptButton = event.target.closest('[data-order-receipt]');
+    if (receiptButton) window.SobersPlatformOrders?.showReceipt((window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, [])).find(order=>order.client_request_id === receiptButton.dataset.orderReceipt));
     const remove = event.target.closest('[data-remove-favourite]');
     if (remove) { favourites = favourites.filter(item => item.key !== remove.dataset.removeFavourite); write(KEYS.favourites, favourites); renderPurchases("favourites"); refreshHearts(); }
   });

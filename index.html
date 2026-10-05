@@ -683,14 +683,18 @@
             <strong id="spCheckoutTotal"> GH₵0.00 </strong>
           </div>
 
+          <div class="sp-order-costs"><p>Delivery <strong id="spDeliveryFee">Confirm with branch</strong></p><p>Estimated total <strong id="spEstimatedTotal">GH₵0.00</strong></p><small>Final availability and delivery charges are confirmed by your branch. No online payment is taken.</small></div>
+          <p id="spCheckoutStatus" role="status" aria-live="polite"></p>
           <button type="submit">
-            Send order on WhatsApp
+            Place order
 
             <span>→</span>
           </button>
         </form>
       </section>
     </div>
+
+    <dialog id="spOrderReceipt" class="sp-order-receipt" aria-labelledby="spReceiptTitle"><button type="button" data-receipt-close aria-label="Close order receipt">×</button><p>YOUR SOBERS ORDER</p><h2 id="spReceiptTitle" data-receipt-title>Order receipt</h2><p data-receipt-message role="status" aria-live="polite"></p><strong data-receipt-reference></strong><p data-receipt-branch></p><div class="sp-receipt-actions"><a data-receipt-track>Check tracking</a><button type="button" data-receipt-retry>Check / retry same order</button><a data-receipt-contact target="_blank" rel="noopener">Contact branch on WhatsApp</a></div><small data-receipt-storage>Find this receipt later in Purchases. Guest receipts are saved on this device.</small></dialog>
 
     <div class="sp-qr-overlay" id="spQrOverlay" aria-hidden="true">
       <section class="sp-qr-card" role="dialog" aria-modal="true" aria-labelledby="spQrTitle">
@@ -709,11 +713,11 @@
       </section>
     </div>
 
-    <script src="JS/sobers-platform-orders.js?v=8"></script>
-    <script src="JS/sobers-pizza.js?v=30"></script>
+    <script src="JS/sobers-platform-orders.js?v=9"></script>
+    <script src="JS/sobers-pizza.js?v=32"></script>
     <script src="JS/sobers-notices.js?v=3"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
-    <script src="JS/sobers-customer.js?v=7"></script>
+    <script src="JS/sobers-customer.js?v=8"></script>
     <script src="JS/sobers-auth.js?v=4"></script>
 
     <script src="JS/sobers-pwa.js?v=1"></script>
