@@ -22,6 +22,7 @@
     let business = null;
     let membership = null;
     let orders = [];
+    let deliverySessions = [];
     let products = [];
     let categories = [];
     let branches = [];
@@ -125,18 +126,20 @@
 
     async function loadAll() {
         if (!business) return;
-        const [orderResult, productResult, categoryResult, branchResult, settingsResult, paymentResult, noticeResult] = await Promise.all([
+        const [orderResult, productResult, categoryResult, branchResult, settingsResult, paymentResult, noticeResult, deliveryResult] = await Promise.all([
             db.from("platform_orders").select("*").eq("business_id", business.id).order("created_at", { ascending: false }).limit(500),
             db.from("products").select("*,categories(name)").eq("business_id", business.id).eq("is_active", true).order("sort_order"),
             db.from("categories").select("*").eq("business_id", business.id).order("sort_order"),
             db.from("branches").select("*").eq("business_id", business.id).order("name"),
             db.from("business_settings").select("*").eq("business_id", business.id).maybeSingle(),
             db.from("payment_methods").select("*").eq("business_id", business.id).order("sort_order"),
-            db.from("business_notices").select("*").eq("business_id", business.id).order("priority", { ascending: false }).order("starts_at", { ascending: false })
+            db.from("business_notices").select("*").eq("business_id", business.id).order("priority", { ascending: false }).order("starts_at", { ascending: false }),
+            db.from("sobers_delivery_sessions").select("order_id,state").eq("business_id", business.id)
         ]);
         const failed = [orderResult, productResult, categoryResult, branchResult, settingsResult, paymentResult].find(result => result.error);
         if (failed) return alert(failed.error.message);
         orders = orderResult.data || [];
+        deliverySessions = deliveryResult.error ? [] : (deliveryResult.data || []);
         products = productResult.data || [];
         categories = categoryResult.data || [];
         branches = branchResult.data || [];
@@ -313,7 +316,15 @@
         if (error) return alert(error.message);
         $("#orderDialogTitle").textContent = order.order_number;
         const rows = (items || []).map(item => { const product = products.find(entry => entry.id === item.product_id || entry.slug === item.product_key); const options = optionSummary(item.selected_options, product); return `<tr><td><strong>${esc(item.quantity)} × ${esc(item.product_name)}</strong>${options.length ? `<span class="order-option">${options.map(esc).join(" · ")}</span>` : ""}</td><td>${money(item.unit_price)}</td><td>${money(item.line_total)}</td></tr>`; }).join("");
-        $("#orderDetail").innerHTML = `<div class="order-meta"><div><small>Official reference</small><strong>${esc(order.order_number)}</strong></div><div><small>Preparing branch</small><strong>${esc(branchName(order.branch_id))}</strong></div>${order.display_order_number ? `<div><small>Kiosk number</small><strong>${esc(order.display_order_number)}</strong></div>` : ""}<div><small>Source</small>${esc(order.source)}</div><div><small>Customer</small><strong>${esc(order.customer_name)}</strong></div><div><small>Phone</small>${esc(order.customer_phone)}</div><div><small>Order type</small>${esc(order.fulfilment)}</div><div><small>Kitchen status</small>${esc(order.status)}</div><div><small>Payment status</small>${esc(order.payment_status || "unpaid")}</div>${order.payment_reference ? `<div><small>Payment reference</small>${esc(order.payment_reference)}</div>` : ""}${order.delivery_address ? `<div><small>Delivery address</small>${esc(order.delivery_address)}</div>` : ""}${order.customer_note ? `<div><small>Customer note</small>${esc(order.customer_note)}</div>` : ""}<div><small>Created</small>${new Date(order.created_at).toLocaleString()}</div></div><table class="order-items"><thead><tr><th>Item</th><th>Unit</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">Subtotal</th><td>${money(order.subtotal)}</td></tr><tr><th colspan="2">Delivery</th><td>${money(order.delivery_fee)}</td></tr><tr><th colspan="2">Order total</th><td><strong>${money(order.total)}</strong></td></tr></tfoot></table>`;
+        $("#orderDetail").innerHTML = `<div class="order-meta"><div><small>Official reference</small><strong>${esc(order.order_number)}</strong></div><div><small>Preparing branch</small><strong>${esc(branchName(order.branch_id))}</strong></div>${order.display_order_number ? `<div><small>Kiosk number</small><strong>${esc(order.display_order_number)}</strong></div>` : ""}<div><small>Source</small>${esc(order.source)}</div><div><small>Customer</small><strong>${esc(order.customer_name)}</strong></div><div><small>Phone</small>${esc(order.customer_phone)}</div><div><small>Order type</small>${esc(order.fulfilment)}</div><div><small>Kitchen status</small>${esc(order.status)}${deliverySessions.find(s=>s.order_id===order.id)?.state === "out_for_delivery" ? " · Out for Delivery" : ""}</div><div><small>Payment status</small>${esc(order.payment_status || "unpaid")}</div>${order.payment_reference ? `<div><small>Payment reference</small>${esc(order.payment_reference)}</div>` : ""}${order.delivery_address ? `<div><small>Delivery address</small>${esc(order.delivery_address)}</div>` : ""}${order.customer_note ? `<div><small>Customer note</small>${esc(order.customer_note)}</div>` : ""}<div><small>Created</small>${new Date(order.created_at).toLocaleString()}</div></div><table class="order-items"><thead><tr><th>Item</th><th>Unit</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">Subtotal</th><td>${money(order.subtotal)}</td></tr><tr><th colspan="2">Delivery</th><td>${money(order.delivery_fee)}</td></tr><tr><th colspan="2">Order total</th><td><strong>${money(order.total)}</strong></td></tr></tfoot></table>`;
+        if (order.fulfilment === "delivery" && !["completed","cancelled"].includes(order.status)) {
+          const area=document.createElement("section");area.innerHTML='<h3>Assign delivery rider</h3><label>Rider<select id="deliveryRiderChoice"></select></label><button type="button" id="assignDeliveryRider">Assign rider</button><p id="deliveryAssignmentMessage" role="status"></p><a href="../rider/">Open Rider Mode</a>';$("#orderDetail").append(area);
+          const {data:riders,error}=await db.rpc("sobers_available_riders",{p_business:business.id});
+          area.querySelector("select").innerHTML=(riders||[]).map(r=>'<option value="'+esc(r.id)+'">'+esc(r.name||r.id)+'</option>').join('');
+          if(error)area.querySelector("p").textContent="Rider tracking is not configured yet.";
+          area.querySelector("button").disabled=!!error||!riders?.length;
+          area.querySelector("button").onclick=async()=>{const button=area.querySelector("button");button.disabled=true;try{const {error}=await db.rpc("sobers_assign_delivery",{p_order:order.id,p_rider:area.querySelector("select").value});area.querySelector("p").textContent=error?error.message:"Rider assigned. Mark the kitchen order ready before starting delivery.";}finally{button.disabled=false;}};
+        }
         const phone = String(order.customer_phone || "").replace(/\D/g, "");
         $("#orderCall").href = `tel:${phone}`; $("#orderWhatsApp").href = `https://wa.me/${phone}`; openDialog("orderDialog");
     }

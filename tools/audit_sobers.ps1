@@ -14,7 +14,7 @@ $jsFiles = @(
   'JS/sobers-pizza.js', 'JS/sobers-platform-orders.js', 'JS/sobers-customer.js',
   'JS/sobers-auth.js', 'JS/sobers-notices.js', 'JS/sobers-extras.js',
   'kiosk/kiosk.js', 'admin/business-admin.js', 'admin-preview/business-admin.js',
-  'track/track.js', 'track/track-live.js'
+  'track/track.js', 'track/track-live.js', 'track/delivery-map.js', 'JS/sobers-gps.js', 'JS/sobers-delivery-pin.js', 'rider/rider.js', 'rider/rider-pwa.js', 'rider/sw.js'
 )
 $syntaxErrors = @()
 foreach ($relative in $jsFiles) {
@@ -24,7 +24,7 @@ foreach ($relative in $jsFiles) {
 }
 Add-Check 'JavaScript syntax' ($syntaxErrors.Count -eq 0) ($(if ($syntaxErrors) { $syntaxErrors -join ', ' } else { "$($jsFiles.Count) application scripts passed" }))
 
-$manifestFiles = @('manifest.json','admin/manifest.json','kiosk/main-branch/manifest.json')
+$manifestFiles = @('manifest.json','admin/manifest.json','kiosk/main-branch/manifest.json','rider/manifest.json')
 $manifestFailures = @()
 foreach ($relative in $manifestFiles) {
   try {
@@ -64,7 +64,7 @@ $juicePaths = foreach ($slug in $juiceSlugs) {
 }
 Add-Check 'Juice Bar uniqueness' (($juicePaths | Select-Object -Unique).Count -eq $juiceSlugs.Count) "17 Juice Bar products have 17 distinct image mappings"
 
-$requiredRoutes = @('index.html','kiosk/main-branch/index.html','admin/index.html','admin-preview/index.html','track/index.html','legal/terms.html','legal/privacy.html')
+$requiredRoutes = @('index.html','kiosk/main-branch/index.html','admin/index.html','admin-preview/index.html','track/index.html','rider/index.html','legal/terms.html','legal/privacy.html')
 $missingRoutes = @($requiredRoutes | Where-Object { -not (Test-Path (Join-Path $dist $_)) })
 Add-Check 'Deployment routes' ($missingRoutes.Count -eq 0) ($(if ($missingRoutes) { $missingRoutes -join ', ' } else { "$($requiredRoutes.Count) primary routes present" }))
 
@@ -93,7 +93,7 @@ foreach ($relative in $securityPages) {
 }
 Add-Check 'Browser security policy' ($securityFailures.Count -eq 0) ($(if ($securityFailures) { $securityFailures -join ', ' } else { 'all public and operational routes include CSP and referrer protection' }))
 
-$parityFiles = @('index.html','manifest.json','sw.js','JS/sobers-pizza.js','JS/sobers-platform-orders.js','JS/sobers-customer.js','JS/sobers-auth.js','JS/sobers-notices.js','admin/index.html','admin/business-admin.js','admin/admin-pwa.js','admin/sw.js','kiosk/kiosk.js','kiosk/main-branch/index.html','kiosk/main-branch/manifest.json','kiosk/main-branch/sw.js','track/index.html','track/track.js','track/track-live.js')
+$parityFiles = @('index.html','manifest.json','sw.js','JS/sobers-pizza.js','JS/sobers-platform-orders.js','JS/sobers-customer.js','JS/sobers-auth.js','JS/sobers-notices.js','admin/index.html','admin/business-admin.js','admin/admin-pwa.js','admin/sw.js','kiosk/kiosk.js','kiosk/main-branch/index.html','kiosk/main-branch/manifest.json','kiosk/main-branch/sw.js','track/index.html','track/track.js','track/track-live.js','track/delivery-map.js','JS/sobers-gps.js','JS/sobers-delivery-pin.js','css/sobers-delivery.css','rider/index.html','rider/rider.js','rider/manifest.json','rider/rider-pwa.js','rider/sw.js')
 $parityFailures = @()
 foreach ($relative in $parityFiles) {
   $sourcePath = Join-Path $root $relative

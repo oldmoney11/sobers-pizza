@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="theme-color" content="#171513" />
     <title>Track your Sobers Pizza order</title>
     <link rel="stylesheet" href="./track.css?v=3" />
     <link rel="stylesheet" href="./track-live.css?v=3" />
-  </head>
+  <link rel="stylesheet" href="../vendor/leaflet/leaflet.css"><link rel="stylesheet" href="../css/sobers-delivery.css"></head>
   <body>
     <main>
       <nav class="track-nav" aria-label="Tracking navigation">
@@ -29,7 +29,7 @@
       </section>
       <section class="receipt hidden" id="receipt" aria-live="polite">
         <header><div><p class="eyebrow">VERIFIED SOBERS ORDER</p><h2 id="receiptNumber"></h2><small class="live-state" id="liveState">Live updates on</small></div><span class="status" id="receiptStatus"></span></header>
-        <div class="progress" id="orderProgress"></div>
+        <div class="progress" id="orderProgress"></div><section id="deliveryMapCard" hidden><h3 id="deliveryHeading">Your rider is on the way</h3><p id="gpsFreshness" role="status">Waiting for a new rider location</p><div id="deliveryMap" aria-label="Live delivery map"></div><p id="deliveryPinNote"></p><small id="deliveryDistance"></small></section>
         <div class="meta" id="receiptMeta"></div>
         <div class="items" id="receiptItems"></div>
         <div class="total"><span>Total</span><strong id="receiptTotal"></strong></div>
@@ -38,7 +38,7 @@
         <button class="print" type="button" id="printReceipt">Print / save receipt</button>
       </section>
     </main>
-    <script src="./track-live.js?v=4"></script>
+    <script src="../vendor/leaflet/leaflet.js"></script><script src="../admin/vendor/supabase.min.js"></script><script src="../JS/sobers-gps.js"></script><script src="delivery-map.js"></script><script src="./track-live.js?v=5"></script>
   </body>
 </html>
 

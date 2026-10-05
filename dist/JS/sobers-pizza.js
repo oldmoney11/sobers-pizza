@@ -1562,6 +1562,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   function clearCartAfterOrder() {
+    window.SobersDeliveryPin?.clear();
     cart = [];
 
     localStorage.removeItem(BUSINESS.storageKey);
@@ -1781,6 +1782,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const grand = document.querySelector("#spEstimatedTotal");
     if (!fee || !grand) return;
     const delivery = document.querySelector("#spCheckoutForm input[name=fulfilment]:checked")?.value === "Delivery";
+    const pinControls=document.querySelector(".sp-delivery-pin");if(pinControls)pinControls.hidden=!delivery;
     const subtotal = cart.reduce((sum,item)=>sum+Number(item.price)*Number(item.qty),0);
     fee.textContent = delivery ? money(BUSINESS.deliveryFee || 0) + " · confirm with branch" : "No delivery fee";
     grand.textContent = money(subtotal + (delivery ? BUSINESS.deliveryFee || 0 : 0));
@@ -1879,7 +1881,10 @@ document.addEventListener("DOMContentLoaded", () => {
                        WhatsApp remains available if offline.
                     ========================================= */
 
+        const deliveryPin = fulfilment === "delivery" ? window.SobersDeliveryPin?.get() : null;
         const databaseOrder = {
+          delivery_latitude: deliveryPin?.latitude ?? null,
+          delivery_longitude: deliveryPin?.longitude ?? null,
           business_slug: "sobers-pizza",
 
           branch_code: selectedBranch?.code || "MAIN-BRANCH",
