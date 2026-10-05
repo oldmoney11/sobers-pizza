@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="theme-color" content="#11100f" />
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <title>Sobers Pizza — Town Branch Kiosk</title>
@@ -96,11 +96,7 @@
       </section>
     </div>
     <script src="../kiosk-config.js?v=2"></script>
-    <script src="../kiosk.js?v=12"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=10").then(registration => registration.update()).catch(console.error));
-      }
-    </script>
+    <script src="../kiosk.js?v=13"></script>
+    <script src="kiosk-pwa.js?v=1"></script>
   </body>
 </html>

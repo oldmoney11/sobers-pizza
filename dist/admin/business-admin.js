@@ -29,6 +29,7 @@
     let notices = [];
     let orderChannel = null;
     let passwordRecovery = false;
+    let recoveryInProgress = location.hash.includes('type=recovery');
     const dashboard = document.body.dataset;
     const businessSlug = dashboard.businessSlug;
     const businessLabel = dashboard.businessName || "Business";
@@ -102,6 +103,8 @@
     async function session() {
         const { data: { session } } = await db.auth.getSession();
         if (!session) return showLogin();
+        if (recoveryInProgress) return showLogin();
+        try { await window.SobersAdminSecurity.ensure(); } catch (error) { return showError(error.message); }
         await db.rpc("accept_business_invitation");
         const { data: profile } = await db.from("profiles").select("full_name,is_platform_admin").eq("id", session.user.id).maybeSingle();
         const { data: foundBusiness } = await db.from("businesses").select("*").eq("slug", businessSlug).maybeSingle();
@@ -465,7 +468,9 @@
             const { error } = await db.auth.updateUser({ password: form.elements.new_password.value });
             if (error) return $("#passwordMessage").textContent = error.message;
             $("#passwordMessage").textContent = "Password updated. You can now continue securely.";
-            setTimeout(() => closeDialog("passwordDialog"), 900);
+            recoveryInProgress = false;
+            closeDialog("passwordDialog");
+            await session();
             return;
         }
         const redirectTo = `${location.origin}${location.pathname}`;
@@ -505,7 +510,7 @@
         const headings = document.querySelectorAll(".option-heading");
         if (headings[1]) { headings[1].querySelector("strong").textContent = "Colors"; headings[1].querySelector("small").textContent = "Available product colours."; $("#addExtra").textContent = "Add color"; }
     }
-    db.auth.onAuthStateChange(event => { if (event === "PASSWORD_RECOVERY") setTimeout(() => openPasswordDialog(true), 0); });
+    db.auth.onAuthStateChange(event => { if (event === "PASSWORD_RECOVERY") { recoveryInProgress = true; setTimeout(() => openPasswordDialog(true), 0); } });
 
     if (document.body.dataset.allowPreview === "true" && new URLSearchParams(location.search).has("preview")) {
         business = { id: "preview", name: businessLabel }; $("#login").classList.add("hidden"); $("#app").classList.remove("hidden"); $("#userName").textContent = "Preview mode";

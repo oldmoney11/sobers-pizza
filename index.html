@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co https://quickchart.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co https://quickchart.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
 
     <title>Sobers Pizza | Bold Pizza. Your Way.</title>
 
@@ -714,32 +714,8 @@
     <script src="JS/sobers-notices.js?v=3"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=7"></script>
-    <script src="JS/sobers-auth.js?v=3"></script>
+    <script src="JS/sobers-auth.js?v=4"></script>
 
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("./sw.js?v=72")
-            .then((registration) => {
-              registration.update();
-
-              console.log("Sobers Pizza service worker registered:", registration.scope);
-            })
-            .catch((error) => {
-              console.error("Sobers Pizza service worker registration failed:", error);
-            });
-        });
-
-        navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data?.type !== "PWA_UPDATED" || sessionStorage.getItem("sobers-pwa-v66")) {
-            return;
-          }
-
-          sessionStorage.setItem("sobers-pwa-v66", "1");
-          location.reload();
-        });
-      }
-    </script>
+    <script src="JS/sobers-pwa.js?v=1"></script>
   </body>
 </html>
