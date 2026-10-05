@@ -7,6 +7,9 @@
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const money = (value) => `GH₵${Number(value || 0).toFixed(2)}`;
   let pollTimer = 0;
+  let lastLookupAt = 0;
+  let requestBusy = false;
+  let lookupSequence = 0;
   let activeLookup = null;
   let lastManualLookupAt = 0;
 
@@ -15,14 +18,16 @@
     if (order.status === "new") return "Order received";
     if (order.status === "confirmed") return "Confirmed";
     if (order.status === "preparing") return "Preparing your food";
+    if (order.delivery?.state === "out_for_delivery" || order.delivery?.state === "stopped") return "Out for Delivery";
     if (order.status === "ready") return order.fulfilment === "pickup" ? "Ready for pickup" : "Ready for delivery";
     if (order.status === "completed") return order.fulfilment === "pickup" ? "Collected" : "Delivered";
     return String(order.status || "Received").replace(/_/g, " ");
   }
 
   function render(order) {
+    window.SobersDeliveryMap?.render(order.delivery);
     const current = order.status === "cancelled" ? -1 : statuses.indexOf(order.status);
-    const labels = ["Received", "Confirmed", "Preparing", order.fulfilment === "pickup" ? "Pickup" : "Ready", order.fulfilment === "pickup" ? "Collected" : "Delivered"];
+    const labels = ["Received", "Confirmed", "Preparing", order.fulfilment === "pickup" ? "Pickup" : ["out_for_delivery","stopped"].includes(order.delivery?.state) ? "On the way" : "Ready", order.fulfilment === "pickup" ? "Collected" : "Delivered"];
     $("#receiptNumber").textContent = order.order_number;
     $("#receiptStatus").textContent = statusLabel(order);
     $("#orderProgress").innerHTML = statuses.map((status, index) => `<div class="progress-step ${index <= current ? "done" : ""} ${index === current ? "current" : ""}"><span class="step" title="${esc(status)}"></span><small>${esc(labels[index])}</small></div>`).join("");
@@ -43,13 +48,25 @@
   }
 
   async function lookup(reference, phone, quiet = false) {
-    const response = await fetch(`${url}/rest/v1/rpc/track_public_order`, {
+    lastLookupAt = Date.now();
+    const sequence = ++lookupSequence;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    let response, order;
+    try {
+    response = await fetch(`${url}/rest/v1/rpc/track_public_order`, {
       method: "POST",
       headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ p_business_slug: "sobers-pizza", p_order_number: reference, p_customer_phone: phone }),
-      cache: "no-store",
+      cache: "no-store", signal: controller.signal,
     });
-    const order = await response.json();
+    order = await response.json();
+    } catch (error) {
+      if (sequence !== lookupSequence) return { superseded: true };
+      if (error.name === "AbortError") throw new Error("Tracking connection timed out. We’ll retry.");
+      throw error;
+    } finally { window.clearTimeout(timeout); }
+    if (sequence !== lookupSequence) return { superseded: true };
     if (!response.ok) throw new Error(order?.message || "Tracking is temporarily unavailable.");
     if (!order) {
       if (quiet) return null;
@@ -64,14 +81,15 @@
   }
 
   async function refresh() {
-    if (!activeLookup || document.hidden) {
+    if (requestBusy || Date.now() - lastLookupAt < 6000 || !activeLookup || document.hidden) {
       pollTimer = window.setTimeout(refresh, 5000);
       return;
     }
+    requestBusy = true;
     try {
       const order = await lookup(activeLookup.reference, activeLookup.phone, true);
-      if (!order) pollTimer = window.setTimeout(refresh, 5000);
-    } catch (_) { pollTimer = window.setTimeout(refresh, 12000); }
+      if (!order) { window.SobersDeliveryMap?.render(null); $("#liveState").textContent = "Waiting for a verified order update"; pollTimer = window.setTimeout(refresh, 10000); }
+    } catch (_) { $("#liveState").textContent = "Connection interrupted · retrying"; pollTimer = window.setTimeout(refresh, 12000); } finally { requestBusy = false; }
   }
 
   async function submit(reference, phone, automatic = false) {
@@ -80,7 +98,7 @@
       $("#trackMessage").textContent = "Please wait a moment before checking again.";
       return;
     }
-    if (!automatic) lastManualLookupAt = now;
+    if (!automatic) { lastManualLookupAt = now; activeLookup = null; window.SobersDeliveryMap?.render(null); $("#receipt").classList.add("hidden"); }
     const button = $("#trackForm button");
     button.disabled = true;
     $("#trackMessage").textContent = automatic ? "Connecting to your live order…" : "Checking your order…";
@@ -97,6 +115,9 @@
     const form = new FormData(event.currentTarget);
     submit(String(form.get("order_number") || "").trim(), String(form.get("customer_phone") || "").trim());
   };
+  window.addEventListener("sobers:delivery-changed", () => { window.clearTimeout(pollTimer); pollTimer = window.setTimeout(refresh, Math.max(0, 6000 - (Date.now() - lastLookupAt))); });
+  window.addEventListener("online",refresh);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh();});
   $("#printReceipt").onclick = () => window.print();
 
   const shared = new URLSearchParams(window.location.hash.slice(1));

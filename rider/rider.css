@@ -1,0 +1,1 @@
+#deliveries article{padding:20px;margin-top:16px;border:1px solid var(--line);border-radius:16px}#deliveries button{margin:8px 8px 0 0;min-height:44px;padding:10px 14px}#riderControls{margin-top:20px}button:focus-visible,a:focus-visible{outline:3px solid #ff9ba6;outline-offset:3px}#riderMessage{min-height:2em;color:#ff9ba6}button:disabled{opacity:.55}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v74";
+const CACHE_NAME = "sobers-pizza-independent-v75";
 const SHELL = [
   "./",
   "./index.html",
@@ -22,6 +22,13 @@ const SHELL = [
   "./track/track-live.css",
   "./track/track-live.js",
   "./track/track.js",
+  "./vendor/leaflet/leaflet.js",
+  "./vendor/leaflet/leaflet.css",
+  "./JS/sobers-gps.js",
+  "./JS/sobers-delivery-pin.js",
+  "./track/delivery-map.js",
+  "./css/sobers-delivery.css",
+  "./admin/vendor/supabase.min.js",
   "./legal/terms.html",
   "./legal/privacy.html",
   "./kiosk/main-branch/",

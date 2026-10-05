@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co https://quickchart.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co wss://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: https://tile.openstreetmap.org blob: https://inthadecmxmbqexufzpe.supabase.co https://quickchart.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
 
     <title>Sobers Pizza | Bold Pizza. Your Way.</title>
 
@@ -44,7 +44,7 @@
     <meta name="apple-mobile-web-app-title" content="Sobers Pizza" />
 
     <meta name="format-detection" content="telephone=no" />
-  </head>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css"><link rel="stylesheet" href="css/sobers-delivery.css"></head>
 
   <body id="top">
     <div class="sp-welcome" id="spWelcome" hidden aria-hidden="true">
@@ -670,6 +670,7 @@
             ></textarea>
           </label>
 
+          <div class="sp-delivery-pin"><p>Delivery map pin (optional)</p><button type="button" id="chooseDeliveryPin">Choose on map</button><button type="button" id="savedDeliveryPin" hidden>Use saved location</button><button type="button" id="locateDeliveryPin">Use my location</button><button type="button" id="clearDeliveryPin">Remove pin</button><p id="deliveryPinStatus" role="status">Optional: choose your delivery location.</p><div id="deliveryPinMap" hidden aria-label="Choose delivery pin"></div></div>
           <label>
             Order note
             <small>(optional)</small>
@@ -713,8 +714,8 @@
       </section>
     </div>
 
-    <script src="JS/sobers-platform-orders.js?v=9"></script>
-    <script src="JS/sobers-pizza.js?v=32"></script>
+    <script src="JS/sobers-platform-orders.js?v=10"></script>
+    <script src="vendor/leaflet/leaflet.js"></script><script src="JS/sobers-delivery-pin.js"></script><script src="JS/sobers-pizza.js?v=33"></script>
     <script src="JS/sobers-notices.js?v=3"></script>
     <script src="JS/sobers-extras.js?v=5"></script>
     <script src="JS/sobers-customer.js?v=8"></script>
