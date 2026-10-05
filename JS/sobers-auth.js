@@ -122,7 +122,7 @@
       });
       write("sobersCustomerOrdersV1", allOrders);
       window.SobersPurchases?.render?.(tab);
-    } catch (error) { host.innerHTML = `<div class="sp-empty-state"><span>!</span><h3>Could not load purchases</h3><p>${error.message}</p></div>`; }
+    } catch (error) { host.innerHTML = `<div class="sp-empty-state"><span>!</span><h3>Could not load purchases</h3><p>${String(error.message ?? "Could not load purchases").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"})[c])}</p></div>`; }
   }
 
   async function syncRemoteOrders() {
