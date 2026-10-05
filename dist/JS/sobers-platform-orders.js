@@ -1,123 +1,22 @@
 (function () {
-  "use strict";
-
-  const SUPABASE_URL = "https://inthadecmxmbqexufzpe.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80";
-  const PENDING_KEY = "sobersPendingDatabaseOrders";
-  const CUSTOMER_ORDERS_KEY = "sobersCustomerOrdersV1";
-  const SUBMIT_GUARD_KEY = "sobersOrderSubmitGuardV1";
-
-  function enforceLocalSubmitGuard() {
-    const now = Date.now();
-    let attempts = [];
-    try { attempts = JSON.parse(sessionStorage.getItem(SUBMIT_GUARD_KEY) || "[]"); } catch (_) {}
-    attempts = Array.isArray(attempts) ? attempts.filter((time) => now - Number(time) < 300000) : [];
-    if (attempts.length >= 5) throw new Error("Too many order attempts. Please wait a few minutes and try again.");
-    attempts.push(now);
-    try { sessionStorage.setItem(SUBMIT_GUARD_KEY, JSON.stringify(attempts)); } catch (_) {}
-  }
-
-  function customerOrders() {
-    try {
-      const value = JSON.parse(localStorage.getItem(CUSTOMER_ORDERS_KEY) || "[]");
-      return Array.isArray(value) ? value : [];
-    } catch (_) { return []; }
-  }
-
-  function saveCustomerOrder(receipt) {
-    const orders = customerOrders();
-    const index = orders.findIndex(item => item.client_request_id === receipt.client_request_id);
-    if (index >= 0) orders[index] = { ...orders[index], ...receipt };
-    else orders.push(receipt);
-    localStorage.setItem(CUSTOMER_ORDERS_KEY, JSON.stringify(orders.slice(-50)));
-    window.dispatchEvent(new CustomEvent("sobers:orders-updated", { detail: receipt }));
-  }
-
-  function pendingOrders() {
-    try {
-      const value = JSON.parse(localStorage.getItem(PENDING_KEY) || "[]");
-      return Array.isArray(value) ? value : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function savePending(orders) {
-    localStorage.setItem(PENDING_KEY, JSON.stringify(orders.slice(-20)));
-  }
-
-  function queueOfflineOrder(order) {
-    const queued = pendingOrders();
-    const fingerprint = JSON.stringify(order);
-    if (!queued.some((item) => JSON.stringify(item) === fingerprint)) {
-      queued.push(order);
-      savePending(queued);
-    }
-  }
-
-  async function send(order) {
-    enforceLocalSubmitGuard();
-    const customerToken = window.SobersCustomerAuth?.getAccessToken?.();
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_public_order_v2`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${customerToken || SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(order),
-      keepalive: true,
-    });
-
-    const body = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new Error(body?.message || "The online order could not be saved.");
-    }
-    return body;
-  }
-
-  async function submit(order) {
-    if (navigator.onLine === false) {
-      queueOfflineOrder(order);
-      return { saved: false, queued: true, result: null };
-    }
-
-    try {
-      const result = await send(order);
-      const saved = Array.isArray(result) ? result[0] : result;
-      saveCustomerOrder({
-        client_request_id: order.client_request_id,
-        id: saved?.order_id || null,
-        order_number: saved?.order_number || order.client_request_id,
-        total: Number(saved?.order_total || 0),
-        status: "new",
-        synced: true,
-      });
-      return { saved: true, result };
-    } catch (error) {
-      // Do not automatically retry an ambiguous online failure. The server may
-      // have accepted the request even when its response did not reach us.
-      console.warn("Sobers online order save could not be confirmed:", error);
-      return { saved: false, queued: false, result: null };
-    }
-  }
-
-  async function retryPending() {
-    const queued = pendingOrders();
-    if (!queued.length) return;
-
-    const remaining = [];
-    for (const order of queued) {
-      try {
-        await send(order);
-      } catch (error) {
-        remaining.push(order);
-      }
-    }
-    savePending(remaining);
-  }
-
-  window.SobersPlatformOrders = { submit, retryPending, saveCustomerOrder };
-  window.addEventListener("online", retryPending);
-  window.addEventListener("load", retryPending);
+ "use strict";
+ const URL="https://inthadecmxmbqexufzpe.supabase.co", KEY="sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80", ORDERS="sobersCustomerOrdersV1", inFlight=new Map();
+ let memory=[],storageWritable=true;
+ const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||"null")||fallback;}catch(_){return fallback;}};
+ const getOrders=()=>{const rows=storageWritable?read(ORDERS,memory):memory;return Array.isArray(rows)?rows:[];};
+ function saveCustomerOrder(receipt){const rows=getOrders(),i=rows.findIndex(r=>r.client_request_id===receipt.client_request_id);if(i>=0)rows[i]={...rows[i],...receipt};else rows.push(receipt);memory=rows.slice(-50);try{localStorage.setItem(ORDERS,JSON.stringify(memory));}catch(_){storageWritable=false;} const merged=memory.find(r=>r.client_request_id===receipt.client_request_id);merged.storage_persisted=storageWritable;window.dispatchEvent(new CustomEvent("sobers:orders-updated",{detail:merged}));return merged;}
+ function guard(){let times=[];try{times=JSON.parse(sessionStorage.getItem("sobersOrderSubmitGuardV1")||"[]");}catch(_){}times=Array.isArray(times)?times.filter(t=>Date.now()-Number(t)<300000):[];if(times.length>=5)throw Error("Too many attempts. Please wait five minutes.");times.push(Date.now());try{sessionStorage.setItem("sobersOrderSubmitGuardV1",JSON.stringify(times));}catch(_){}}
+ async function attempt(order){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);try{const token=window.SobersCustomerAuth?.getAccessToken?.();const response=await fetch(`${URL}/rest/v1/rpc/create_public_order_v2`,{method:"POST",headers:{apikey:KEY,Authorization:`Bearer ${token||KEY}`,"Content-Type":"application/json"},body:JSON.stringify(order),signal:controller.signal});const data=await response.json();if(!response.ok){const error=Error(data?.message||"Check your order details and try again.");error.definitive=response.status>=400&&response.status<500;throw error;}const saved=Array.isArray(data)?data[0]:data;if(!saved?.order_id||!saved?.order_number||!Number.isFinite(Number(saved.order_total)))throw Error("Order confirmation could not be read.");return saved;}finally{clearTimeout(timer);}}
+ const fingerprint=order=>{const {client_request_id,...details}=order;return JSON.stringify(details);};
+ function submit(input,details={}){const previous=getOrders().find(r=>["offline","unconfirmed","sending"].includes(r.confirmation)&&r.request&&fingerprint(r.request)===fingerprint(input));const order=previous?.request||input;if(inFlight.has(order.client_request_id))return inFlight.get(order.client_request_id);const task=send(order,previous?{...details,...previous}:details,previous).finally(()=>inFlight.delete(order.client_request_id));inFlight.set(order.client_request_id,task);return task;}
+ async function send(order,details,previous){const receipt=saveCustomerOrder({...details,client_request_id:order.client_request_id,request:order,created_at:previous?.created_at||new Date().toISOString(),confirmation:"sending",status:"pending",synced:false,customer_phone:order.customer_phone,branch_code:order.branch_code,fulfilment:order.fulfilment});
+ function finish(confirmation,message){return{saved:false,queued:confirmation==="offline",receipt:saveCustomerOrder({client_request_id:order.client_request_id,confirmation,message}),result:null};}
+ if(Date.now()-new Date(receipt.created_at).getTime()>1800000)return finish("unconfirmed","This saved order is over 30 minutes old. Check tracking or contact the branch before placing a fresh order.");
+ if(navigator.onLine===false)return finish("offline","You are offline. Saved on this device; the restaurant has not received it. Reconnect and choose Check / retry.");
+ try{guard();}catch(error){return finish("unconfirmed",error.message);}
+ try{let saved;try{saved=await attempt(order);}catch(error){if(error.definitive)throw error;saved=await attempt(order);}const confirmed=saveCustomerOrder({client_request_id:order.client_request_id,id:saved.order_id,order_number:saved.order_number,total:Number(saved.order_total),status:"new",confirmation:"received",synced:true,request:null,message:"Order received. The branch will confirm availability and preparation time."});return{saved:true,queued:false,receipt:confirmed,result:[saved]};}catch(error){return finish(error.definitive?"rejected":"unconfirmed",error.definitive?error.message:"We could not confirm receipt. Your order may have arrived. Check tracking or retry this same reference; do not place a second order.");}}
+ async function retry(reference){const receipt=getOrders().find(r=>r.client_request_id===reference);return receipt?.request?submit(receipt.request,receipt):null;}
+ function showReceipt(receipt){const dialog=document.querySelector("#spOrderReceipt");if(!dialog||!receipt)return;dialog.querySelector("[data-receipt-title]").textContent=receipt.confirmation==="received"?"Your order is received.":receipt.confirmation==="offline"?"Saved on this device.":receipt.confirmation==="rejected"?"Please check your order.":"Receipt not confirmed yet.";dialog.querySelector("[data-receipt-message]").textContent=receipt.message||"Check tracking for the latest update.";dialog.querySelector("[data-receipt-reference]").textContent=receipt.order_number||receipt.client_request_id;dialog.querySelector("[data-receipt-branch]").textContent=`${receipt.branch_name||"Sobers Pizza"} · GH₵${Number(receipt.total||0).toFixed(2)}`;dialog.querySelector("[data-receipt-storage]").textContent=receipt.storage_persisted===false?"Device storage is unavailable. Keep your tracking link before closing this page.":"Find this receipt later in Purchases. Guest receipts are saved on this device.";const link=new window.URL("track/",window.location.href);link.hash=`ref=${encodeURIComponent(receipt.client_request_id)}&phone=${encodeURIComponent(receipt.customer_phone||"")}`;dialog.querySelector("[data-receipt-track]").href=link.href;const contact=dialog.querySelector("[data-receipt-contact]");contact.hidden=!/^https:\/\/wa\.me\/\d+\?/.test(receipt.whatsapp_url||"");if(!contact.hidden)contact.href=receipt.whatsapp_url;const button=dialog.querySelector("[data-receipt-retry]");button.hidden=!receipt.request||receipt.confirmation==="rejected";button.onclick=async()=>{button.disabled=true;try{const result=await retry(receipt.client_request_id);if(result)showReceipt(result.receipt);}finally{button.disabled=false;}};dialog.querySelector("[data-receipt-close]").onclick=()=>dialog.close();if(!dialog.open)dialog.showModal();}
+ const legacy=read("sobersPendingDatabaseOrders",[]);if(Array.isArray(legacy))for(const request of legacy)if(request?.client_request_id&&!getOrders().some(r=>r.client_request_id===request.client_request_id))saveCustomerOrder({client_request_id:request.client_request_id,request,created_at:new Date(0).toISOString(),confirmation:"offline",status:"pending",customer_phone:request.customer_phone,message:"An older offline order is saved. Contact the branch before placing it again."});
+ window.SobersPlatformOrders={submit,retry,saveCustomerOrder,showReceipt,getOrders};
 })();

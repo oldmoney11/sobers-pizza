@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v73";
+const CACHE_NAME = "sobers-pizza-independent-v74";
 const SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const SHELL = [
   "./css/sobers-urban.css",
   "./css/sobers-glass.css",
   "./css/sobers-customer.css",
-  "./css/sobers-polished.css",
+  "./css/sobers-polished.css?v=2",
   "./JS/sobers-platform-orders.js",
   "./JS/sobers-pizza.js",
   "./JS/sobers-notices.js",
