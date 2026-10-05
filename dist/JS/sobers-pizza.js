@@ -1986,6 +1986,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (outcome.saved) clearCartAfterOrder();
         closeCheckout();
         window.SobersPlatformOrders.showReceipt(outcome.receipt);
+        // Same-tab navigation avoids popup blockers after the asynchronous confirmation.
+        if (outcome.saved && /^https:\/\/wa\.me\/\d+\?/.test(outcome.receipt.whatsapp_url || "")) {
+          window.location.assign(outcome.receipt.whatsapp_url);
+        }
 
         /* =========================================
                        CLEAR CART
