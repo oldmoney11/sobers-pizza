@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     branchStorageKey: "sobersPizzaBranch",
   };
   const FALLBACK_BRANCHES = [
-    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233247836769", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
-    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233553138780", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "MAIN-BRANCH", name: "TOWN", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233247836769", momo_number: "0247836769", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "TTU-MAIN-CAMPUS", name: "TTU", address: "Takoradi Technical University Main Campus", whatsapp_number: "233553138780", momo_number: "0553138780", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
   ];
   let branches = [...FALLBACK_BRANCHES];
   let selectedBranch = null;
@@ -78,9 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
     const checkoutMeta = document.querySelector("#spCheckoutBranchMeta");
-    if (checkoutMeta) checkoutMeta.textContent = branch.accepting_orders === false
-      ? "Online orders are paused"
-      : `Usually ready in ${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`;
+    if (checkoutMeta) {
+      const momo = branch.momo_number || (branch.whatsapp_number ? "0" + branch.whatsapp_number.slice(3) : "");
+      checkoutMeta.textContent = branch.accepting_orders === false
+        ? "Online orders are paused"
+        : `WhatsApp: ${branch.whatsapp_number || ""} · MoMo: ${momo}`;
+    }
     document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
     if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
   }
@@ -88,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBranches() {
     const host = document.querySelector("#spBranchList");
     if (!host) return;
-    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "Order from this location")} · ${branch.accepting_orders === false ? "Orders paused" : `${Number(branch.prep_min_minutes || 20)}–${Number(branch.prep_max_minutes || 30)} min`}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`).join("");
+    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "")}<br>WhatsApp: ${escapeHtml(branch.whatsapp_number || "")} · MoMo: ${escapeHtml(branch.momo_number || branch.whatsapp_number || "")}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`).join("");
     host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
   }
 
