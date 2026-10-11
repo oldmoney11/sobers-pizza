@@ -1,36 +1,73 @@
 # Paystack Ghana MoMo Integration — Setup
 
+## Edge Function base URL
+All functions are called at:
+```
+https://inthadecmxmbqexufzpe.supabase.co/functions/v1/
+```
+
+- Initialize: `https://inthadecmxmbqexufzpe.supabase.co/functions/v1/initialize-paystack`
+- Verify: `https://inthadecmxmbqexufzpe.supabase.co/functions/v1/verify-paystack`
+- Webhook: `https://inthadecmxmbqexufzpe.supabase.co/functions/v1/paystack-webhook`
+
 ## Required Supabase Secrets
 Set in Dashboard → Edge Functions → Secrets:
-- `PAYSTACK_SECRET_KEY` — Start with your **Test** secret key. Switch to Live only after full end-to-end testing and explicit approval.
+- `PAYSTACK_SECRET_KEY` — Use the **Test** secret key until end-to-end testing is complete and you explicitly choose to go live.
 
-`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided automatically to Edge Functions.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
 
-## Deployed Functions
-- `initialize-paystack` — Derives amount from `platform_orders.total`, creates Paystack transaction, saves reference.
-- `verify-paystack` — Verifies with Paystack API, validates amount/currency/reference, updates payment_status.
-- `paystack-webhook` — Validates HMAC-SHA512 signature, processes `charge.success` idempotently.
+**Never** commit secrets to Git or expose them in frontend code.
 
-## Callback URL
-The frontend passes `callback_url` based on the current page origin when calling initialize.  
-For production, ensure your hosted site is reachable at the URL customers use. No domain is hardcoded.
+## Deployed functions
+- `initialize-paystack` — Loads the order from `platform_orders`, uses the saved `total` (pesewas), validates GHS and unpaid status, creates the Paystack transaction, and stores the reference.
+- `verify-paystack` — Calls Paystack’s verify endpoint, checks reference match, amount, and currency, then updates `payment_status`.
+- `paystack-webhook` — Validates the Paystack HMAC-SHA512 signature on the raw body, processes `charge.success` idempotently, and only marks paid after full checks.
+
+## Deployment commands
+```bash
+supabase functions deploy initialize-paystack --project-ref inthadecmxmbqexufzpe --no-verify-jwt
+supabase functions deploy verify-paystack --project-ref inthadecmxmbqexufzpe --no-verify-jwt
+supabase functions deploy paystack-webhook --project-ref inthadecmxmbqexufzpe --no-verify-jwt
+```
+
+`--no-verify-jwt` is required for public guest checkout and for the webhook (Paystack cannot send a Supabase JWT). All validation stays server-side. The webhook authenticates solely via Paystack’s signature.
+
+## Callback and return flow
+The frontend sends `callback_url` as:
+```
+window.location.origin + window.location.pathname + "?paystack_return=1"
+```
+Paystack redirects back with `reference` or `trxref` plus `paystack_return=1`.
+
+On page load the frontend:
+1. Detects `paystack_return`.
+2. Reads the reference.
+3. Calls `verify-paystack`.
+4. Shows confirmed / pending / failed.
+5. Cleans the URL so a refresh does not re-verify.
+
+No domain is hardcoded.
+
+## Webhook URL
+Set in Paystack Dashboard (Test mode first):
+```
+https://inthadecmxmbqexufzpe.supabase.co/functions/v1/paystack-webhook
+```
 
 ## Switching Test → Live
-1. Complete a successful test transaction in Paystack Test Mode.
-2. In Supabase Secrets, replace `PAYSTACK_SECRET_KEY` with the Live secret.
-3. In Paystack Dashboard (Live), set the webhook URL to:  
-   `https://inthadecmxmbqexufzpe.supabase.co/functions/v1/paystack-webhook`
+1. Complete a successful test transaction and confirm the order is marked paid only after verification.
+2. Replace `PAYSTACK_SECRET_KEY` in Supabase Secrets with the Live secret.
+3. In Paystack Live mode, set the same webhook URL.
 4. Confirm Mobile Money is enabled for Ghana on the live account.
 
-## End-to-end test steps (Test Mode)
-1. Place an order and choose “Pay now with Mobile Money”.
-2. Complete the Paystack test checkout.
-3. Confirm you are redirected back and the verification screen appears.
-4. Check the order in admin — payment_status should be `paid` only after verification succeeds.
-5. Test a failed/cancelled flow and confirm the order is not marked paid.
+## Acceptance checklist (future testing)
+- [ ] Successful MoMo test transaction → order `payment_status` becomes `paid`.
+- [ ] Failed or cancelled transaction → order is not marked paid.
+- [ ] Pending transaction → status remains pending or is updated correctly.
+- [ ] Duplicate webhook delivery does not re-mark or corrupt the order.
+- [ ] Amount or currency mismatch is rejected.
+- [ ] Guest checkout works (no bearer token required beyond the public key fallback).
+- [ ] WhatsApp ordering path still works when MoMo is not selected.
+- [ ] TTU / TOWN branch numbers remain correct.
 
-## JWT notes
-- `paystack-webhook` should be deployed with `--no-verify-jwt` (signature is the auth).
-- Guest checkout uses the public key as a fallback Authorization header; all validation remains server-side.
-
-No secrets are stored in the repository.
+No end-to-end payment test has been completed in this environment.
