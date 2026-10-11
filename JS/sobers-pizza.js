@@ -37,15 +37,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
   const BUSINESS = {
-    whatsappNumber: "233542704084",
-    defaultWhatsAppNumber: "233542704084",
+    whatsappNumber: "233247836769",
+    defaultWhatsAppNumber: "233247836769",
     currency: "GH₵",
     storageKey: "sobersPizzaCart",
     branchStorageKey: "sobersPizzaBranch",
   };
   const FALLBACK_BRANCHES = [
-    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233542704084", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
-    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233204863743", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "MAIN-BRANCH", name: "Town", address: "PAKOS Road, opposite Donewell Insurance Company", whatsapp_number: "233247836769", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
+    { code: "TTU-MAIN-CAMPUS", name: "TTU Main Campus", address: "Takoradi Technical University Main Campus", whatsapp_number: "233553138780", accepting_orders: true, prep_min_minutes: 20, prep_max_minutes: 30, is_active: true },
   ];
   let branches = [...FALLBACK_BRANCHES];
   let selectedBranch = null;
