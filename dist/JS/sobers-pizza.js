@@ -1983,7 +1983,50 @@ document.addEventListener("DOMContentLoaded", () => {
           whatsapp_url: whatsappURL,
           cart_signature: JSON.stringify(databaseOrder.requested_items),
         });
-        if (outcome.saved) clearCartAfterOrder();
+
+        if (!outcome.saved) {
+          if (progress) progress.textContent = "Order could not be confirmed. Please try again.";
+          return;
+        }
+
+        clearCartAfterOrder();
+
+        const paymentMethod = form.get("payment_method");
+        const momoProvider = form.get("momo_provider") || "MTN";
+
+        if (paymentMethod === "momo" && outcome.receipt?.order_id) {
+          if (progress) progress.textContent = "Redirecting to Mobile Money payment…";
+          try {
+            const initRes = await fetch("/functions/v1/initialize-paystack", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${window.SobersCustomerAuth?.getAccessToken?.() || ""}`,
+                apikey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
+              },
+              body: JSON.stringify({
+                order_id: outcome.receipt.order_id,
+                email: (customerName.toLowerCase().replace(/\s+/g, ".") + "@sobers.local"),
+                amount_ghs: total,
+                phone: normalizedCustomerPhone,
+                provider: momoProvider,
+              }),
+            });
+            const initData = await initRes.json();
+            if (initData.authorization_url) {
+              window.location.assign(initData.authorization_url);
+              return;
+            } else {
+              throw new Error(initData.error || "Could not start payment");
+            }
+          } catch (payErr) {
+            console.error(payErr);
+            if (progress) progress.textContent = "Payment could not be started. Your order was saved — contact the branch.";
+            window.SobersPlatformOrders.showReceipt(outcome.receipt);
+            return;
+          }
+        }
+
         closeCheckout();
         window.SobersPlatformOrders.showReceipt(outcome.receipt);
         // Same-tab navigation avoids popup blockers after the asynchronous confirmation.
@@ -2033,3 +2076,11 @@ document.addEventListener("DOMContentLoaded", () => {
   settingsSync = syncBusinessSettings();
   syncMenuFromDatabase();
 });
+
+  // Toggle MoMo provider selector
+  document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      const field = document.getElementById("spMomoProviderField");
+      if (field) field.hidden = radio.value !== "momo" || !radio.checked;
+    });
+  });

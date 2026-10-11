@@ -683,11 +683,32 @@
             <strong id="spCheckoutTotal"> GH₵0.00 </strong>
           </div>
 
-          <div class="sp-order-costs"><p>Delivery <strong id="spDeliveryFee">Confirm with branch</strong></p><p>Estimated total <strong id="spEstimatedTotal">GH₵0.00</strong></p><small>Final availability and delivery charges are confirmed by your branch. No online payment is taken.</small></div>
+          <div class="sp-order-costs"><p>Delivery <strong id="spDeliveryFee">Confirm with branch</strong></p><p>Estimated total <strong id="spEstimatedTotal">GH₵0.00</strong></p><small>Final availability and delivery charges are confirmed by your branch.</small></div>
+
+          <div class="sp-payment-options">
+            <label class="sp-payment-option">
+              <input type="radio" name="payment_method" value="whatsapp" checked />
+              <span>Order via WhatsApp (pay on delivery / pickup)</span>
+            </label>
+            <label class="sp-payment-option">
+              <input type="radio" name="payment_method" value="momo" />
+              <span>Pay now with Mobile Money (Paystack)</span>
+            </label>
+          </div>
+          <div id="spMomoProviderField" hidden>
+            <label>
+              Mobile Money provider
+              <select name="momo_provider">
+                <option value="MTN">MTN</option>
+                <option value="ATL">AirtelTigo / ATMoney</option>
+                <option value="VOD">Telecel (Vodafone)</option>
+              </select>
+            </label>
+          </div>
+
           <p id="spCheckoutStatus" role="status" aria-live="polite"></p>
           <button type="submit">
             Place order
-
             <span>→</span>
           </button>
         </form>
