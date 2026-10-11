@@ -2012,6 +2012,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: (customerName.toLowerCase().replace(/\s+/g, ".") + "@sobers.local"),
                 phone: normalizedCustomerPhone,
                 provider: momoProvider,
+                callback_url: window.location.origin + window.location.pathname + "?paystack_return=1",
               }),
             });
             const initData = await initRes.json();
@@ -2086,3 +2087,42 @@ document.addEventListener("DOMContentLoaded", () => {
       if (field) field.hidden = radio.value !== "momo" || !radio.checked;
     });
   });
+
+  // Paystack return handler — runs on page load if Paystack redirected back
+  (async function handlePaystackReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("reference") || params.get("trxref");
+    if (!reference || !params.has("paystack_return")) return;
+
+    const statusEl = document.createElement("div");
+    statusEl.style.cssText = "position:fixed;inset:0;background:#0b0b0b;color:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:system-ui;padding:2rem;text-align:center;";
+    statusEl.innerHTML = "<div><h2>Verifying payment…</h2><p>Please wait while we confirm with Paystack.</p></div>";
+    document.body.appendChild(statusEl);
+
+    try {
+      const res = await fetch("https://inthadecmxmbqexufzpe.supabase.co/functions/v1/verify-paystack", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${window.SobersCustomerAuth?.getAccessToken?.() || "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80"}`,
+          apikey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
+        },
+        body: JSON.stringify({ reference }),
+      });
+      const data = await res.json();
+
+      if (data.verified) {
+        statusEl.innerHTML = `<div><h2>Payment confirmed</h2><p>Your order has been marked as paid.</p><button onclick="location.href='/'">Back to menu</button></div>`;
+      } else if (data.status === "pending") {
+        statusEl.innerHTML = `<div><h2>Payment pending</h2><p>Your payment is still being processed. Check tracking later.</p><button onclick="location.href='/'">Back to menu</button></div>`;
+      } else {
+        statusEl.innerHTML = `<div><h2>Payment not confirmed</h2><p>${data.error || "The transaction was not successful."}</p><button onclick="location.href='/'">Back to menu</button></div>`;
+      }
+    } catch (err) {
+      statusEl.innerHTML = `<div><h2>Verification error</h2><p>Could not confirm payment. Please contact the branch with your order reference.</p><button onclick="location.href='/'">Back to menu</button></div>`;
+    }
+
+    // Clean the URL so refresh does not re-trigger
+    const clean = window.location.pathname;
+    window.history.replaceState({}, "", clean);
+  })();

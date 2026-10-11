@@ -1,40 +1,36 @@
-# Paystack Ghana MoMo Integration — Setup Instructions
+# Paystack Ghana MoMo Integration — Setup
 
-## Required Supabase Secrets (set in Dashboard → Edge Functions → Secrets)
+## Required Supabase Secrets
+Set in Dashboard → Edge Functions → Secrets:
+- `PAYSTACK_SECRET_KEY` — Start with your **Test** secret key. Switch to Live only after full end-to-end testing and explicit approval.
 
-- `PAYSTACK_SECRET_KEY` — Your Paystack secret key (start with Test Secret Key)
-- `SUPABASE_URL` — Automatically available
-- `SUPABASE_SERVICE_ROLE_KEY` — Automatically available in Edge Functions
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided automatically to Edge Functions.
 
-**Never** put the secret key in frontend code or Git.
+## Deployed Functions
+- `initialize-paystack` — Derives amount from `platform_orders.total`, creates Paystack transaction, saves reference.
+- `verify-paystack` — Verifies with Paystack API, validates amount/currency/reference, updates payment_status.
+- `paystack-webhook` — Validates HMAC-SHA512 signature, processes `charge.success` idempotently.
 
-## Deploy Edge Functions
+## Callback URL
+The frontend passes `callback_url` based on the current page origin when calling initialize.  
+For production, ensure your hosted site is reachable at the URL customers use. No domain is hardcoded.
 
-```bash
-# From project root (after installing Supabase CLI)
-supabase functions deploy initialize-paystack
-supabase functions deploy verify-paystack
-supabase functions deploy paystack-webhook
-```
+## Switching Test → Live
+1. Complete a successful test transaction in Paystack Test Mode.
+2. In Supabase Secrets, replace `PAYSTACK_SECRET_KEY` with the Live secret.
+3. In Paystack Dashboard (Live), set the webhook URL to:  
+   `https://inthadecmxmbqexufzpe.supabase.co/functions/v1/paystack-webhook`
+4. Confirm Mobile Money is enabled for Ghana on the live account.
 
-## Frontend Changes Made
+## End-to-end test steps (Test Mode)
+1. Place an order and choose “Pay now with Mobile Money”.
+2. Complete the Paystack test checkout.
+3. Confirm you are redirected back and the verification screen appears.
+4. Check the order in admin — payment_status should be `paid` only after verification succeeds.
+5. Test a failed/cancelled flow and confirm the order is not marked paid.
 
-- Added payment method radio buttons in checkout (WhatsApp vs Pay now with MoMo).
-- After a successful database order, if MoMo is selected, the frontend calls the `initialize-paystack` Edge Function and redirects to Paystack.
-- Existing WhatsApp flow is preserved as the default.
+## JWT notes
+- `paystack-webhook` should be deployed with `--no-verify-jwt` (signature is the auth).
+- Guest checkout uses the public key as a fallback Authorization header; all validation remains server-side.
 
-## Next Steps Before Hosting
-
-1. Deploy the three Edge Functions to your production Supabase project.
-2. Set the `PAYSTACK_SECRET_KEY` secret to your **Test** key first.
-3. Update the frontend fetch URL if needed (currently relative `/functions/v1/...` — adjust for your hosting).
-4. Test a full flow in Paystack test mode.
-5. Once verified, switch the secret to the Live key and confirm MoMo is enabled on your Paystack dashboard.
-6. Rebuild / copy updated files into `dist/` before deploying the static site.
-
-## Verification
-
-After payment, call the `verify-paystack` function with the reference, or rely on the webhook (recommended for production).
-
-Webhook URL to set in Paystack Dashboard:  
-`https://<your-project-ref>.supabase.co/functions/v1/paystack-webhook`
+No secrets are stored in the repository.

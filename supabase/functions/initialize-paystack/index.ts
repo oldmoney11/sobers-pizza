@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { order_id, email, phone, provider } = await req.json();
+    const { order_id, email, phone, provider, callback_url } = await req.json();
 
     if (!order_id || !email) {
       throw new Error("Missing required fields: order_id, email");
@@ -63,6 +63,11 @@ serve(async (req) => {
         ]
       }
     };
+
+    // Use provided callback_url or fall back to a relative path that the frontend will resolve
+    if (callback_url) {
+      payload.callback_url = callback_url;
+    }
 
     if (phone && provider) {
       payload.mobile_money = { phone, provider };
