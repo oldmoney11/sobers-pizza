@@ -37,33 +37,60 @@ serve(async (req) => {
 
     const event = JSON.parse(body);
 
-    if (event.event === "charge.success") {
-      const tx = event.data;
-      const orderId = tx.metadata?.order_id || tx.metadata?.custom_fields?.find((f: any) => f.variable_name === "order_id")?.value;
+    if (event.event !== "charge.success") {
+      return new Response(JSON.stringify({ received: true, ignored: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      if (orderId) {
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-        );
+    const tx = event.data;
+    const orderId = tx.metadata?.order_id || tx.metadata?.custom_fields?.find((f: any) => f.variable_name === "order_id")?.value;
 
-        const { data: order } = await supabase
-          .from("platform_orders")
-          .select("total")
-          .eq("id", orderId)
-          .single();
+    if (!orderId) {
+      return new Response(JSON.stringify({ received: true, ignored: "no order_id" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-        const expected = order ? Math.round(Number(order.total) * 100) : 0;
-        if (tx.amount === expected && tx.currency === "GHS") {
-          await supabase
-            .from("platform_orders")
-            .update({ payment_status: "paid", payment_reference: tx.reference })
-            .eq("id", orderId);
-        }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: order } = await supabase
+      .from("platform_orders")
+      .select("id, total, currency_code, payment_status, payment_reference")
+      .eq("id", orderId)
+      .single();
+
+    if (!order) {
+      return new Response(JSON.stringify({ received: true, ignored: "order not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Idempotent: already paid with this reference
+    if (order.payment_status === "paid" && order.payment_reference === tx.reference) {
+      return new Response(JSON.stringify({ received: true, already_processed: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const expected = Math.round(Number(order.total) * 100);
+    const valid = tx.status === "success" && tx.amount === expected && tx.currency === "GHS";
+
+    if (valid) {
+      const { error: updateErr } = await supabase
+        .from("platform_orders")
+        .update({ payment_status: "paid", payment_reference: tx.reference })
+        .eq("id", orderId);
+
+      if (updateErr) {
+        return new Response(JSON.stringify({ error: "Update failed" }), { status: 500 });
       }
     }
 
-    return new Response(JSON.stringify({ received: true }), {
+    return new Response(JSON.stringify({ received: true, paid: valid }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

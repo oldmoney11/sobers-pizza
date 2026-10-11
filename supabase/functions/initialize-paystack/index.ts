@@ -13,17 +13,40 @@ serve(async (req) => {
   }
 
   try {
-    const { order_id, email, amount_ghs, phone, provider } = await req.json();
+    const { order_id, email, phone, provider } = await req.json();
 
-    if (!order_id || !email || !amount_ghs) {
-      throw new Error("Missing required fields: order_id, email, amount_ghs");
+    if (!order_id || !email) {
+      throw new Error("Missing required fields: order_id, email");
     }
-
-    const amountPesewas = Math.round(Number(amount_ghs) * 100);
-    if (amountPesewas < 100) throw new Error("Amount too small");
 
     const secretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!secretKey) throw new Error("PAYSTACK_SECRET_KEY not configured");
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: order, error: orderErr } = await supabase
+      .from("platform_orders")
+      .select("id, total, currency_code, payment_status")
+      .eq("id", order_id)
+      .single();
+
+    if (orderErr || !order) {
+      throw new Error("Order not found or inaccessible");
+    }
+
+    if (order.currency_code && order.currency_code !== "GHS") {
+      throw new Error("Only GHS orders are supported");
+    }
+
+    if (order.payment_status === "paid") {
+      throw new Error("Order is already paid");
+    }
+
+    const amountPesewas = Math.round(Number(order.total) * 100);
+    if (amountPesewas < 100) throw new Error("Order total is too small");
 
     const reference = `sobers_${order_id}_${Date.now()}`;
 
@@ -41,7 +64,6 @@ serve(async (req) => {
       }
     };
 
-    // Optional: pre-fill mobile money if provided
     if (phone && provider) {
       payload.mobile_money = { phone, provider };
     }
@@ -60,16 +82,14 @@ serve(async (req) => {
       throw new Error(paystackData.message || "Paystack initialization failed");
     }
 
-    // Optionally store reference on the order (requires service role)
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    await supabase
+    const { error: updateErr } = await supabase
       .from("platform_orders")
       .update({ payment_reference: reference, payment_status: "pending" })
       .eq("id", order_id);
+
+    if (updateErr) {
+      throw new Error("Failed to save payment reference: " + updateErr.message);
+    }
 
     return new Response(
       JSON.stringify({

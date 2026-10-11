@@ -2000,17 +2000,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (paymentMethod === "momo" && outcome.receipt?.order_id) {
           if (progress) progress.textContent = "Redirecting to Mobile Money payment…";
           try {
-            const initRes = await fetch("/functions/v1/initialize-paystack", {
+            const initRes = await fetch("https://inthadecmxmbqexufzpe.supabase.co/functions/v1/initialize-paystack", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${window.SobersCustomerAuth?.getAccessToken?.() || ""}`,
+                Authorization: `Bearer ${window.SobersCustomerAuth?.getAccessToken?.() || "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80"}`,
                 apikey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
               },
               body: JSON.stringify({
                 order_id: outcome.receipt.order_id,
                 email: (customerName.toLowerCase().replace(/\s+/g, ".") + "@sobers.local"),
-                amount_ghs: total,
                 phone: normalizedCustomerPhone,
                 provider: momoProvider,
               }),

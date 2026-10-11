@@ -38,27 +38,42 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch order to validate amount
     const { data: order, error: orderErr } = await supabase
       .from("platform_orders")
-      .select("id, total, payment_status")
+      .select("id, total, currency_code, payment_status, payment_reference")
       .eq("id", orderId)
       .single();
 
     if (orderErr || !order) throw new Error("Order not found");
 
+    if (order.payment_reference && order.payment_reference !== reference) {
+      throw new Error("Reference mismatch for this order");
+    }
+
     const expectedPesewas = Math.round(Number(order.total) * 100);
     const isSuccess = tx.status === "success" && tx.amount === expectedPesewas && tx.currency === "GHS";
 
-    const newStatus = isSuccess ? "paid" : (tx.status === "failed" || tx.status === "abandoned" ? "failed" : "pending");
+    let newStatus = order.payment_status;
+    if (isSuccess) {
+      newStatus = "paid";
+    } else if (tx.status === "failed" || tx.status === "abandoned") {
+      newStatus = "failed";
+    } else {
+      newStatus = "pending";
+    }
 
-    await supabase
-      .from("platform_orders")
-      .update({
-        payment_status: newStatus,
-        payment_reference: reference,
-      })
-      .eq("id", orderId);
+    // Only update if status actually changes or reference needs setting
+    if (newStatus !== order.payment_status || !order.payment_reference) {
+      const { error: updateErr } = await supabase
+        .from("platform_orders")
+        .update({
+          payment_status: newStatus,
+          payment_reference: reference,
+        })
+        .eq("id", orderId);
+
+      if (updateErr) throw new Error("Failed to update order: " + updateErr.message);
+    }
 
     return new Response(
       JSON.stringify({
