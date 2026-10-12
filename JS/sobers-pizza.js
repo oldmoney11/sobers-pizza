@@ -2009,7 +2009,7 @@ document.addEventListener("DOMContentLoaded", () => {
               },
               body: JSON.stringify({
                 order_id: outcome.receipt.order_id,
-                email: (customerName.toLowerCase().replace(/\s+/g, ".") + "@sobers.local"),
+                email: paystackEmail,
                 phone: normalizedCustomerPhone,
                 provider: momoProvider,
                 callback_url: window.location.origin + window.location.pathname + "?paystack_return=1",
