@@ -79,7 +79,6 @@ serve(async (req) => {
       JSON.stringify({
         verified: isSuccess,
         status: tx.status,
-        order_id: orderId,
         payment_status: newStatus,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
