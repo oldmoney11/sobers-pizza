@@ -2017,6 +2017,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             const initData = await initRes.json();
             if (initData.authorization_url) {
+              // Store reference locally so customer can check status later without a new charge
+              if (outcome.receipt) {
+                outcome.receipt.payment_reference = initData.reference;
+                window.SobersPlatformOrders.saveCustomerOrder(outcome.receipt);
+              }
               window.location.assign(initData.authorization_url);
               return;
             } else {
