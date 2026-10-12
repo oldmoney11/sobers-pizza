@@ -2024,7 +2024,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } catch (payErr) {
             console.error(payErr);
-            if (progress) progress.textContent = "Payment could not be started. Your order was saved — contact the branch.";
+            if (progress) progress.textContent = "Payment could not be started. Your order is saved. Use the WhatsApp button on the receipt to contact the branch and arrange payment.";
             window.SobersPlatformOrders.showReceipt(outcome.receipt);
             return;
           }
