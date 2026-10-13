@@ -930,3 +930,17 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
 .sp-checkout form > button[type="submit"]:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .sp-checkout form > button[type="submit"]:disabled { opacity: .6; cursor: not-allowed; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+.sp-checkout select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: #1a1a1a;
+  color: #fff;
+  font: inherit;
+}
+.sp-checkout select option {
+  background: #1a1a1a;
+  color: #fff;
+}

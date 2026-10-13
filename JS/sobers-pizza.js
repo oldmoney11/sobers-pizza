@@ -62,17 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
     return number;
   }
 
-  const OFFICIAL_WHATSAPP = {
-    "MAIN-BRANCH": "233247836769",
-    "TTU-MAIN-CAMPUS": "233553138780",
+  const OFFICIAL = {
+    "MAIN-BRANCH": { whatsapp: "233247836769", momo: "0247836769" },
+    "TTU-MAIN-CAMPUS": { whatsapp: "233553138780", momo: "0553138780" },
   };
+
+  function officialFor(branch) {
+    return OFFICIAL[branch?.code] || null;
+  }
 
   function chooseBranch(branch, remember = true) {
     if (!branch) return;
     selectedBranch = branch;
     // Prefer official numbers for known branches so DB overrides cannot route to a personal number
-    const official = OFFICIAL_WHATSAPP[branch.code];
-    const number = official || normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
+    const official = officialFor(branch);
+    const number = official ? official.whatsapp : normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
     applyWhatsAppNumber(number);
     document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
     const branchButton = document.querySelector("#spBranchButton");
@@ -86,10 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
     const checkoutMeta = document.querySelector("#spCheckoutBranchMeta");
     if (checkoutMeta) {
-      const momo = branch.momo_number || (branch.whatsapp_number ? "0" + branch.whatsapp_number.slice(3) : "");
+      const official = officialFor(branch);
+      const momo = official ? official.momo : (branch.momo_number || (branch.whatsapp_number ? "0" + branch.whatsapp_number.slice(3) : ""));
+      const wa = official ? official.whatsapp : (branch.whatsapp_number || "");
       checkoutMeta.textContent = branch.accepting_orders === false
         ? "Online orders are paused"
-        : `WhatsApp: ${branch.whatsapp_number || ""} · MoMo: ${momo}`;
+        : `WhatsApp: ${wa} · MoMo: ${momo}`;
     }
     document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
     if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
@@ -98,7 +104,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBranches() {
     const host = document.querySelector("#spBranchList");
     if (!host) return;
-    host.innerHTML = branches.map(branch => `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "")}<br>WhatsApp: ${escapeHtml(branch.whatsapp_number || "")} · MoMo: ${escapeHtml(branch.momo_number || branch.whatsapp_number || "")}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`).join("");
+    host.innerHTML = branches.map(branch => {
+      const official = officialFor(branch);
+      const wa = official ? official.whatsapp : (branch.whatsapp_number || "");
+      const momo = official ? official.momo : (branch.momo_number || branch.whatsapp_number || "");
+      return `<button type="button" data-branch-code="${escapeHtml(branch.code)}" ${branch.accepting_orders === false ? "disabled" : ""}><span>⌖</span><span><strong>${escapeHtml(branch.name)}</strong><small>${escapeHtml(branch.address || "")}<br>WhatsApp: ${escapeHtml(wa)} · MoMo: ${escapeHtml(momo)}</small></span><i>${branch.accepting_orders === false ? "Paused" : "→"}</i></button>`;
+    }).join("");
     host.querySelectorAll("[data-branch-code]").forEach(button => button.addEventListener("click", () => { chooseBranch(branches.find(branch => branch.code === button.dataset.branchCode)); closeBranchChooser(); }));
   }
 
