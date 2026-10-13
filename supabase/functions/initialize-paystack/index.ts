@@ -69,9 +69,8 @@ serve(async (req) => {
       payload.callback_url = callback_url;
     }
 
-    if (phone && provider) {
-      payload.mobile_money = { phone, provider };
-    }
+    // Provider selection happens on the Paystack hosted checkout.
+    // The mobile_money object is documented for the Charge API, not Initialize.
 
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",

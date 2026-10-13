@@ -671,32 +671,38 @@
             <textarea name="note" rows="2" placeholder="Any special request?"></textarea>
           </label>
 
-          <div class="sp-checkout-total">
-            <span> Order subtotal </span>
-
-            <strong id="spCheckoutTotal"> GH₵0.00 </strong>
+          <div class="sp-order-costs">
+            <div class="sp-cost-row"><span>Subtotal</span><strong id="spCheckoutTotal">GH₵0.00</strong></div>
+            <div class="sp-cost-row muted"><span>Delivery</span><strong id="spDeliveryFee">Confirm with branch</strong></div>
+            <div class="sp-cost-row total"><span>Estimated total</span><strong id="spEstimatedTotal">GH₵0.00</strong></div>
+            <small class="sp-cost-note">Final availability and delivery charges are confirmed by your branch.</small>
           </div>
 
-          <div class="sp-order-costs"><p>Delivery <strong id="spDeliveryFee">Confirm with branch</strong></p><p>Estimated total <strong id="spEstimatedTotal">GH₵0.00</strong></p><small>Final availability and delivery charges are confirmed by your branch.</small></div>
-
-          <div class="sp-payment-options">
-            <label class="sp-payment-option">
+          <fieldset class="sp-payment-cards">
+            <legend class="sr-only">Payment method</legend>
+            <label class="sp-payment-card">
               <input type="radio" name="payment_method" value="whatsapp" checked />
-              <span>Order via WhatsApp (pay on delivery / pickup)</span>
+              <span class="sp-payment-card-body">
+                <strong>Order via WhatsApp</strong>
+                <small>Pay on delivery or pickup.</small>
+              </span>
             </label>
-            <label class="sp-payment-option">
+            <label class="sp-payment-card">
               <input type="radio" name="payment_method" value="momo" />
-              <span>Pay now with Mobile Money (Paystack)</span>
+              <span class="sp-payment-card-body">
+                <strong>Pay with Mobile Money</strong>
+                <small>Pay securely through Paystack using an available supported provider (MTN MoMo or Telecel Cash where enabled).</small>
+              </span>
             </label>
-          </div>
+          </fieldset>
           <div id="spMomoProviderField" hidden>
             <label>
-              Mobile Money provider
+              Preferred provider (optional)
               <select name="momo_provider">
-                <option value="MTN">MTN</option>
-                <option value="ATL">AirtelTigo / ATMoney</option>
-                <option value="VOD">Telecel (Vodafone)</option>
+                <option value="MTN">MTN Mobile Money</option>
+                <option value="VOD">Telecel Cash</option>
               </select>
+              <small>Final provider is chosen on the Paystack page. Availability depends on account configuration.</small>
             </label>
           </div>
 

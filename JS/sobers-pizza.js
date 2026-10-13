@@ -62,10 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return number;
   }
 
+  const OFFICIAL_WHATSAPP = {
+    "MAIN-BRANCH": "233247836769",
+    "TTU-MAIN-CAMPUS": "233553138780",
+  };
+
   function chooseBranch(branch, remember = true) {
     if (!branch) return;
     selectedBranch = branch;
-    const number = normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
+    // Prefer official numbers for known branches so DB overrides cannot route to a personal number
+    const official = OFFICIAL_WHATSAPP[branch.code];
+    const number = official || normalizeGhanaNumber(branch.whatsapp_number || branch.phone || BUSINESS.defaultWhatsAppNumber);
     applyWhatsAppNumber(number);
     document.querySelector("#spBranchLabel")?.replaceChildren(document.createTextNode(branch.name));
     const branchButton = document.querySelector("#spBranchButton");
@@ -2011,7 +2018,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 order_id: outcome.receipt.order_id,
                 email: paystackEmail,
                 phone: normalizedCustomerPhone,
-                provider: momoProvider,
                 callback_url: window.location.origin + window.location.pathname + "?paystack_return=1",
               }),
             });
