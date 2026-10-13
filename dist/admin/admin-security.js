@@ -4,9 +4,9 @@
   let pending = null;
   window.SobersAdminSecurity = Object.freeze({
     ensure() {
-      if (pending) return pending;
-      pending = verify().finally(() => { pending = null; });
-      return pending;
+      // MFA enforcement disabled — restore original email/password admin login.
+      // Enrolled factors remain on the accounts; this only removes the app-level prompt.
+      return Promise.resolve();
     },
   });
   async function verify() {
