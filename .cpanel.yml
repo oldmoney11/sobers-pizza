@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/soberspi/public_html/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/rsync -a --delete --exclude=.git* --exclude=.cpanel.yml dist/ $DEPLOYPATH
