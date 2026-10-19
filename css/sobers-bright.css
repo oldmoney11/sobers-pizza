@@ -470,3 +470,37 @@ html[data-sp-theme="light"] .sp-footer-bottom {
     height: 240px;
   }
 }
+
+/* Light mode cart / checkout / receipt text visibility */
+html[data-sp-theme="light"] .sp-cart,
+html[data-sp-theme="light"] .sp-checkout,
+html[data-sp-theme="light"] .sp-order-receipt {
+  color: var(--bright-ink);
+  background: var(--bright-paper-2);
+}
+html[data-sp-theme="light"] .sp-cart header p,
+html[data-sp-theme="light"] .sp-cart header h2,
+html[data-sp-theme="light"] .sp-checkout h2,
+html[data-sp-theme="light"] .sp-checkout label,
+html[data-sp-theme="light"] .sp-checkout small,
+html[data-sp-theme="light"] .sp-order-receipt p,
+html[data-sp-theme="light"] .sp-order-receipt h2,
+html[data-sp-theme="light"] .sp-order-receipt strong {
+  color: var(--bright-ink);
+}
+html[data-sp-theme="light"] .sp-cart .sp-empty p,
+html[data-sp-theme="light"] .sp-checkout .sp-cost-note,
+html[data-sp-theme="light"] .sp-order-receipt small {
+  color: var(--bright-muted);
+}
+html[data-sp-theme="light"] .sp-oven-progress span {
+  color: var(--bright-ink);
+  border-color: var(--bright-line);
+}
+html[data-sp-theme="light"] .sp-checkout input,
+html[data-sp-theme="light"] .sp-checkout textarea,
+html[data-sp-theme="light"] .sp-checkout select {
+  color: var(--bright-ink);
+  background: #fff;
+  border-color: var(--bright-line);
+}
