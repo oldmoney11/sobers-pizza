@@ -504,3 +504,30 @@ html[data-sp-theme="light"] .sp-checkout select {
   background: #fff;
   border-color: var(--bright-line);
 }
+
+/* Force readable cart header and checkout payment text in light mode */
+html[data-sp-theme="light"] .sp-cart > header h2,
+html[data-sp-theme="light"] .sp-cart header h2 {
+  color: #fffaf2 !important;
+}
+html[data-sp-theme="light"] .sp-cart > header p,
+html[data-sp-theme="light"] .sp-cart header p {
+  color: #f22e43 !important;
+}
+html[data-sp-theme="light"] .sp-payment-card,
+html[data-sp-theme="light"] .sp-payment-card strong,
+html[data-sp-theme="light"] .sp-payment-card small,
+html[data-sp-theme="light"] .sp-checkout label,
+html[data-sp-theme="light"] .sp-checkout > label,
+html[data-sp-theme="light"] .sp-checkout .sp-cost-row,
+html[data-sp-theme="light"] .sp-checkout .sp-cost-row strong {
+  color: #191915 !important;
+}
+html[data-sp-theme="light"] .sp-payment-card small,
+html[data-sp-theme="light"] .sp-checkout label small,
+html[data-sp-theme="light"] .sp-checkout .sp-cost-note {
+  color: #5c574e !important;
+}
+html[data-sp-theme="light"] .sp-oven-progress span {
+  color: #191915 !important;
+}
