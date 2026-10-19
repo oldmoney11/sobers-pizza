@@ -2014,8 +2014,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const paymentMethod = form.get("payment_method");
         const momoProvider = form.get("momo_provider") || "MTN";
+        const paystackOrderId = outcome.receipt?.order_id || outcome.receipt?.id;
 
-        if (paymentMethod === "momo" && outcome.receipt?.order_id) {
+        if (paymentMethod === "momo" && paystackOrderId) {
           if (progress) progress.textContent = "Redirecting to Mobile Money payment…";
           try {
             const initRes = await fetch("https://inthadecmxmbqexufzpe.supabase.co/functions/v1/initialize-paystack", {
@@ -2026,7 +2027,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 apikey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
               },
               body: JSON.stringify({
-                order_id: outcome.receipt.order_id,
+                order_id: paystackOrderId,
                 email: paystackEmail,
                 phone: normalizedCustomerPhone,
                 callback_url: window.location.origin + window.location.pathname + "?paystack_return=1",

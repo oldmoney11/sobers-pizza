@@ -1,6 +1,6 @@
 window.SobersKioskConfig = Object.freeze({
   businessSlug: "sobers-pizza",
-  branchCode: "main-branch",
+  branchCode: "MAIN-BRANCH",
   kioskCode: "main-kiosk",
   currency: "GH₵",
   idleWarningMs: 120000,
