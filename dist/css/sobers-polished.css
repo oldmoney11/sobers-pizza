@@ -93,3 +93,16 @@ html[data-sp-theme="light"] .sp-order-receipt{background:#fff8ee;color:#29201b;b
 html[data-sp-theme="light"] .sp-order-costs{background:#442a140a}
 html[data-sp-theme="light"] .sp-receipt-actions a,html[data-sp-theme="light"] .sp-receipt-actions button{border-color:#442a1430}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Cart item text must stay readable on the dark cart panel */
+.sp-cart-item h3,
+.sp-cart-item > div:first-child > span,
+.sp-cart-controls b,
+.sp-oven-progress span {
+  color: #fffaf2 !important;
+}
+.sp-cart-item small,
+.sp-cart > footer p,
+.sp-cart-total span {
+  color: #d5d6d9 !important;
+}
