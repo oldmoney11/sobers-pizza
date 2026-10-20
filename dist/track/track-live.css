@@ -1,6 +1,8 @@
+.live-state { display: block; color: #82e6ae; font-weight: 750; }
 .progress { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
-.progress-step { display: grid; gap: 8px; min-width: 0; }
-.progress-step small { overflow: hidden; color: var(--muted); font-size: .72rem; text-overflow: ellipsis; }
+.progress-step { display: grid; gap: 8px; justify-items: center; min-width: 0; }
+.progress-step .step { width: 100%; }
+.progress-step small { color: var(--muted); font-size: .72rem; line-height: 1.2; text-align: center; }
 .progress-step.done .step { background: var(--red); }
 .progress-step.current .step { box-shadow: 0 0 0 4px rgba(239,35,60,.15); }
 .progress-step.current small { color: var(--cream); font-weight: 800; }
@@ -9,6 +11,8 @@
 .contact.hidden { display: none; }
 @media (max-width: 620px) {
   input { font-size: 16px; }
-  .progress { gap: 5px; }
-  .progress-step small { font-size: .62rem; }
+  .progress { grid-template-columns: 1fr; gap: 12px; }
+  .progress-step { grid-template-columns: 18px 1fr; justify-items: stretch; align-items: center; gap: 12px; }
+  .progress-step .step { width: 18px; height: 18px; border-radius: 50%; }
+  .progress-step small { font-size: .95rem; text-align: left; }
 }
