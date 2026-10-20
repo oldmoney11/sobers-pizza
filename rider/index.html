@@ -4,109 +4,127 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="theme-color" content="#090a0e" />
+    <meta name="theme-color" content="#08090c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Rider" />
-    <title>Rider</title>
+    <title>Sobers Rider</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,500&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../track/vendor/leaflet.css" />
-    <link rel="stylesheet" href="./rider.css?v=4" />
+    <link rel="stylesheet" href="./rider.css?v=5" />
   </head>
   <body>
     <div id="gate">
-      <header class="mark">
-        <span class="badge" aria-hidden="true">R</span>
-        <div><strong>RIDER</strong><small>DELIVERY</small></div>
-      </header>
-      <section class="sheet">
-        <form id="riderLogin" data-screen="login">
-          <p class="kicker">Your shift</p>
-          <h1>Sign in</h1>
-          <p class="copy">See the deliveries assigned to you. Nothing else.</p>
-          <label>Email<input name="email" type="email" required autocomplete="username" placeholder="you@email.com" /></label>
-          <label class="field">Password
-            <input name="password" type="password" required autocomplete="current-password" placeholder="Password" />
-            <button class="toggle-password" type="button" data-toggle-password>Show</button>
-          </label>
-          <button class="go" type="submit">Sign in</button>
-          <div class="links">
-            <button class="text" type="button" data-panel="forgot">Forgot password</button>
-            <button class="text" type="button" data-panel="signup">Create account</button>
-          </div>
-        </form>
-        <form id="riderSignup" class="hidden" data-screen="signup">
-          <button class="back" type="button" data-panel="login">Back</button>
-          <p class="kicker">New rider</p>
-          <h1>Create account</h1>
-          <p class="copy">The business still has to add this email before any delivery appears.</p>
-          <label>Your name<input name="full_name" required autocomplete="name" placeholder="Your name" /></label>
-          <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
-          <label class="field">Password
-            <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
-            <button class="toggle-password" type="button" data-toggle-password>Show</button>
-          </label>
-          <label>Confirm password<input name="confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Repeat password" /></label>
-          <button class="go" type="submit">Create account</button>
-        </form>
-        <form id="riderForgot" class="hidden" data-screen="forgot">
-          <button class="back" type="button" data-panel="login">Back</button>
-          <p class="kicker">Account help</p>
-          <h1>Reset password</h1>
-          <p class="copy">We’ll email a link that opens this app.</p>
-          <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
-          <button class="go" type="submit">Send reset link</button>
-        </form>
-        <form id="riderReset" class="hidden" data-screen="reset">
-          <p class="kicker">Secure reset</p>
-          <h1>New password</h1>
-          <p class="copy">At least 8 characters.</p>
-          <label class="field">New password
-            <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="New password" />
-            <button class="toggle-password" type="button" data-toggle-password>Show</button>
-          </label>
-          <label>Confirm password<input name="confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Repeat password" /></label>
-          <button class="go" type="submit">Save password</button>
-        </form>
-        <p id="gateMessage" role="status"></p>
+      <aside class="hero-pane">
+        <p class="brand-lock">SOBERS <span>RIDER</span></p>
+        <h1>Your shift.<br><em>Nothing else.</em></h1>
+        <p>Assigned pickups, the road, and a clean handoff. Built for the phone in your pocket and the desk at the branch.</p>
+      </aside>
+      <section class="auth-pane">
+        <header class="mark">
+          <span class="badge" aria-hidden="true">S</span>
+          <div><strong>SOBERS</strong><small>RIDER</small></div>
+        </header>
+        <section class="sheet">
+          <form id="riderLogin" data-screen="login">
+            <p class="kicker">Staff access</p>
+            <h1>Sign in</h1>
+            <p class="copy">Use the email the branch added for you.</p>
+            <label>Email<input name="email" type="email" required autocomplete="username" placeholder="you@email.com" /></label>
+            <label class="field">Password
+              <input name="password" type="password" required autocomplete="current-password" placeholder="Password" />
+              <button class="toggle-password" type="button" data-toggle-password>Show</button>
+            </label>
+            <button class="go" type="submit">Sign in</button>
+            <div class="links">
+              <button class="text" type="button" data-panel="forgot">Forgot password</button>
+              <button class="text" type="button" data-panel="signup">Create account</button>
+            </div>
+          </form>
+          <form id="riderSignup" class="hidden" data-screen="signup">
+            <button class="back" type="button" data-panel="login">Back</button>
+            <p class="kicker">New rider</p>
+            <h1>Create account</h1>
+            <p class="copy">The business still has to add this email before a job appears.</p>
+            <label>Your name<input name="full_name" required autocomplete="name" placeholder="Your name" /></label>
+            <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
+            <label class="field">Password
+              <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
+              <button class="toggle-password" type="button" data-toggle-password>Show</button>
+            </label>
+            <label>Confirm password<input name="confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Repeat password" /></label>
+            <button class="go" type="submit">Create account</button>
+          </form>
+          <form id="riderForgot" class="hidden" data-screen="forgot">
+            <button class="back" type="button" data-panel="login">Back</button>
+            <p class="kicker">Account help</p>
+            <h1>Reset password</h1>
+            <p class="copy">We’ll email a link that opens this app.</p>
+            <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
+            <button class="go" type="submit">Send reset link</button>
+          </form>
+          <form id="riderReset" class="hidden" data-screen="reset">
+            <p class="kicker">Secure reset</p>
+            <h1>New password</h1>
+            <p class="copy">At least 8 characters.</p>
+            <label class="field">New password
+              <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="New password" />
+              <button class="toggle-password" type="button" data-toggle-password>Show</button>
+            </label>
+            <label>Confirm password<input name="confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Repeat password" /></label>
+            <button class="go" type="submit">Save password</button>
+          </form>
+          <p id="gateMessage" role="status"></p>
+        </section>
       </section>
     </div>
 
     <div id="desk" class="hidden">
-      <header class="top">
-        <div>
-          <p class="kicker" id="deskKicker">Today</p>
-          <h1 id="deskTitle">Jobs</h1>
-        </div>
-        <span id="livePill" class="pill">Off shift</span>
-      </header>
-      <section id="jobsView"></section>
-      <section id="activeView" class="hidden"></section>
-      <section id="historyView" class="hidden"></section>
-      <section id="accountView" class="hidden">
-        <article class="ticket">
-          <p class="kicker">Account</p>
-          <h2 id="riderEmail"></h2>
-          <p class="copy">You only see deliveries a business has assigned to this login.</p>
-          <button class="go" type="button" id="installApp" hidden>Install app</button>
-          <p class="copy">On iPhone, use Share, then Add to Home Screen.</p>
-          <button class="ghost" type="button" id="signOut">Sign out</button>
-        </article>
-      </section>
-      <p id="riderMessage" role="status"></p>
+      <aside class="side">
+        <p class="brand-lock">SOBERS <span>RIDER</span></p>
+        <nav class="side-nav" aria-label="Rider">
+          <button type="button" data-tab="jobs" class="on">Jobs</button>
+          <button type="button" data-tab="active">Active <span class="count"></span></button>
+          <button type="button" data-tab="history">History</button>
+          <button type="button" data-tab="account">Account</button>
+        </nav>
+      </aside>
+      <div class="stage">
+        <header class="top">
+          <div>
+            <p class="kicker" id="deskKicker">Today</p>
+            <h1 id="deskTitle">Jobs</h1>
+          </div>
+          <span id="livePill" class="pill">Off shift</span>
+        </header>
+        <section id="jobsView"></section>
+        <section id="activeView" class="hidden"></section>
+        <section id="historyView" class="hidden"></section>
+        <section id="accountView" class="hidden">
+          <article class="ticket account-card">
+            <p class="kicker">Account</p>
+            <h2 id="riderEmail"></h2>
+            <p class="copy">Only deliveries assigned to this login are shown.</p>
+            <button class="go" type="button" id="installApp" hidden>Install app</button>
+            <p class="copy">On iPhone, use Share, then Add to Home Screen.</p>
+            <button class="ghost" type="button" id="signOut">Sign out</button>
+          </article>
+        </section>
+        <p id="riderMessage" role="status"></p>
+      </div>
       <nav class="tabs" aria-label="Rider">
         <button type="button" data-tab="jobs" class="on">Jobs</button>
-        <button type="button" data-tab="active">Active</button>
+        <button type="button" data-tab="active">Active <span class="count"></span></button>
         <button type="button" data-tab="history">History</button>
         <button type="button" data-tab="account">Account</button>
       </nav>
     </div>
     <script src="../track/vendor/leaflet.js"></script>
     <script src="../admin/vendor/supabase.min.js"></script>
-    <script src="./rider.js?v=4"></script>
+    <script src="./rider.js?v=5"></script>
   </body>
 </html>

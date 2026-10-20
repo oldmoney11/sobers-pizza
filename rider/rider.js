@@ -90,15 +90,17 @@
     const phone = String(order.customer_phone || "").replace(/\D/g, "");
     const address = order.delivery_address || "";
     const klass = order.status === "out_for_delivery" ? "on-road" : order.status === "completed" ? "done" : "ready";
+    const status = order.status === "out_for_delivery" ? "On the road" : order.status === "completed" ? "Delivered" : "Ready for pickup";
     const maps = address ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}">Navigate</a>` : "";
     const call = phone ? `<a href="tel:${esc(phone)}">Call</a>` : "";
-    let actions = "";
+    const body = `<div class="ticket-body"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned delivery")}</p><span class="chip">${esc(status)}</span></div><div class="ticket-main"><h2>${esc(order.order_number)}</h2><strong class="fare">${money(order.order_total)}</strong></div><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
     if (mode === "job") {
-      actions = `<div class="actions"><button type="button" data-action="start" data-order="${order.order_id}">Pick up and start</button>${call}</div>`;
-    } else if (mode === "active") {
-      actions = `<div id="riderMap"></div><div class="actions">${maps}${call}<button type="button" data-action="share" data-order="${order.order_id}">${sharingOrderId === order.order_id ? "Location is live" : "Share location"}</button><button class="go" type="button" data-action="delivered" data-order="${order.order_id}">Mark delivered</button></div>`;
+      return `<article class="ticket ${klass}">${body}<div class="actions"><button type="button" data-action="start" data-order="${order.order_id}">Pick up and start</button>${call}</div></div></article>`;
     }
-    return `<article class="ticket ${klass}"><p class="kicker">${esc(order.branch_name || "Assigned delivery")}</p><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}<p class="meta"><span>${esc(order.status === "out_for_delivery" ? "On the road" : order.status === "completed" ? "Delivered" : "Ready for pickup")}</span><span>${money(order.order_total)}</span></p>${actions}</article>`;
+    if (mode === "active") {
+      return `<article class="ticket ${klass} active-job"><div id="riderMap"></div>${body}<div class="actions">${maps}${call}<button type="button" data-action="share" data-order="${order.order_id}">${sharingOrderId === order.order_id ? "Location is live" : "Share location"}</button><button class="go" type="button" data-action="delivered" data-order="${order.order_id}">Mark delivered</button></div></div></article>`;
+    }
+    return `<article class="ticket ${klass}">${body}</div></article>`;
   }
 
   function paint() {
@@ -108,19 +110,19 @@
     document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("on", button.dataset.tab === tab));
     const active = jobs.filter((order) => order.status === "out_for_delivery");
     const waiting = jobs.filter((order) => order.status === "ready");
-    document.querySelector('[data-tab="active"]').textContent = active.length ? `Active ${active.length}` : "Active";
+    document.querySelectorAll("[data-tab='active'] .count").forEach((badge) => { badge.textContent = active.length ? String(active.length) : ""; });
     $("#livePill").textContent = sharingOrderId ? "Live" : "Off shift";
     $("#livePill").classList.toggle("live", !!sharingOrderId);
     $("#jobsView").classList.toggle("hidden", tab !== "jobs");
     $("#activeView").classList.toggle("hidden", tab !== "active");
     $("#historyView").classList.toggle("hidden", tab !== "history");
     $("#accountView").classList.toggle("hidden", tab !== "account");
-    $("#jobsView").innerHTML = `<div class="stats"><div class="stat"><b>${waiting.length}</b><span>Waiting at the branch</span></div><div class="stat"><b>${active.length}</b><span>On the road</span></div></div>` + (waiting.length ? waiting.map((order) => ticket(order, "job")).join("") : `<p class="empty">No pickup is waiting. A job appears here when it is marked Ready and assigned to you.</p>`);
-    $("#activeView").innerHTML = active.length ? active.map((order) => ticket(order, "active")).join("") : `<p class="empty">Nothing is on the road. Start a job and this becomes your delivery screen.</p>`;
+    $("#jobsView").innerHTML = `<div class="stats"><div class="stat"><b>${waiting.length}</b><span>Waiting at the branch</span></div><div class="stat"><b>${active.length}</b><span>On the road</span></div></div><div class="board">${waiting.length ? waiting.map((order) => ticket(order, "job")).join("") : `<p class="empty">No pickup is waiting. A job appears when it is marked Ready and assigned to you.</p>`}</div>`;
+    $("#activeView").innerHTML = active.length ? active.map((order) => ticket(order, "active")).join("") : `<p class="empty">Nothing is on the road. Start a job and this becomes the delivery screen.</p>`;
     const deliveredValue = history.reduce((sum, order) => sum + Number(order.order_total || 0), 0);
     $("#historyView").innerHTML = historyNote
       ? `<p class="empty">${esc(historyNote)}</p>`
-      : `<div class="stats"><div class="stat"><b>${history.length}</b><span>Delivered</span></div><div class="stat"><b>${money(deliveredValue)}</b><span>Order value, not rider pay</span></div></div>` + (history.length ? history.map((order) => ticket(order, "history")).join("") : `<p class="empty">Completed deliveries from the last 60 days will show here.</p>`);
+      : `<div class="stats"><div class="stat"><b>${history.length}</b><span>Delivered</span></div><div class="stat"><b>${money(deliveredValue)}</b><span>Order value, not rider pay</span></div></div><div class="board">${history.length ? history.map((order) => ticket(order, "history")).join("") : `<p class="empty">Completed deliveries from the last 60 days show here.</p>`}</div>`;
     if (tab === "active") updateMap();
   }
 
