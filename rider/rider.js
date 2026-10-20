@@ -8,6 +8,46 @@
   const $ = (selector) => document.querySelector(selector);
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);
   let timer = 0;
+  let sharingOrderId = null;
+  let watchId = null;
+  let lastSent = 0;
+
+  function stopShare() {
+    if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    sharingOrderId = null;
+    lastSent = 0;
+  }
+
+  function startShare(orderId, force = false) {
+    if (!orderId) return;
+    if (!force && sharingOrderId === orderId && watchId != null) return;
+    if (!navigator.geolocation) {
+      message("This browser cannot share location.");
+      return;
+    }
+    stopShare();
+    sharingOrderId = orderId;
+    watchId = navigator.geolocation.watchPosition(async (position) => {
+      if (sharingOrderId !== orderId) return;
+      const now = Date.now();
+      if (now - lastSent < 8000) return;
+      lastSent = now;
+      const { error } = await db.rpc("sobers_rider_location", {
+        p_order: orderId,
+        p_lat: position.coords.latitude,
+        p_lng: position.coords.longitude,
+        p_accuracy: position.coords.accuracy
+      });
+      if (sharingOrderId !== orderId) return;
+      message(error ? error.message : "Sharing your location with the customer.");
+    }, (error) => {
+      message(error && error.code === 1
+        ? "Location permission was blocked. Allow location for this site, then press Share location."
+        : "Location is unavailable right now.");
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+  }
+
 
   function message(text) { $("#riderMessage").textContent = text || ""; }
 
@@ -20,7 +60,7 @@
     host.innerHTML = rows.map((order) => {
       const phone = String(order.customer_phone || "").replace(/\D/g, "");
       const status = order.status === "out_for_delivery" ? "Out for delivery" : "Ready for pickup from the branch";
-      return `<article class="delivery"><h2>${esc(order.order_number)}</h2><p><strong>${esc(order.customer_name || "Customer")}</strong> · ${esc(order.branch_name || "Sobers Pizza")}</p><p>${esc(order.delivery_address || "No address saved")}</p>${order.customer_note ? `<p>Note: ${esc(order.customer_note)}</p>` : ""}<p>${esc(status)} · GH₵${Number(order.order_total || 0).toFixed(2)}</p><div class="actions">${phone ? `<a class="secondary" href="tel:${esc(phone)}">Call customer</a>` : ""}<button type="button" data-action="start" data-order="${order.order_id}" ${order.status === "ready" ? "" : "disabled"}>Start delivery</button><button type="button" data-action="delivered" data-order="${order.order_id}" ${order.status === "out_for_delivery" ? "" : "disabled"}>Mark delivered</button></div></article>`;
+      return `<article class="delivery"><h2>${esc(order.order_number)}</h2><p><strong>${esc(order.customer_name || "Customer")}</strong> · ${esc(order.branch_name || "Sobers Pizza")}</p><p>${esc(order.delivery_address || "No address saved")}</p>${order.customer_note ? `<p>Note: ${esc(order.customer_note)}</p>` : ""}<p>${esc(status)} · GH₵${Number(order.order_total || 0).toFixed(2)}</p><div class="actions">${phone ? `<a class="secondary" href="tel:${esc(phone)}">Call customer</a>` : ""}<button type="button" data-action="start" data-order="${order.order_id}" ${order.status === "ready" ? "" : "disabled"}>Start delivery</button><button type="button" data-action="share" data-order="${order.order_id}" ${order.status === "out_for_delivery" ? "" : "disabled"}>${sharingOrderId === order.order_id ? "Sharing location" : "Share location"}</button><button type="button" data-action="delivered" data-order="${order.order_id}" ${order.status === "out_for_delivery" ? "" : "disabled"}>Mark delivered</button></div></article>`;
     }).join("");
   }
 
@@ -32,14 +72,20 @@
     if (!session) { window.clearInterval(timer); return; }
     const { data, error } = await db.rpc("sobers_rider_orders");
     if (error) return message(error.message);
-    render(data || []);
+    const rows = data || [];
+    const active = rows.find((order) => order.status === "out_for_delivery");
+    if (active) startShare(active.order_id);
+    else if (sharingOrderId) stopShare();
+    render(rows);
   }
 
   async function update(orderId, action) {
     message(action === "start" ? "Starting delivery…" : "Marking delivered…");
     const { error } = await db.rpc("sobers_rider_update", { p_order: orderId, p_action: action });
     if (error) return message(error.message);
-    message(action === "start" ? "Customer tracking now shows On the way." : "Order marked delivered.");
+    if (action === "start") startShare(orderId, true);
+    if (action === "delivered" && sharingOrderId === orderId) stopShare();
+    message(action === "start" ? "Delivery started. Allow location so the customer can see you." : "Order marked delivered. Location sharing stopped.");
     await load();
   }
 
@@ -66,10 +112,15 @@
     await load();
   };
 
-  $("#signOut").onclick = async () => { await db.auth.signOut(); message(""); await load(); };
+  $("#signOut").onclick = async () => { stopShare(); await db.auth.signOut(); message(""); await load(); };
   $("#deliveries").onclick = (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button || button.disabled) return;
+    if (button.dataset.action === "share") {
+      startShare(button.dataset.order, true);
+      message("Requesting location…");
+      return;
+    }
     update(button.dataset.order, button.dataset.action);
   };
 

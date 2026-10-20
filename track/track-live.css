@@ -16,3 +16,9 @@
   .progress-step .step { width: 18px; height: 18px; border-radius: 50%; }
   .progress-step small { font-size: .95rem; text-align: left; }
 }
+.delivery-map { margin-top: 22px; }
+.delivery-map h3 { margin: 0 0 6px; font-size: 1.15rem; }
+.delivery-map p, .delivery-map small { color: var(--muted); }
+#deliveryMap { height: 280px; margin: 12px 0; overflow: hidden; border-radius: 18px; background: #1a1816; }
+.leaflet-container { font: inherit; background: #1a1816; }
+@media print { .delivery-map { display: none; } }

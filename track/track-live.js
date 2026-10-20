@@ -48,6 +48,36 @@
     $("#receipt").classList.remove("hidden");
   }
 
+  async function refreshMap(order) {
+    if (!window.SobersDeliveryMap) return;
+    if (order.fulfilment === "pickup" || order.status !== "out_for_delivery" || !activeLookup) {
+      window.SobersDeliveryMap.hide();
+      return;
+    }
+    try {
+      const response = await fetch(`${url}/rest/v1/rpc/sobers_track_location`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_business_slug: "sobers-pizza",
+          p_order_number: activeLookup.reference,
+          p_customer_phone: activeLookup.phone,
+        }),
+        cache: "no-store",
+      });
+      const point = await response.json();
+      if (!response.ok) {
+        window.SobersDeliveryMap.show(null);
+        const note = document.querySelector("#mapFreshness");
+        if (note) note.textContent = "The live map is not ready yet. Run the delivery map SQL in Supabase, then refresh.";
+        return;
+      }
+      window.SobersDeliveryMap.show(point);
+    } catch (_) {
+      window.SobersDeliveryMap.show(null);
+    }
+  }
+
   async function lookup(reference, phone, quiet = false) {
     const response = await fetch(`${url}/rest/v1/rpc/track_public_order`, {
       method: "POST",
@@ -64,8 +94,11 @@
     render(order);
     activeLookup = { reference, phone };
     try { localStorage.setItem("sobersLastTracking", JSON.stringify(activeLookup)); } catch (_) {}
+    await refreshMap(order);
     window.clearTimeout(pollTimer);
-    if (!["completed", "cancelled"].includes(order.status)) pollTimer = window.setTimeout(refresh, 10000);
+    if (!["completed", "cancelled"].includes(order.status)) {
+      pollTimer = window.setTimeout(refresh, order.status === "out_for_delivery" ? 5000 : 10000);
+    }
     return order;
   }
 
