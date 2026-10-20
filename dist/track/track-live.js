@@ -2,7 +2,6 @@
   "use strict";
   const url = "https://inthadecmxmbqexufzpe.supabase.co";
   const key = "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80";
-  const statuses = ["new", "confirmed", "preparing", "ready", "completed"];
   const $ = (selector) => document.querySelector(selector);
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const money = (value) => `GH₵${Number(value || 0).toFixed(2)}`;
@@ -10,22 +9,29 @@
   let activeLookup = null;
   let lastManualLookupAt = 0;
 
+  function progressSteps(order) {
+    return order.fulfilment === "pickup"
+      ? [["new", "Received"], ["confirmed", "Confirmed"], ["preparing", "Preparing"], ["ready", "Ready"], ["completed", "Collected"]]
+      : [["new", "Received"], ["confirmed", "Confirmed"], ["preparing", "Preparing"], ["ready", "Ready"], ["out_for_delivery", "On the way"], ["completed", "Delivered"]];
+  }
+
   function statusLabel(order) {
     if (order.status === "cancelled") return "Cancelled";
     if (order.status === "new") return "Order received";
     if (order.status === "confirmed") return "Confirmed";
     if (order.status === "preparing") return "Preparing your food";
     if (order.status === "ready") return order.fulfilment === "pickup" ? "Ready for pickup" : "Ready for delivery";
+    if (order.status === "out_for_delivery") return "Out for delivery";
     if (order.status === "completed") return order.fulfilment === "pickup" ? "Collected" : "Delivered";
     return String(order.status || "Received").replace(/_/g, " ");
   }
 
   function render(order) {
-    const current = order.status === "cancelled" ? -1 : statuses.indexOf(order.status);
-    const labels = ["Received", "Confirmed", "Preparing", order.fulfilment === "pickup" ? "Pickup" : "Ready", order.fulfilment === "pickup" ? "Collected" : "Delivered"];
+    const steps = progressSteps(order);
+    const current = order.status === "cancelled" ? -1 : steps.findIndex(([status]) => status === order.status);
     $("#receiptNumber").textContent = order.order_number;
     $("#receiptStatus").textContent = statusLabel(order);
-    $("#orderProgress").innerHTML = statuses.map((status, index) => `<div class="progress-step ${index <= current ? "done" : ""} ${index === current ? "current" : ""}"><span class="step" title="${esc(status)}"></span><small>${esc(labels[index])}</small></div>`).join("");
+    $("#orderProgress").innerHTML = steps.map(([status, label], index) => `<div class="progress-step ${index <= current ? "done" : ""} ${index === current ? "current" : ""}"><span class="step" title="${esc(status)}"></span><small>${esc(label)}</small></div>`).join("");
     const prep = order.prep_min_minutes && order.prep_max_minutes ? `${order.prep_min_minutes}–${order.prep_max_minutes} min` : "Confirming";
     $("#receiptMeta").innerHTML = `<div><small>Branch</small><strong>${esc(order.branch_name || "Sobers Pizza")}</strong></div><div><small>Estimated prep</small><strong>${esc(prep)}</strong></div><div><small>Order type</small><strong>${esc(order.fulfilment.replace(/_/g, " "))}</strong></div><div><small>Payment</small><strong>${esc(order.payment_status)}</strong></div><div><small>Last updated</small><strong>${new Date(order.updated_at || order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div>`;
     $("#receiptItems").innerHTML = (order.items || []).map((item) => `<div class="item"><div><b>${Number(item.quantity)} × ${esc(item.name)}</b></div><strong>${money(item.line_total)}</strong></div>`).join("");

@@ -1,4 +1,4 @@
-.live-state { display: block; color: #82e6ae; font-weight: 750; }
+.progress { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
 .progress-step { display: grid; gap: 8px; min-width: 0; }
 .progress-step small { overflow: hidden; color: var(--muted); font-size: .72rem; text-overflow: ellipsis; }
 .progress-step.done .step { background: var(--red); }

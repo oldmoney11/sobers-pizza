@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $$('[data-smart-filter]').forEach(button => button.addEventListener("click", () => openMenuFilter(button.dataset.smartFilter)));
 
   const shell = $("#spCustomerShell");
+  let statusTimer = 0;
   function openPanel(name) {
     if (!shell) return;
     shell.hidden = false; shell.setAttribute("aria-hidden", "false"); document.body.classList.add("sp-modal-lock");
@@ -50,11 +51,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const titles = { rewards: "Slice Rewards", purchases: "My Purchases", account: "My Account" };
     $("#spCustomerPanelTitle").textContent = titles[name] || "My Sobers";
     $$('[data-customer-panel]').forEach(item => item.classList.toggle("active", item.dataset.customerPanel === name));
+    window.clearInterval(statusTimer);
     if (name === "purchases") { renderPurchases("active"); refreshOrderStatuses(); }
     if (name === "rewards") { renderRewards(); refreshOrderStatuses(); }
+    if (name === "purchases" || name === "rewards") statusTimer = window.setInterval(() => { if (!document.hidden && shell && !shell.hidden) refreshOrderStatuses(); }, 12000);
     if (name === "account") renderProfile();
   }
-  function closePanel() { if (!shell) return; shell.hidden = true; shell.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-lock"); }
+  function closePanel() { window.clearInterval(statusTimer); if (!shell) return; shell.hidden = true; shell.setAttribute("aria-hidden", "true"); document.body.classList.remove("sp-modal-lock"); }
   $$('[data-customer-panel]').forEach(button => button.addEventListener("click", () => openPanel(button.dataset.customerPanel)));
   $$('[data-customer-close]').forEach(button => button.addEventListener("click", closePanel));
   document.addEventListener("keydown", event => { if (event.key === "Escape") { closePanel(); closeProfile(); } });
@@ -72,14 +75,15 @@ document.addEventListener("DOMContentLoaded", () => {
       else { host.innerHTML = `<div class="sp-favourite-list">${favourites.map(item => `<div class="sp-favourite-row"><img src="${item.image}" alt=""><div><b>${item.name}</b><small>${item.price}</small></div><button type="button" data-remove-favourite="${item.key}" aria-label="Remove ${item.name}">×</button></div>`).join("")}</div>`; }
     } else if (["active", "history"].includes(tab)) {
       orders = (window.SobersPlatformOrders?.getOrders?.() || read(KEYS.orders, []));
-      const activeStatuses = ["new", "confirmed", "preparing", "ready", "pending"];
+      const activeStatuses = ["new", "confirmed", "preparing", "ready", "out_for_delivery", "pending"];
       const visibleOrders = orders
         .filter(order => tab === "active" ? activeStatuses.includes(String(order.status || "new").toLowerCase()) : !activeStatuses.includes(String(order.status || "new").toLowerCase()))
         .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (visibleOrders.length) {
         host.innerHTML = `<div class="sp-purchase-list">${visibleOrders.map(order => {
           const status = String(order.status || "new").toLowerCase();
-          const label = order.confirmation && !order.synced ? ({sending:"Sending…",offline:"Saved offline",unconfirmed:"Not confirmed",rejected:"Needs attention"}[order.confirmation] || "Not confirmed") : status === "new" ? "Received · awaiting branch" : status.replace(/\b\w/g, letter => letter.toUpperCase());
+          const statusLabels = { new: "Received", confirmed: "Confirmed", preparing: "Preparing", ready: "Ready", out_for_delivery: "Out for delivery", completed: String(order.fulfilment || "").includes("pickup") ? "Collected" : "Delivered", cancelled: "Cancelled" };
+          const label = order.confirmation && !order.synced ? ({sending:"Sending…",offline:"Saved offline",unconfirmed:"Not confirmed",rejected:"Needs attention"}[order.confirmation] || "Not confirmed") : (statusLabels[status] || status.replace(/\b\w/g, letter => letter.toUpperCase()));
           const reference = order.order_number || order.client_request_id || "Sobers order";
           const tracking = order.client_request_id ? `<button type="button" class="sp-order-track" data-order-receipt="${escape(order.client_request_id)}">View receipt / tracking →</button>` : "";
           return `<article class="sp-purchase-card"><div class="sp-purchase-card__top"><div><small>${new Date(order.created_at).toLocaleString()}</small><h3>${escape(reference)}</h3></div><span data-order-status="${status}">${escape(label)}</span></div><div class="sp-purchase-card__meta"><span>${escape(order.branch_name || "Sobers Pizza")}</span><span>${escape(order.fulfilment || "Order")}</span><strong>GH₵${Number(order.total || 0).toFixed(2)}</strong></div>${tracking}</article>`;
