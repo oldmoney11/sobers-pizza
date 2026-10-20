@@ -64,12 +64,34 @@
     }).join("");
   }
 
+  let recovery = false;
+  let panel = "login";
+
+  function showPanel(name) {
+    panel = name;
+    document.querySelectorAll("[data-screen]").forEach((screen) => {
+      screen.classList.toggle("hidden", screen.dataset.screen !== name);
+    });
+  }
+
+  function redirectHere() {
+    return new URL(window.location.pathname, window.location.origin).href;
+  }
+
   async function load() {
     const { data: { session } } = await db.auth.getSession();
-    $("#riderLogin").classList.toggle("hidden", !!session);
-    $("#riderSignup").classList.toggle("hidden", !!session);
-    $("#riderWork").classList.toggle("hidden", !session);
-    if (!session) { window.clearInterval(timer); return; }
+    if (recovery) {
+      showPanel("reset");
+      return;
+    }
+    if (!session) {
+      window.clearInterval(timer);
+      showPanel(panel === "work" || panel === "reset" ? "login" : panel);
+      return;
+    }
+    showPanel("work");
+    const email = $("#riderEmail");
+    if (email) email.textContent = session.user.email || "";
     const { data, error } = await db.rpc("sobers_rider_orders");
     if (error) return message(error.message);
     const rows = data || [];
@@ -89,13 +111,24 @@
     await load();
   }
 
+  function busy(form, on) {
+    const button = form.querySelector('button[type="submit"]');
+    if (button) button.disabled = on;
+  }
+
   $("#riderLogin").onsubmit = async (event) => {
     event.preventDefault();
     const form = event.target;
+    busy(form, true);
     message("Signing in…");
-    const { error } = await db.auth.signInWithPassword({ email: form.elements.email.value.trim(), password: form.elements.password.value });
+    const { error } = await db.auth.signInWithPassword({
+      email: form.elements.email.value.trim(),
+      password: form.elements.password.value
+    });
     form.elements.password.value = "";
+    busy(form, false);
     if (error) return message(error.message);
+    message("");
     await load();
   };
 
@@ -104,15 +137,78 @@
     const form = event.target;
     const password = form.elements.password.value;
     if (password.length < 8) return message("Use at least 8 characters.");
+    if (password !== form.elements.confirm.value) return message("The two passwords do not match.");
+    busy(form, true);
     message("Creating account…");
-    const { error } = await db.auth.signUp({ email: form.elements.email.value.trim(), password, options: { data: { full_name: form.elements.full_name.value.trim() } } });
+    const { data, error } = await db.auth.signUp({
+      email: form.elements.email.value.trim(),
+      password,
+      options: {
+        data: { full_name: form.elements.full_name.value.trim() },
+        emailRedirectTo: redirectHere()
+      }
+    });
     form.elements.password.value = "";
+    form.elements.confirm.value = "";
+    busy(form, false);
     if (error) return message(error.message);
-    message("Account created. If Sobers asks you to confirm the email, do that, then ask admin to add this email under Riders.");
+    message(data.session
+      ? "Account created. Ask Sobers admin to add this email under Riders before orders will appear."
+      : "Account created. Confirm the email if Sobers asks you to, then ask admin to add this email under Riders.");
     await load();
   };
 
-  $("#signOut").onclick = async () => { stopShare(); await db.auth.signOut(); message(""); await load(); };
+  $("#riderForgot").onsubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    busy(form, true);
+    message("Sending reset link…");
+    const { error } = await db.auth.resetPasswordForEmail(form.elements.email.value.trim(), { redirectTo: redirectHere() });
+    busy(form, false);
+    if (error) return message(error.message);
+    message("If this email has a rider account, a reset link is on its way. Check the inbox and spam folder.");
+  };
+
+  $("#riderReset").onsubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const password = form.elements.password.value;
+    if (password.length < 8) return message("Use at least 8 characters.");
+    if (password !== form.elements.confirm.value) return message("The two passwords do not match.");
+    busy(form, true);
+    message("Saving your new password…");
+    const { error } = await db.auth.updateUser({ password });
+    form.elements.password.value = "";
+    form.elements.confirm.value = "";
+    busy(form, false);
+    if (error) return message(error.message);
+    recovery = false;
+    message("Password updated.");
+    await load();
+  };
+
+  document.querySelectorAll("[data-panel]").forEach((button) => {
+    button.onclick = () => {
+      const destination = button.dataset.panel;
+      if (destination === "forgot") {
+        const from = $("#riderLogin").elements.email.value.trim();
+        if (from) $("#riderForgot").elements.email.value = from;
+      }
+      message("");
+      showPanel(destination);
+    };
+  });
+
+  document.querySelectorAll("[data-toggle-password]").forEach((button) => {
+    button.onclick = () => {
+      const input = button.parentElement.querySelector("input");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      button.textContent = showing ? "Show" : "Hide";
+    };
+  });
+
+  $("#signOut").onclick = async () => { stopShare(); recovery = false; await db.auth.signOut(); message(""); await load(); };
   $("#deliveries").onclick = (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button || button.disabled) return;
@@ -124,6 +220,14 @@
     update(button.dataset.order, button.dataset.action);
   };
 
-  db.auth.onAuthStateChange(() => load());
+  db.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") {
+      recovery = true;
+      showPanel("reset");
+      message("Choose a new password for this rider account.");
+      return;
+    }
+    load();
+  });
   load().then(() => { timer = window.setInterval(load, 15000); });
 })();

@@ -4,40 +4,104 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="theme-color" content="#171513" />
+    <meta name="theme-color" content="#11100f" />
     <title>Sobers rider</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../track/track.css?v=3" />
-    <link rel="stylesheet" href="./rider.css?v=1" />
+    <link rel="stylesheet" href="./rider.css?v=2" />
   </head>
-  <body>
-    <main>
-      <nav class="track-nav" aria-label="Rider navigation">
+  <body class="rider-page">
+    <main class="rider-shell">
+      <section class="rider-brand">
         <a class="brand" href="../">SOBERS <span>PIZZA</span></a>
-        <a class="back-to-app" href="../admin/">Admin</a>
-      </nav>
-      <section class="track-card">
-        <p class="eyebrow">RIDER</p>
-        <h1>Your deliveries</h1>
-        <p>Sign in to see only the orders assigned to you. After you start a delivery, this page shares your location until you mark it delivered.</p>
-        <form id="riderLogin">
+        <p class="eyebrow">RIDER ACCESS</p>
+        <h1>Deliver with <em>Sobers.</em></h1>
+        <p id="brandLead">Sign in to see only the orders assigned to you. Your location is shared only while a delivery is active.</p>
+        <ul class="rider-points">
+          <li><strong>Your orders only</strong><span>Nothing assigned to another rider appears here.</span></li>
+          <li><strong>One clear step</strong><span>Start the delivery, share location, then mark it delivered.</span></li>
+          <li><strong>Customer tracking</strong><span>The customer sees the status and your latest point.</span></li>
+        </ul>
+      </section>
+
+      <section class="rider-panel" aria-live="polite">
+        <form id="riderLogin" data-screen="login">
+          <p class="eyebrow">WELCOME BACK</p>
+          <h2>Sign in</h2>
+          <p class="panel-copy">Use the email and password for your rider account.</p>
           <label>Email<input name="email" type="email" required autocomplete="username" /></label>
-          <label>Password<input name="password" type="password" required autocomplete="current-password" /></label>
+          <label class="field">Password
+            <input name="password" type="password" required autocomplete="current-password" />
+            <button class="toggle-password" type="button" data-toggle-password>Show</button>
+          </label>
           <button type="submit">Sign in</button>
+          <div class="auth-links">
+            <button class="text-link" type="button" data-panel="forgot">Forgot password</button>
+            <button class="text-link" type="button" data-panel="signup">Create account</button>
+          </div>
         </form>
-        <form id="riderSignup">
+
+        <form id="riderSignup" class="hidden" data-screen="signup">
+          <p class="eyebrow">NEW RIDER</p>
+          <h2>Create account</h2>
+          <p class="panel-copy">After this, Sobers admin must add the same email under Riders before orders appear.</p>
           <label>Your name<input name="full_name" required autocomplete="name" /></label>
           <label>Email<input name="email" type="email" required autocomplete="email" /></label>
-          <label>Password<input name="password" type="password" required minlength="8" autocomplete="new-password" /></label>
-          <button class="secondary" type="submit">Create rider account</button>
+          <label class="field">Password
+            <input name="password" type="password" required minlength="8" autocomplete="new-password" />
+            <button class="toggle-password" type="button" data-toggle-password>Show</button>
+          </label>
+          <label class="field">Confirm password
+            <input name="confirm" type="password" required minlength="8" autocomplete="new-password" />
+          </label>
+          <button type="submit">Create account</button>
+          <div class="auth-links">
+            <button class="text-link" type="button" data-panel="login">Back to sign in</button>
+          </div>
         </form>
-        <div id="riderWork" class="hidden">
-          <div class="actions"><button class="secondary" type="button" id="signOut">Sign out</button></div>
+
+        <form id="riderForgot" class="hidden" data-screen="forgot">
+          <p class="eyebrow">ACCOUNT HELP</p>
+          <h2>Reset password</h2>
+          <p class="panel-copy">We will email a secure link. It opens this same rider page so you can choose a new password.</p>
+          <label>Email<input name="email" type="email" required autocomplete="email" /></label>
+          <button type="submit">Send reset link</button>
+          <div class="auth-links">
+            <button class="text-link" type="button" data-panel="login">Back to sign in</button>
+          </div>
+        </form>
+
+        <form id="riderReset" class="hidden" data-screen="reset">
+          <p class="eyebrow">SECURE RESET</p>
+          <h2>Choose a new password</h2>
+          <p class="panel-copy">Use at least 8 characters. You will stay signed in after it is saved.</p>
+          <label class="field">New password
+            <input name="password" type="password" required minlength="8" autocomplete="new-password" />
+            <button class="toggle-password" type="button" data-toggle-password>Show</button>
+          </label>
+          <label class="field">Confirm password
+            <input name="confirm" type="password" required minlength="8" autocomplete="new-password" />
+          </label>
+          <button type="submit">Save password</button>
+        </form>
+
+        <div id="riderWork" class="hidden" data-screen="work">
+          <div class="work-head">
+            <div>
+              <p class="eyebrow">ON SHIFT</p>
+              <h2>Your deliveries</h2>
+              <p class="signed-in">Signed in as <strong id="riderEmail"></strong></p>
+            </div>
+            <button class="secondary" type="button" id="signOut">Sign out</button>
+          </div>
           <div id="deliveries"></div>
         </div>
         <p id="riderMessage" role="status"></p>
       </section>
     </main>
     <script src="../admin/vendor/supabase.min.js"></script>
-    <script src="./rider.js?v=2"></script>
+    <script src="./rider.js?v=3"></script>
   </body>
 </html>
