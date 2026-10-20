@@ -6,6 +6,19 @@
     { auth: { storageKey: "sobers-rider-auth" } }
   );
   const $ = (selector) => document.querySelector(selector);
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.querySelectorAll(".theme-toggle").forEach((button) => { button.textContent = theme === "day" ? "Night" : "Day"; });
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = theme === "day" ? "#ffffff" : "#0d0d0f";
+  }
+  applyTheme(localStorage.getItem("rider-theme") || "night");
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".theme-toggle")) return;
+    const next = document.documentElement.dataset.theme === "day" ? "night" : "day";
+    localStorage.setItem("rider-theme", next);
+    applyTheme(next);
+  });
   const esc = (value) => String(value ?? "").replace(/[&<>"\']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);
   let timer = 0;
   let sharingOrderId = null;
