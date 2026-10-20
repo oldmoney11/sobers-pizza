@@ -62,7 +62,7 @@
         <small>Business administration</small>
         <nav class="nav" id="nav">
           <button class="active" data-view="overview">Overview</button
-          ><button data-view="orders">Orders</button><button data-view="products">Products</button
+          ><button data-view="orders">Orders</button><button data-view="riders">Riders</button><button data-view="products">Products</button
           ><button data-view="categories">Categories</button
           ><button data-view="notices">Notices</button
           ><button data-view="branches">Branches</button
@@ -156,6 +156,35 @@
                   <tbody id="ordersBody"></tbody>
                 </table>
                 <div class="empty" id="ordersEmpty">No platform orders yet.</div>
+              </div>
+            </div>
+          </section>
+          <section class="view" id="riders">
+            <div class="heading">
+              <div>
+                <span class="eyebrow">Delivery</span>
+                <h1>Riders</h1>
+                <p class="view-intro">Add a rider after they create a login on the rider page. Then assign them from an order.</p>
+              </div>
+              <a class="button-link secondary" href="../rider/">Open rider page</a>
+            </div>
+            <p class="notice" id="riderSetupNotice" hidden>Rider setup is not in the database yet. Run supabase/20-sobers-rider-access.sql in the Supabase SQL editor, then refresh.</p>
+            <form id="riderForm" class="panel">
+              <div class="form-grid">
+                <label>Rider name<input name="display_name" required /></label>
+                <label>Login email<input name="email" type="email" required /></label>
+                <label>Phone<input name="phone" type="tel" /></label>
+              </div>
+              <div class="actions"><button type="submit">Save rider</button></div>
+              <p class="message" id="riderMessage"></p>
+            </form>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
+                  <tbody id="ridersBody"></tbody>
+                </table>
+                <div class="empty hidden" id="ridersEmpty">No riders yet.</div>
               </div>
             </div>
           </section>

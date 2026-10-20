@@ -29,6 +29,7 @@
     let branches = [];
     let paymentMethods = [];
     let notices = [];
+    let riders = [];
     let orderChannel = null;
     let passwordRecovery = false;
     let recoveryInProgress = location.hash.includes('type=recovery');
@@ -146,6 +147,30 @@
         notices = noticeResult.error ? [] : (noticeResult.data || []);
         renderBranchFilter(); renderOrders(); renderProducts(); renderCategories(); renderNotices(); renderBranches(); renderPaymentMethods(); renderSettings(settingsResult.data); renderStats();
         $("#setupNotice").classList.add("hidden");
+        await loadRiders();
+    }
+
+    async function loadRiders() {
+        const { data, error } = await db.rpc("sobers_list_riders", { p_business: business.id });
+        const notice = $("#riderSetupNotice");
+        if (error) {
+            riders = [];
+            if (notice) notice.hidden = false;
+        } else {
+            riders = data || [];
+            if (notice) notice.hidden = true;
+        }
+        renderRiders();
+    }
+    function renderRiders() {
+        const body = $("#ridersBody");
+        const empty = $("#ridersEmpty");
+        if (!body) return;
+        body.innerHTML = riders.map(rider => `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td><td>${rider.is_active ? "Active" : "Inactive"}</td></tr>`).join("");
+        if (empty) empty.classList.toggle("hidden", riders.length > 0);
+    }
+    function riderName(riderId) {
+        return riders.find(rider => rider.id === riderId)?.display_name || "";
     }
 
     function soundNewOrder() {
@@ -315,8 +340,22 @@
         if (error) return alert(error.message);
         $("#orderDialogTitle").textContent = order.order_number;
         const rows = (items || []).map(item => { const product = products.find(entry => entry.id === item.product_id || entry.slug === item.product_key); const options = optionSummary(item.selected_options, product); return `<tr><td><strong>${esc(item.quantity)} × ${esc(item.product_name)}</strong>${options.length ? `<span class="order-option">${options.map(esc).join(" · ")}</span>` : ""}</td><td>${money(item.unit_price)}</td><td>${money(item.line_total)}</td></tr>`; }).join("");
-        $("#orderDetail").innerHTML = `<div class="order-meta"><div><small>Official reference</small><strong>${esc(order.order_number)}</strong></div><div><small>Preparing branch</small><strong>${esc(branchName(order.branch_id))}</strong></div>${order.display_order_number ? `<div><small>Kiosk number</small><strong>${esc(order.display_order_number)}</strong></div>` : ""}<div><small>Source</small>${esc(order.source)}</div><div><small>Customer</small><strong>${esc(order.customer_name)}</strong></div><div><small>Phone</small>${esc(order.customer_phone)}</div><div><small>Order type</small>${esc(order.fulfilment)}</div><div><small>Kitchen status</small>${esc(orderStatusLabel(order.status))}</div><div><small>Payment status</small>${esc(order.payment_status || "unpaid")}</div>${order.payment_reference ? `<div><small>Payment reference</small>${esc(order.payment_reference)}</div>` : ""}${order.delivery_address ? `<div><small>Delivery address</small>${esc(order.delivery_address)}</div>` : ""}${order.customer_note ? `<div><small>Customer note</small>${esc(order.customer_note)}</div>` : ""}<div><small>Created</small>${new Date(order.created_at).toLocaleString()}</div></div><table class="order-items"><thead><tr><th>Item</th><th>Unit</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">Subtotal</th><td>${money(order.subtotal)}</td></tr><tr><th colspan="2">Delivery</th><td>${money(order.delivery_fee)}</td></tr><tr><th colspan="2">Order total</th><td><strong>${money(order.total)}</strong></td></tr></tfoot></table>`;
+        $("#orderDetail").innerHTML = `<div class="order-meta"><div><small>Official reference</small><strong>${esc(order.order_number)}</strong></div><div><small>Preparing branch</small><strong>${esc(branchName(order.branch_id))}</strong></div>${order.display_order_number ? `<div><small>Kiosk number</small><strong>${esc(order.display_order_number)}</strong></div>` : ""}<div><small>Source</small>${esc(order.source)}</div><div><small>Customer</small><strong>${esc(order.customer_name)}</strong></div><div><small>Phone</small>${esc(order.customer_phone)}</div><div><small>Order type</small>${esc(order.fulfilment)}</div><div><small>Kitchen status</small>${esc(orderStatusLabel(order.status))}</div>${order.rider_id ? `<div><small>Rider</small><strong>${esc(riderName(order.rider_id) || "Assigned")}</strong></div>` : ""}<div><small>Payment status</small>${esc(order.payment_status || "unpaid")}</div>${order.payment_reference ? `<div><small>Payment reference</small>${esc(order.payment_reference)}</div>` : ""}${order.delivery_address ? `<div><small>Delivery address</small>${esc(order.delivery_address)}</div>` : ""}${order.customer_note ? `<div><small>Customer note</small>${esc(order.customer_note)}</div>` : ""}<div><small>Created</small>${new Date(order.created_at).toLocaleString()}</div></div><table class="order-items"><thead><tr><th>Item</th><th>Unit</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">Subtotal</th><td>${money(order.subtotal)}</td></tr><tr><th colspan="2">Delivery</th><td>${money(order.delivery_fee)}</td></tr><tr><th colspan="2">Order total</th><td><strong>${money(order.total)}</strong></td></tr></tfoot></table>`;
         const phone = String(order.customer_phone || "").replace(/\D/g, "");
+        if (order.fulfilment !== "pickup") {
+            const options = [`<option value="">Unassigned</option>`].concat(riders.filter(rider => rider.is_active).map(rider => `<option value="${rider.id}" ${rider.id === order.rider_id ? "selected" : ""}>${esc(rider.display_name)}</option>`));
+            $("#orderDetail").insertAdjacentHTML("beforeend", `<form id="assignRiderForm"><label>Assign rider<select name="rider_id">${options.join("")}</select></label><button type="submit">Save rider</button><p class="message" id="assignRiderMessage"></p></form>`);
+            $("#assignRiderForm").onsubmit = async event => {
+                event.preventDefault();
+                const choice = event.target.elements.rider_id.value || null;
+                $("#assignRiderMessage").textContent = "Saving rider…";
+                const { error: assignError } = await db.rpc("sobers_assign_rider", { p_business: business.id, p_order: order.id, p_rider: choice });
+                if (assignError) return $("#assignRiderMessage").textContent = assignError.message;
+                order.rider_id = choice;
+                $("#assignRiderMessage").textContent = choice ? "Rider assigned." : "Rider removed.";
+                renderOrders();
+            };
+        }
         $("#orderCall").href = `tel:${phone}`; $("#orderWhatsApp").href = `https://wa.me/${phone}`; openDialog("orderDialog");
     }
     function editProduct(product = null) {
@@ -504,6 +543,19 @@
         } finally {
             if (submitButton) submitButton.disabled = false;
         }
+    };
+    $("#riderForm").onsubmit = async event => {
+        event.preventDefault();
+        const form = event.target;
+        $("#riderMessage").textContent = "Saving rider…";
+        const { error } = await db.rpc("sobers_save_rider", {
+            p_business: business.id,
+            p_email: form.elements.email.value.trim(),
+            p_name: form.elements.display_name.value.trim(),
+            p_phone: form.elements.phone.value.trim()
+        });
+        $("#riderMessage").textContent = error ? error.message : "Rider saved. You can assign them from a delivery order.";
+        if (!error) { form.reset(); await loadRiders(); }
     };
     $("#signOut").onclick = async () => { await db.auth.signOut(); showLogin(); };
 

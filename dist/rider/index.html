@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#171513" />
+    <title>Sobers rider</title>
+    <link rel="stylesheet" href="../track/track.css?v=3" />
+    <link rel="stylesheet" href="./rider.css?v=1" />
+  </head>
+  <body>
+    <main>
+      <nav class="track-nav" aria-label="Rider navigation">
+        <a class="brand" href="../">SOBERS <span>PIZZA</span></a>
+        <a class="back-to-app" href="../admin/">Admin</a>
+      </nav>
+      <section class="track-card">
+        <p class="eyebrow">RIDER</p>
+        <h1>Your deliveries</h1>
+        <p>Sign in to see only the orders assigned to you. This page does not show the map yet.</p>
+        <form id="riderLogin">
+          <label>Email<input name="email" type="email" required autocomplete="username" /></label>
+          <label>Password<input name="password" type="password" required autocomplete="current-password" /></label>
+          <button type="submit">Sign in</button>
+        </form>
+        <form id="riderSignup">
+          <label>Your name<input name="full_name" required autocomplete="name" /></label>
+          <label>Email<input name="email" type="email" required autocomplete="email" /></label>
+          <label>Password<input name="password" type="password" required minlength="8" autocomplete="new-password" /></label>
+          <button class="secondary" type="submit">Create rider account</button>
+        </form>
+        <div id="riderWork" class="hidden">
+          <div class="actions"><button class="secondary" type="button" id="signOut">Sign out</button></div>
+          <div id="deliveries"></div>
+        </div>
+        <p id="riderMessage" role="status"></p>
+      </section>
+    </main>
+    <script src="../admin/vendor/supabase.min.js"></script>
+    <script src="./rider.js?v=1"></script>
+  </body>
+</html>

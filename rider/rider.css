@@ -1,0 +1,15 @@
+main { max-width: 720px; }
+.track-card h1 { font-size: clamp(2.2rem, 7vw, 4rem); }
+form { grid-template-columns: 1fr; }
+.delivery { margin-top: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: #171513; }
+.delivery h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.delivery p { margin: 6px 0; color: var(--muted); }
+.delivery strong { color: var(--cream); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.actions button, .actions a { min-height: 46px; }
+.secondary { background: transparent; border: 1px solid var(--line); color: var(--cream); }
+#riderMessage { min-height: 1.4em; color: #ff9ba6; }
+.hidden { display: none; }
+@media (max-width: 620px) {
+  .delivery { padding: 16px; }
+}
