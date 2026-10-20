@@ -2015,6 +2015,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const paymentMethod = form.get("payment_method");
         const momoProvider = form.get("momo_provider") || "MTN";
         const paystackOrderId = outcome.receipt?.order_id || outcome.receipt?.id;
+        const paystackEmail = String(form.get("email") || "").trim() || "guest@soberspizza.com";
 
         if (paymentMethod === "momo" && paystackOrderId) {
           if (progress) progress.textContent = "Redirecting to Mobile Money payment…";
