@@ -106,3 +106,21 @@ html[data-sp-theme="light"] .sp-receipt-actions a,html[data-sp-theme="light"] .s
 .sp-cart-total span {
   color: #d5d6d9 !important;
 }
+
+/* Light mode was recoloring the title to ink while this sheet stays dark. */
+html[data-sp-theme="light"] .sp-cart > header h2,
+html[data-sp-theme="light"] .sp-cart header h2,
+html[data-sp-theme="light"] .sp-cart-total strong,
+html[data-sp-theme="light"] .sp-cart-summary strong {
+  color: #fffaf2 !important;
+}
+html[data-sp-theme="light"] .sp-cart > header p,
+html[data-sp-theme="light"] .sp-cart header p {
+  color: #ff5b69 !important;
+}
+html[data-sp-theme="light"] .sp-cart > header button,
+html[data-sp-theme="light"] .sp-cart-controls button {
+  color: #fffaf2 !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
