@@ -1,8 +1,8 @@
-const CACHE = "rider-app-v1";
+const CACHE = "rider-app-v2";
 const FILES = ["./index.html", "./rider.css", "./rider.js", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).catch(() => {}));
   self.skipWaiting();
 });
 
@@ -16,8 +16,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || !url.pathname.startsWith("/rider/")) return;
   event.respondWith(fetch(event.request).then((response) => {
-    const copy = response.clone();
-    caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    if (response.ok) {
+      const copy = response.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    }
     return response;
   }).catch(() => caches.match(event.request)));
 });

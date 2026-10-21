@@ -10,7 +10,7 @@
     document.documentElement.dataset.theme = theme;
     document.querySelectorAll(".theme-toggle").forEach((button) => { button.textContent = theme === "day" ? "Night" : "Day"; });
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = theme === "day" ? "#ffffff" : "#0d0d0f";
+    if (meta) meta.content = theme === "day" ? "#f3f3f5" : "#0c0c0e";
   }
   applyTheme(localStorage.getItem("rider-theme") || "night");
   document.addEventListener("click", (event) => {
@@ -19,21 +19,29 @@
     localStorage.setItem("rider-theme", next);
     applyTheme(next);
   });
-  const esc = (value) => String(value ?? "").replace(/[&<>"\']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);
+  const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "\u0026amp;", "<": "\u0026lt;", ">": "\u0026gt;", "\"": "\u0026quot;", "'": "\u0026#39;" })[character]);
   let timer = 0;
   let sharingOrderId = null;
   let watchId = null;
-  let lastSent = 0;
+  let lastOk = 0;
+  let sending = false;
   let lastPosition = null;
   let map = null;
   let marker = null;
   let recovery = false;
   let panel = "login";
-  let tab = "jobs";
+  let tab = "home";
   let jobs = [];
   let history = [];
   let historyNote = "";
   let installEvent = null;
+  let sessionUser = null;
+  let locState = "off";
+  let selectedHistory = "";
+  let homeKey = "";
+  let activityKey = "";
+  let toastTimer = 0;
+  let confirmAction = null;
 
   function message(text) {
     const value = text || "";
@@ -41,11 +49,56 @@
     if ($("#riderMessage")) $("#riderMessage").textContent = value;
   }
 
-  function stopShare() {
-    if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-    sharingOrderId = null;
-    lastSent = 0;
+  function toast(text) {
+    const el = $("#toast");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => { el.hidden = true; }, 3200);
+  }
+
+  function riderLabel() {
+    const meta = (sessionUser && sessionUser.user_metadata) || {};
+    return meta.full_name || meta.name || ((sessionUser && sessionUser.email) || "Rider").split("@")[0];
+  }
+
+  function money(value) { return "GH\u20b5" + Number(value || 0).toFixed(2); }
+
+  function ageText(ms) {
+    const seconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (seconds < 60) return seconds + "s ago";
+    return Math.round(seconds / 60) + " min ago";
+  }
+
+  function sameDay(iso, offset) {
+    const d = new Date(iso);
+    const n = new Date();
+    n.setDate(n.getDate() - offset);
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+
+  function setPill() {
+    const pill = $("#livePill");
+    if (!pill) return;
+    const online = navigator.onLine;
+    let text = "Off shift";
+    let kind = "";
+    if (!online) { text = "Offline"; kind = "bad"; }
+    else if (locState === "denied") { text = "Location permission required"; kind = "bad"; }
+    else if (locState === "unavailable") { text = "Location unavailable"; kind = "warn"; }
+    else if (locState === "paused") { text = "Location paused"; kind = "warn"; }
+    else if (locState === "syncing") { text = "Syncing"; kind = "warn"; }
+    else if (locState === "live") { text = "Live · " + ageText(lastOk); kind = "live"; }
+    else if (sharingOrderId) { text = "Connecting"; kind = "warn"; }
+    pill.textContent = text;
+    pill.className = "pill" + (kind ? " " + kind : "");
+    const net = $("#accountNet");
+    if (net) net.textContent = online ? "Online" : "Offline";
+  }
+
+  function destroyMap() {
+    if (map) { map.remove(); map = null; marker = null; }
   }
 
   function updateMap() {
@@ -53,9 +106,9 @@
     if (!host || !lastPosition || !window.L) return;
     const latlng = [lastPosition.lat, lastPosition.lng];
     if (!map || map.getContainer() !== host) {
-      map = window.L.map(host, { zoomControl: false, attributionControl: false }).setView(latlng, 16);
+      map = window.L.map(host, { zoomControl: true, attributionControl: false }).setView(latlng, 16);
       window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 19 }).addTo(map);
-      marker = window.L.circleMarker(latlng, { radius: 9, color: "#fff7e8", weight: 2, fillColor: "#ef233c", fillOpacity: 1 }).addTo(map);
+      marker = window.L.circleMarker(latlng, { radius: 10, color: "#ffffff", weight: 3, fillColor: "#ef233c", fillOpacity: 1 }).addTo(map);
     } else {
       marker.setLatLng(latlng);
       map.panTo(latlng);
@@ -63,80 +116,156 @@
     window.setTimeout(() => map.invalidateSize(), 60);
   }
 
-  function startShare(orderId, force = false) {
+  function stopShare() {
+    if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    sharingOrderId = null;
+    sending = false;
+    locState = "off";
+    setPill();
+  }
+
+  function startShare(orderId, force) {
     if (!orderId) return;
     if (!force && sharingOrderId === orderId && watchId != null) return;
     if (!navigator.geolocation) {
+      locState = "unavailable";
       message("This phone cannot share location.");
+      setPill();
       return;
     }
-    stopShare();
-    map = null;
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
     sharingOrderId = orderId;
+    locState = "syncing";
+    setPill();
     watchId = navigator.geolocation.watchPosition(async (position) => {
       if (sharingOrderId !== orderId) return;
-      lastPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+      lastPosition = { lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy };
       updateMap();
-      const now = Date.now();
-      if (now - lastSent < 8000) return;
-      lastSent = now;
+      const stamp = $("#locStamp");
+      if (!navigator.onLine) {
+        locState = "paused";
+        if (stamp) stamp.textContent = "You’re offline. Location will retry when data returns.";
+        setPill();
+        return;
+      }
+      if (sending || (lastOk && Date.now() - lastOk < 15000)) {
+        if (stamp && lastOk) stamp.textContent = "Last update " + ageText(lastOk);
+        setPill();
+        return;
+      }
+      sending = true;
+      locState = "syncing";
+      setPill();
       const { error } = await db.rpc("sobers_rider_location", {
         p_order: orderId,
         p_lat: position.coords.latitude,
         p_lng: position.coords.longitude,
         p_accuracy: position.coords.accuracy
       });
+      sending = false;
       if (sharingOrderId !== orderId) return;
-      message(error ? error.message : "The customer can see your latest location.");
-      $("#livePill").textContent = "Live";
-      $("#livePill").classList.add("live");
+      if (error) {
+        locState = "paused";
+        message(error.message);
+        if (stamp) stamp.textContent = "Location paused";
+      } else {
+        lastOk = Date.now();
+        locState = "live";
+        message("");
+        if (stamp) stamp.textContent = "Last update " + ageText(lastOk);
+      }
+      setPill();
     }, (error) => {
-      message(error && error.code === 1
-        ? "Location permission was blocked. Allow location, then open the active delivery."
+      locState = error && error.code === 1 ? "denied" : "unavailable";
+      message(locState === "denied"
+        ? "Location access is required while delivering. Allow location for this site, then tap Share location."
         : "Location is unavailable right now.");
-    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+      setPill();
+    }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
   }
 
-  function money(value) { return "GH\u20b5" + Number(value || 0).toFixed(2); }
+  function openConfirm(title, copy, yes, action) {
+    confirmAction = action;
+    $("#confirmTitle").textContent = title;
+    $("#confirmCopy").textContent = copy;
+    $("#confirmYes").textContent = yes;
+    $("#confirmSheet").classList.remove("hidden");
+    $("#confirmYes").focus();
+  }
+
+  function closeConfirm() {
+    confirmAction = null;
+    $("#confirmSheet").classList.add("hidden");
+  }
 
   function ticket(order, mode) {
     const phone = String(order.customer_phone || "").replace(/\D/g, "");
     const address = order.delivery_address || "";
-    const klass = order.status === "out_for_delivery" ? "on-road" : order.status === "completed" ? "done" : "ready";
-    const status = order.status === "out_for_delivery" ? "On the road" : order.status === "completed" ? "Delivered" : "Ready for pickup";
+    const status = order.status === "out_for_delivery" ? "On the way" : "Ready for pickup";
     const maps = address ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}">Navigate</a>` : "";
     const call = phone ? `<a href="tel:${esc(phone)}">Call</a>` : "";
-    const body = `<div class="ticket-body"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned delivery")}</p><span class="chip">${esc(status)}</span></div><div class="ticket-main"><h2>${esc(order.order_number)}</h2><strong class="fare">${money(order.order_total)}</strong></div><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
-    if (mode === "job") {
-      return `<article class="ticket ${klass}">${body}<div class="actions"><button type="button" data-action="start" data-order="${order.order_id}">Pick up and start</button>${call}</div></div></article>`;
-    }
+    const head = `<div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned")}</p><span class="chip">${esc(status)}</span></div><div class="ticket-main"><h2>${esc(order.order_number)}</h2><strong class="fare">${money(order.order_total)}</strong></div><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
     if (mode === "active") {
-      return `<article class="ticket ${klass} active-job"><div id="riderMap"></div>${body}<div class="actions">${maps}${call}<button type="button" data-action="share" data-order="${order.order_id}">${sharingOrderId === order.order_id ? "Location is live" : "Share location"}</button><button class="go" type="button" data-action="delivered" data-order="${order.order_id}">Mark delivered</button></div></div></article>`;
+      return `<article class="card active-layout"><div id="riderMap"></div><div class="ticket">${head}<p class="addr" id="locStamp">Waiting for the first location</p><div class="actions">${maps}${call}<button type="button" data-action="share" data-order="${order.order_id}">Share location</button><button class="go" type="button" data-action="ask-delivered" data-order="${order.order_id}">Mark delivered</button></div></div></article>`;
     }
-    return `<article class="ticket ${klass}">${body}</div></article>`;
+    return `<article class="card ticket">${head}<div class="actions"><button class="go" type="button" data-action="ask-start" data-order="${order.order_id}">Pick up and start</button>${call}</div></article>`;
+  }
+
+  function historyCard(order) {
+    const when = order.updated_at ? new Date(order.updated_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "";
+    return `<button class="history-btn" type="button" data-history="${esc(order.order_id)}"><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)} · ${money(order.order_total)}</p></article></button>`;
+  }
+
+  function detailCard(order) {
+    const when = order.updated_at ? new Date(order.updated_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "";
+    return `<button class="back" type="button" id="historyBack">Back to activity</button><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p><p class="fare">${money(order.order_total)}</p></article>`;
   }
 
   function paint() {
-    const titles = { jobs: ["Today", "Jobs"], active: ["On the road", "Active"], history: ["Last 60 days", "History"], account: ["You", "Account"] };
+    const titles = { home: ["Now", "Home"], activity: ["Last 60 days", "Activity"], account: ["You", "Account"] };
     $("#deskKicker").textContent = titles[tab][0];
-    $("#deskTitle").textContent = titles[tab][1];
+    $("#deskTitle").textContent = tab === "home" ? riderLabel() : titles[tab][1];
     document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("on", button.dataset.tab === tab));
     const active = jobs.filter((order) => order.status === "out_for_delivery");
     const waiting = jobs.filter((order) => order.status === "ready");
-    document.querySelectorAll("[data-tab='active'] .count").forEach((badge) => { badge.textContent = active.length ? String(active.length) : ""; });
-    $("#livePill").textContent = sharingOrderId ? "Live" : "Off shift";
-    $("#livePill").classList.toggle("live", !!sharingOrderId);
-    $("#jobsView").classList.toggle("hidden", tab !== "jobs");
-    $("#activeView").classList.toggle("hidden", tab !== "active");
-    $("#historyView").classList.toggle("hidden", tab !== "history");
+    const todayCount = history.filter((order) => sameDay(order.updated_at, 0)).length;
+    setPill();
+    $("#homeView").classList.toggle("hidden", tab !== "home");
+    $("#activityView").classList.toggle("hidden", tab !== "activity");
     $("#accountView").classList.toggle("hidden", tab !== "account");
-    $("#jobsView").innerHTML = `<div class="stats"><div class="stat"><b>${waiting.length}</b><span>Waiting at the branch</span></div><div class="stat"><b>${active.length}</b><span>On the road</span></div></div><div class="board">${waiting.length ? waiting.map((order) => ticket(order, "job")).join("") : `<p class="empty">No pickup is waiting. A job appears when it is marked Ready and assigned to you.</p>`}</div>`;
-    $("#activeView").innerHTML = active.length ? active.map((order) => ticket(order, "active")).join("") : `<p class="empty">Nothing is on the road. Start a job and this becomes the delivery screen.</p>`;
-    const deliveredValue = history.reduce((sum, order) => sum + Number(order.order_total || 0), 0);
-    $("#historyView").innerHTML = historyNote
-      ? `<p class="empty">${esc(historyNote)}</p>`
-      : `<div class="stats"><div class="stat"><b>${history.length}</b><span>Delivered</span></div><div class="stat"><b>${money(deliveredValue)}</b><span>Order value, not rider pay</span></div></div><div class="board">${history.length ? history.map((order) => ticket(order, "history")).join("") : `<p class="empty">Completed deliveries from the last 60 days show here.</p>`}</div>`;
-    if (tab === "active") updateMap();
+    const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount].join("|");
+    if (nextHome !== homeKey) {
+      destroyMap();
+      homeKey = nextHome;
+      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div>` + (active.length
+        ? ticket(active[0], "active")
+        : waiting.length
+          ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
+          : `<p class="empty">No delivery is assigned. A job appears here when the branch marks it Ready and assigns it to you.</p>`);
+    }
+    const nextActivity = selectedHistory + "|" + history.map((order) => order.order_id).join() + "|" + historyNote;
+    if (nextActivity !== activityKey) {
+      activityKey = nextActivity;
+      if (historyNote) $("#activityView").innerHTML = `<p class="empty">${esc(historyNote)}</p>`;
+      else if (selectedHistory) {
+        const order = history.find((item) => item.order_id === selectedHistory);
+        $("#activityView").innerHTML = order ? detailCard(order) : `<button class="back" type="button" id="historyBack">Back</button><p class="empty">That delivery is no longer in this list.</p>`;
+      } else if (!history.length) $("#activityView").innerHTML = `<p class="empty">Completed deliveries from the last 60 days show here.</p>`;
+      else {
+        const buckets = [
+          ["Today", history.filter((order) => sameDay(order.updated_at, 0))],
+          ["Yesterday", history.filter((order) => sameDay(order.updated_at, 1))],
+          ["Earlier", history.filter((order) => !sameDay(order.updated_at, 0) && !sameDay(order.updated_at, 1))]
+        ];
+        $("#activityView").innerHTML = buckets.filter(([, rows]) => rows.length).map(([name, rows]) => `<section class="group"><h3>${name}</h3><div class="board">${rows.map(historyCard).join("")}</div></section>`).join("");
+      }
+    }
+    if (tab === "home" && active.length) updateMap();
+    if ($("#riderName")) $("#riderName").textContent = riderLabel();
+    if ($("#riderEmail") && sessionUser) $("#riderEmail").textContent = sessionUser.email || "";
+    const status = $("#accountStatus");
+    if (status) status.textContent = active.length ? "On a delivery" : "Signed in";
   }
 
   function showPanel(name) {
@@ -171,12 +300,13 @@
     if (!session) {
       window.clearInterval(timer);
       stopShare();
+      sessionUser = null;
       showPanel(panel === "work" || panel === "reset" ? "login" : panel);
       return;
     }
-    if ($("#riderEmail")) $("#riderEmail").textContent = session.user.email || "";
+    sessionUser = session.user;
     const { data, error } = await db.rpc("sobers_rider_orders");
-    if (error) return message(error.message);
+    if (error) return message(navigator.onLine ? error.message : "You’re offline. We’ll retry when data returns.");
     jobs = data || [];
     const active = jobs.find((order) => order.status === "out_for_delivery");
     if (active) startShare(active.order_id);
@@ -189,14 +319,19 @@
     message(action === "start" ? "Starting delivery…" : "Marking delivered…");
     const { error } = await db.rpc("sobers_rider_update", { p_order: orderId, p_action: action });
     if (error) return message(error.message);
+    homeKey = "";
     if (action === "start") {
-      tab = "active";
+      tab = "home";
       startShare(orderId, true);
-      message("Delivery started. Allow location so the customer can follow you.");
-    } else if (sharingOrderId === orderId) {
+      message("");
+      toast("Delivery started. Keep this app open while you ride.");
+    } else {
       stopShare();
-      tab = "jobs";
-      message("Delivered. Location sharing stopped.");
+      destroyMap();
+      lastPosition = null;
+      tab = "home";
+      message("");
+      toast("Delivery completed.");
     }
     await load();
   }
@@ -214,7 +349,7 @@
     const { error } = await db.auth.signInWithPassword({ email: form.elements.email.value.trim(), password: form.elements.password.value });
     form.elements.password.value = "";
     busy(form, false);
-    if (error) return message(error.message);
+    if (error) return message(error.message === "Invalid login credentials" ? "Email or password is not correct." : error.message);
     message("");
     await load();
   };
@@ -292,14 +427,49 @@
 
   document.body.addEventListener("click", (event) => {
     const tabButton = event.target.closest("[data-tab]");
-    if (tabButton) { tab = tabButton.dataset.tab; message(""); paint(); return; }
+    if (tabButton) { tab = tabButton.dataset.tab; selectedHistory = ""; message(""); paint(); return; }
+    if (event.target.id === "historyBack") { selectedHistory = ""; paint(); return; }
+    const historyButton = event.target.closest("[data-history]");
+    if (historyButton && tab === "activity" && !selectedHistory) {
+      selectedHistory = historyButton.dataset.history;
+      paint();
+      return;
+    }
     const button = event.target.closest("button[data-action]");
     if (!button || button.disabled) return;
-    if (button.dataset.action === "share") { startShare(button.dataset.order, true); message("Requesting location…"); return; }
-    update(button.dataset.order, button.dataset.action);
+    const orderId = button.dataset.order;
+    if (button.dataset.action === "ask-start") {
+      openConfirm("Start this delivery?", "Your location will be shared while this delivery is active so the customer can track you.", "Pick up and start", () => update(orderId, "start"));
+      return;
+    }
+    if (button.dataset.action === "ask-delivered") {
+      openConfirm("Confirm this order has been delivered?", "Location sharing stops after you confirm.", "Confirm delivery", () => update(orderId, "delivered"));
+      return;
+    }
+    if (button.dataset.action === "share") {
+      startShare(orderId, true);
+      message("Requesting location…");
+    }
   });
 
-  $("#signOut").onclick = async () => { stopShare(); recovery = false; await db.auth.signOut(); message(""); await load(); };
+  $("#confirmNo").onclick = closeConfirm;
+  $("#confirmYes").onclick = () => {
+    const action = confirmAction;
+    closeConfirm();
+    if (action) action();
+  };
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeConfirm();
+  });
+
+  $("#signOut").onclick = async () => {
+    stopShare();
+    destroyMap();
+    recovery = false;
+    await db.auth.signOut();
+    message("");
+    await load();
+  };
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     installEvent = event;
@@ -312,6 +482,24 @@
     $("#installApp").hidden = true;
   };
 
+  function net() {
+    const bar = $("#netBar");
+    if (bar) bar.hidden = navigator.onLine;
+    setPill();
+  }
+  window.addEventListener("online", () => { net(); if (panel === "work") load(); });
+  window.addEventListener("offline", net);
+  window.addEventListener("pagehide", (event) => { if (!event.persisted) stopShare(); });
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: "geolocation" }).then((result) => {
+      const el = $("#permState");
+      if (!el) return;
+      const label = () => result.state === "granted" ? "Allowed" : result.state === "denied" ? "Blocked" : "Not asked yet";
+      el.textContent = label();
+      result.onchange = () => { el.textContent = label(); };
+    }).catch(() => {});
+  }
+
   db.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") {
       recovery = true;
@@ -319,8 +507,9 @@
       message("Choose a new password.");
       return;
     }
-    load();
+    if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") load();
   });
-  load().then(() => { timer = window.setInterval(() => { if (panel === "work") load(); }, 15000); });
+  net();
+  timer = window.setInterval(() => { if (panel === "work") load(); }, 20000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
 })();

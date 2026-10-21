@@ -2,52 +2,92 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="referrer" content="no-referrer" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: https://a.basemaps.cartocdn.com https://b.basemaps.cartocdn.com https://c.basemaps.cartocdn.com https://d.basemaps.cartocdn.com; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
-    <meta name="theme-color" content="#171513" />
+    <meta name="theme-color" content="#0c0c0e" />
     <title>Track your Sobers Pizza order</title>
     <link rel="stylesheet" href="./vendor/leaflet.css" />
-    <link rel="stylesheet" href="./track.css?v=3" />
-    <link rel="stylesheet" href="./track-live.css?v=5" />
+    <link rel="stylesheet" href="./track-live.css?v=7" />
   </head>
   <body>
-    <main>
-      <nav class="track-nav" aria-label="Tracking navigation">
+    <main class="app">
+      <header class="top">
         <a class="brand" href="../">SOBERS <span>PIZZA</span></a>
-        <a class="back-to-app" href="../">← Back to customer app</a>
-      </nav>
-      <section class="track-card">
-        <p class="eyebrow">OFFICIAL ORDER TRACKING</p>
+        <a class="back" href="../">Menu</a>
+      </header>
+
+      <section class="lookup" id="lookup">
+        <p class="eyebrow">Order tracking</p>
         <h1>Where’s my order?</h1>
-        <p>Open the tracking link from your WhatsApp order, or enter your reference and checkout phone number.</p>
+        <p class="lead">Use the tracking link from WhatsApp, or enter the reference and the phone number from checkout.</p>
         <form id="trackForm">
-          <label>Order reference<input name="order_number" required autocomplete="off" placeholder="Reference from your tracking link" /></label>
-          <label>Phone number<input name="customer_phone" required type="tel" inputmode="tel" autocomplete="tel" /></label>
+          <label>Tracking reference
+            <input name="order_number" required autocomplete="off" placeholder="From your tracking link" />
+          </label>
+          <label>Phone number
+            <input name="customer_phone" required type="tel" inputmode="tel" autocomplete="tel" placeholder="Number used at checkout" />
+          </label>
           <button type="submit">Track order</button>
-          <p class="message" id="trackMessage" role="status"></p>
         </form>
+        <p class="message" id="trackMessage" role="status"></p>
       </section>
-      <section class="receipt hidden" id="receipt" aria-live="polite">
-        <header><div><p class="eyebrow">VERIFIED SOBERS ORDER</p><h2 id="receiptNumber"></h2><small class="live-state" id="liveState">Live updates on</small></div><span class="status" id="receiptStatus"></span></header>
-        <div class="progress" id="orderProgress"></div>
-        <section class="delivery-map hidden" id="deliveryMapCard">
-          <h3>Your rider is on the way</h3>
-          <p id="mapFreshness">Waiting for a location.</p>
-          <div id="deliveryMap" aria-label="Live rider location"></div>
-          <small>This is the rider’s latest point, not a road route or an arrival time.</small>
-        </section>
-        <div class="meta" id="receiptMeta"></div>
-        <div class="items" id="receiptItems"></div>
-        <div class="total"><span>Total</span><strong id="receiptTotal"></strong></div>
-        <a class="contact hidden" id="branchContact" href="#" target="_blank" rel="noopener">Contact this branch on WhatsApp</a>
-        <p class="safety"><b>Payment safety</b>Only use payment details displayed by Sobers through its official app or confirmed by management.</p>
-        <button class="print" type="button" id="printReceipt">Print / save receipt</button>
+
+      <section class="live hidden" id="receipt" aria-live="polite">
+        <div class="layout" id="liveLayout">
+          <section class="map-wrap" id="deliveryMapCard">
+            <div class="map-head">
+              <div>
+                <p class="eyebrow" id="mapKicker">Delivery</p>
+                <h2 id="mapTitle">Map</h2>
+              </div>
+              <button id="recenter" type="button" hidden>Re-center</button>
+            </div>
+            <div class="map-stage">
+              <div id="deliveryMap" aria-label="Rider location"></div>
+              <p class="map-empty" id="mapEmpty">Waiting for rider location…</p>
+            </div>
+            <p class="map-note" id="mapFreshness"></p>
+          </section>
+
+          <section class="info">
+            <article class="status-card">
+              <div class="status-row">
+                <p class="eyebrow" id="liveState">Checking</p>
+                <span class="status" id="receiptStatus"></span>
+              </div>
+              <h2 id="statusHeadline">Loading your delivery…</h2>
+              <p class="ref" id="receiptNumber"></p>
+              <ol class="timeline" id="orderProgress"></ol>
+            </article>
+
+            <article class="way hidden" id="onWayCard">
+              <p class="eyebrow">On the way</p>
+              <h3>Your order is on the way</h3>
+              <dl>
+                <div><dt>Branch</dt><dd id="wayBranch"></dd></div>
+                <div><dt>Reference</dt><dd id="wayRef"></dd></div>
+                <div><dt>Location</dt><dd id="wayFresh"></dd></div>
+              </dl>
+            </article>
+
+            <details class="summary" id="orderDetails">
+              <summary>Order details</summary>
+              <div class="meta" id="receiptMeta"></div>
+              <div class="items" id="receiptItems"></div>
+              <div class="costs" id="receiptCosts"></div>
+              <div class="total"><span>Total</span><strong id="receiptTotal"></strong></div>
+              <a class="contact hidden" id="branchContact" href="#" target="_blank" rel="noopener">Contact this branch on WhatsApp</a>
+            </details>
+
+            <p class="safety"><b>Payment safety</b>Only use payment details shown in the Sobers app or confirmed by the branch.</p>
+            <button class="print" type="button" id="printReceipt">Print / save receipt</button>
+          </section>
+        </div>
       </section>
     </main>
     <script src="./vendor/leaflet.js"></script>
-    <script src="./delivery-map.js?v=1"></script>
-    <script src="./track-live.js?v=6"></script>
+    <script src="./delivery-map.js?v=2"></script>
+    <script src="./track-live.js?v=7"></script>
   </body>
 </html>
-
