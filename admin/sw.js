@@ -1,4 +1,4 @@
-const CACHE = "sobers-admin-v19",
+const CACHE = "sobers-admin-v20",
   SHELL = [
     "./",
     "./index.html",

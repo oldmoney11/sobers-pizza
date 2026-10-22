@@ -403,7 +403,18 @@
         $("#orderDetail").innerHTML = `<div class="order-meta"><div><small>Official reference</small><strong>${esc(order.order_number)}</strong></div><div><small>Preparing branch</small><strong>${esc(branchName(order.branch_id))}</strong></div>${order.display_order_number ? `<div><small>Kiosk number</small><strong>${esc(order.display_order_number)}</strong></div>` : ""}<div><small>Source</small>${esc(order.source)}</div><div><small>Customer</small><strong>${esc(order.customer_name)}</strong></div><div><small>Phone</small>${esc(order.customer_phone)}</div><div><small>Order type</small>${esc(order.fulfilment)}</div><div><small>Kitchen status</small>${esc(orderStatusLabel(order.status))}</div>${order.rider_id ? `<div><small>Rider</small><strong>${esc(riderName(order.rider_id) || "Assigned")}</strong></div>` : ""}<div><small>Payment status</small>${esc(order.payment_status || "unpaid")}</div>${order.payment_reference ? `<div><small>Payment reference</small>${esc(order.payment_reference)}</div>` : ""}${order.delivery_address ? `<div><small>Delivery address</small>${esc(order.delivery_address)}</div>` : ""}${order.customer_note ? `<div><small>Customer note</small>${esc(order.customer_note)}</div>` : ""}<div><small>Created</small>${new Date(order.created_at).toLocaleString()}</div></div><table class="order-items"><thead><tr><th>Item</th><th>Unit</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">Subtotal</th><td>${money(order.subtotal)}</td></tr><tr><th colspan="2">Delivery</th><td>${money(order.delivery_fee)}</td></tr><tr><th colspan="2">Order total</th><td><strong>${money(order.total)}</strong></td></tr></tfoot></table>`;
         const phone = String(order.customer_phone || "").replace(/\D/g, "");
         if (order.fulfilment !== "pickup") {
-            $("#orderDetail").insertAdjacentHTML("beforeend", `<p class="message">Dispatch: ${esc(dispatchLabel(order))}. A ready delivery is accepted by an online rider. It is not assigned from this screen.</p>`);
+            const options = [`<option value="">Unassigned</option>`].concat(riders.filter(rider => rider.is_active).map(rider => `<option value="${rider.id}" ${rider.id === order.rider_id ? "selected" : ""}>${esc(rider.display_name)}</option>`));
+            $("#orderDetail").insertAdjacentHTML("beforeend", `<form id="assignRiderForm"><label>Assign rider<select name="rider_id">${options.join("")}</select></label><button type="submit">Save rider</button><p class="message" id="assignRiderMessage"></p></form>`);
+            $("#assignRiderForm").onsubmit = async event => {
+                event.preventDefault();
+                const choice = event.target.elements.rider_id.value || null;
+                $("#assignRiderMessage").textContent = "Saving rider…";
+                const { error: assignError } = await db.rpc("sobers_assign_rider", { p_business: business.id, p_order: order.id, p_rider: choice });
+                if (assignError) return $("#assignRiderMessage").textContent = assignError.message;
+                order.rider_id = choice;
+                $("#assignRiderMessage").textContent = choice ? "Rider assigned." : "Rider removed.";
+                renderOrders();
+            };
         }
         const digits = String(order.customer_phone || "").replace(/\D/g, "");
         const whatsapp = digits.startsWith("233") && digits.length === 12 ? digits : digits.startsWith("0") && digits.length === 10 ? `233${digits.slice(1)}` : digits.length === 9 ? `233${digits}` : "";
