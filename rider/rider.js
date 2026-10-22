@@ -8,9 +8,17 @@
   const $ = (selector) => document.querySelector(selector);
   function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
-    document.querySelectorAll(".theme-toggle").forEach((button) => { button.textContent = theme === "day" ? "Night" : "Day"; });
+    const day = theme === "day";
+    const icon = day
+      ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path stroke="currentColor" stroke-width="2" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>';
+    document.querySelectorAll(".theme-toggle").forEach((button) => {
+      button.innerHTML = icon;
+      button.setAttribute("aria-label", day ? "Switch to night" : "Switch to day");
+      button.title = button.getAttribute("aria-label");
+    });
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = theme === "day" ? "#f3f3f5" : "#0c0c0e";
+    if (meta) meta.content = day ? "#f3f3f5" : "#0c0c0e";
   }
   applyTheme(localStorage.getItem("rider-theme") || "night");
   document.addEventListener("click", (event) => {
@@ -32,6 +40,9 @@
   let panel = "login";
   let tab = "home";
   let jobs = [];
+  let queue = [];
+  let queueNote = "";
+  let available = false;
   let history = [];
   let historyNote = "";
   let installEvent = null;
@@ -203,7 +214,7 @@
     const phone = String(order.customer_phone || "").replace(/\D/g, "");
     const address = order.delivery_address || "";
     const status = order.status === "out_for_delivery" ? "On the way" : "Ready for pickup";
-    const maps = address ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}">Navigate</a>` : "";
+    const maps = address ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}" target="_blank" rel="noopener">Navigate</a>` : "";
     const call = phone ? `<a href="tel:${esc(phone)}">Call</a>` : "";
     const head = `<div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned")}</p><span class="chip">${esc(status)}</span></div><div class="ticket-main"><h2>${esc(order.order_number)}</h2><strong class="fare">${money(order.order_total)}</strong></div><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
     if (mode === "active") {
@@ -234,15 +245,15 @@
     $("#homeView").classList.toggle("hidden", tab !== "home");
     $("#activityView").classList.toggle("hidden", tab !== "activity");
     $("#accountView").classList.toggle("hidden", tab !== "account");
-    const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount].join("|");
+    const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount, available ? "on" : "off", queue.map((order) => order.order_id).join(), queueNote].join("|");
     if (nextHome !== homeKey) {
       destroyMap();
       homeKey = nextHome;
-      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div>` + (active.length
+      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip ${available ? "live" : ""}">${available ? "Online" : "Offline"}</span></div><p class="copy">${available ? "You can accept ready deliveries." : "Go online to see new deliveries. A job you already accepted stays here."}</p><button class="go" type="button" id="availabilityToggle">${available ? "Go offline" : "Go online"}</button></article>` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept delivery</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
         ? ticket(active[0], "active")
         : waiting.length
           ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
-          : `<p class="empty">No delivery is assigned. A job appears here when the branch marks it Ready and assigns it to you.</p>`);
+          : (!queue.length ? `<p class="empty">No delivery is assigned. A job appears here when you accept it, or when the branch assigns it to you.</p>` : ""));
     }
     const nextActivity = selectedHistory + "|" + history.map((order) => order.order_id).join() + "|" + historyNote;
     if (nextActivity !== activityKey) {
@@ -265,7 +276,9 @@
     if ($("#riderName")) $("#riderName").textContent = riderLabel();
     if ($("#riderEmail") && sessionUser) $("#riderEmail").textContent = sessionUser.email || "";
     const status = $("#accountStatus");
-    if (status) status.textContent = active.length ? "On a delivery" : "Signed in";
+    if (status) status.textContent = active.length ? "On a delivery" : available ? "Online" : "Offline";
+    const phoneLine = $("#riderPhone");
+    if (phoneLine) phoneLine.textContent = riderPhone || "Not saved";
   }
 
   function showPanel(name) {
@@ -283,6 +296,28 @@
     return new URL(window.location.pathname, window.location.origin).href;
   }
 
+  async function loadQueue() {
+    const { data, error } = await db.rpc("sobers_rider_queue");
+    if (error) {
+      queue = [];
+      queueNote = /sobers_rider_queue|schema cache|does not exist/i.test(error.message)
+        ? "Dispatch opens after the dispatch SQL is run once in Supabase."
+        : error.message;
+      return;
+    }
+    queue = data || [];
+    queueNote = "";
+  }
+
+  let riderPhone = "";
+
+  async function loadProfile() {
+    const { data, error } = await db.rpc("sobers_rider_profile");
+    if (error || !data || !data.length) return;
+    available = Boolean(data[0].is_available);
+    riderPhone = data[0].phone || "";
+    if (data[0].display_name && sessionUser) sessionUser.user_metadata = Object.assign({}, sessionUser.user_metadata, { full_name: data[0].display_name });
+  }
   async function loadHistory() {
     const { data, error } = await db.rpc("sobers_rider_history");
     if (error) {
@@ -312,6 +347,8 @@
     if (active) startShare(active.order_id);
     else if (sharingOrderId) stopShare();
     await loadHistory();
+    await loadProfile();
+    await loadQueue();
     showPanel("work");
   }
 
@@ -365,7 +402,7 @@
     const { data, error } = await db.auth.signUp({
       email: form.elements.email.value.trim(),
       password,
-      options: { data: { full_name: form.elements.full_name.value.trim() }, emailRedirectTo: redirectHere() }
+      options: { data: { full_name: form.elements.full_name.value.trim(), phone: form.elements.phone.value.trim() }, emailRedirectTo: redirectHere() }
     });
     form.elements.password.value = "";
     form.elements.confirm.value = "";
@@ -425,9 +462,20 @@
     };
   });
 
-  document.body.addEventListener("click", (event) => {
+  document.body.addEventListener("click", async (event) => {
     const tabButton = event.target.closest("[data-tab]");
     if (tabButton) { tab = tabButton.dataset.tab; selectedHistory = ""; message(""); paint(); return; }
+    if (event.target.id === "availabilityToggle") {
+      const next = !available;
+      message(next ? "Going online…" : "Going offline…");
+      const { data, error } = await db.rpc("sobers_rider_availability", { p_available: next });
+      if (error) return message(error.message);
+      available = Boolean(data);
+      message("");
+      homeKey = "";
+      await load();
+      return;
+    }
     if (event.target.id === "historyBack") { selectedHistory = ""; paint(); return; }
     const historyButton = event.target.closest("[data-history]");
     if (historyButton && tab === "activity" && !selectedHistory) {
@@ -444,6 +492,16 @@
     }
     if (button.dataset.action === "ask-delivered") {
       openConfirm("Confirm this order has been delivered?", "Location sharing stops after you confirm.", "Confirm delivery", () => update(orderId, "delivered"));
+      return;
+    }
+    if (button.dataset.action === "accept") {
+      button.disabled = true;
+      message("Accepting…");
+      const { error } = await db.rpc("sobers_rider_accept", { p_order: orderId });
+      message(error ? error.message : "");
+      if (!error) toast("Delivery accepted. Pick it up when you have the order.");
+      homeKey = "";
+      await load();
       return;
     }
     if (button.dataset.action === "share") {
@@ -489,7 +547,6 @@
   }
   window.addEventListener("online", () => { net(); if (panel === "work") load(); });
   window.addEventListener("offline", net);
-  window.addEventListener("pagehide", (event) => { if (!event.persisted) stopShare(); });
   if (navigator.permissions && navigator.permissions.query) {
     navigator.permissions.query({ name: "geolocation" }).then((result) => {
       const el = $("#permState");

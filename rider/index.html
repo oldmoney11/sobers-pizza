@@ -7,15 +7,16 @@
     <meta name="theme-color" content="#0c0c0e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Rider" />
-    <title>Sobers Rider</title>
+    <meta name="apple-mobile-web-app-title" content="Sobers Rider" />
+    <title>Sobers Pizza Rider</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../track/vendor/leaflet.css" />
-    <link rel="stylesheet" href="./rider.css?v=8" />
+    <link rel="stylesheet" href="./rider.css?v=9" />
     <script>document.documentElement.dataset.theme = localStorage.getItem("rider-theme") || "night";</script>
   </head>
   <body>
@@ -27,7 +28,7 @@
       </aside>
       <section class="auth-pane">
         <header class="mark">
-          <span class="badge" aria-hidden="true">S</span>
+          <span class="badge" aria-hidden="true"><img src="./icons/icon-192.png" alt="" /></span>
           <div><strong>SOBERS</strong><small>RIDER</small></div>
           <button class="theme-toggle" type="button">Day</button>
         </header>
@@ -51,8 +52,9 @@
             <button class="back" type="button" data-panel="login">Back</button>
             <p class="kicker">New rider</p>
             <h1>Create account</h1>
-            <p class="copy">The business still has to add this email before a job appears.</p>
+            <p class="copy">The business still has to approve this email before a job appears.</p>
             <label>Your name<input name="full_name" required autocomplete="name" placeholder="Your name" /></label>
+            <label>Phone<input name="phone" type="tel" required autocomplete="tel" placeholder="024…" /></label>
             <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
             <label class="field">Password
               <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
@@ -112,6 +114,7 @@
             <h2 id="riderName">Rider</h2>
             <p id="riderEmail" class="copy"></p>
             <dl class="facts">
+              <div><dt>Phone</dt><dd id="riderPhone">Not saved</dd></div>
               <div><dt>Status</dt><dd id="accountStatus">Signed in</dd></div>
               <div><dt>Connection</dt><dd id="accountNet">Checking</dd></div>
               <div><dt>Location</dt><dd id="permState">Checking</dd></div>
@@ -143,6 +146,6 @@
     <p id="toast" class="toast" hidden role="status"></p>
     <script src="../track/vendor/leaflet.js"></script>
     <script src="../admin/vendor/supabase.min.js"></script>
-    <script src="./rider.js?v=8"></script>
+    <script src="./rider.js?v=9"></script>
   </body>
 </html>

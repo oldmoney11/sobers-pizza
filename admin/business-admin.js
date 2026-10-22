@@ -57,24 +57,63 @@
         notificationButton.dataset.notifications = "";
         notificationButton.onclick = enableNotifications;
         topbar.insertBefore(notificationButton, $("#signOut"));
+        const themeButton = document.createElement("button");
+        themeButton.type = "button";
+        themeButton.className = "secondary theme-button";
+        themeButton.onclick = () => {
+            const next = document.documentElement.dataset.appearance === "day" ? "night" : "day";
+            document.documentElement.dataset.appearance = next;
+            localStorage.setItem("sobers-admin-appearance", next);
+            paintThemeButton(themeButton);
+        };
+        paintThemeButton(themeButton);
+        topbar.insertBefore(themeButton, notificationButton);
         renderNotificationState();
+    }
+
+    function paintThemeButton(button) {
+        const day = document.documentElement.dataset.appearance === "day";
+        button.innerHTML = day
+            ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/></svg>'
+            : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path stroke="currentColor" stroke-width="2" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>';
+        button.setAttribute("aria-label", day ? "Switch to night" : "Switch to day");
+        button.title = button.getAttribute("aria-label");
+    }
+
+    function alertsEnabled() {
+        return localStorage.getItem("sobers-admin-alerts") === "on" && "Notification" in window && Notification.permission === "granted";
     }
 
     function renderNotificationState() {
         if (!notificationButton) return;
+        notificationButton.disabled = false;
         if (!("Notification" in window)) { notificationButton.textContent = "Alerts unavailable"; notificationButton.disabled = true; return; }
-        notificationButton.textContent = Notification.permission === "granted" ? "🔔 Alerts on" : Notification.permission === "denied" ? "🔕 Alerts blocked" : "Enable alerts";
+        if (Notification.permission === "denied") { notificationButton.textContent = "Alerts blocked"; return; }
+        notificationButton.textContent = alertsEnabled() ? "Alerts on" : "Alerts off";
+        notificationButton.setAttribute("aria-pressed", alertsEnabled() ? "true" : "false");
     }
 
     async function enableNotifications() {
         if (!("Notification" in window)) return;
-        if (Notification.permission !== "granted") await Notification.requestPermission();
+        if (alertsEnabled()) {
+            localStorage.setItem("sobers-admin-alerts", "off");
+            renderNotificationState();
+            return;
+        }
+        if (Notification.permission !== "granted") {
+            const result = await Notification.requestPermission();
+            if (result !== "granted") {
+                renderNotificationState();
+                return;
+            }
+        }
+        localStorage.setItem("sobers-admin-alerts", "on");
         renderNotificationState();
-        if (Notification.permission === "granted") notifyOrder({ order_number: "Test", customer_name: businessLabel }, true);
+        notifyOrder({ order_number: "Test", customer_name: businessLabel }, true);
     }
 
     async function notifyOrder(order, test = false) {
-        if (!("Notification" in window) || Notification.permission !== "granted") return;
+        if (!alertsEnabled()) return;
         const title = test ? `${businessLabel} alerts enabled` : `New ${businessLabel} order`;
         const body = test ? "You will be notified when a new order arrives." : `${order?.order_number || "New order"}${order?.customer_name ? ` · ${order.customer_name}` : ""}`;
         try {
@@ -166,7 +205,7 @@
         const body = $("#ridersBody");
         const empty = $("#ridersEmpty");
         if (!body) return;
-        body.innerHTML = riders.map(rider => `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td><td>${rider.is_active ? "Active" : "Inactive"}</td></tr>`).join("");
+        body.innerHTML = riders.map(rider => `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td><td>${rider.is_active ? "Approved" : "Inactive"}${rider.is_available ? " · Online" : ""}</td></tr>`).join("");
         if (empty) empty.classList.toggle("hidden", riders.length > 0);
     }
     function riderName(riderId) {
@@ -254,12 +293,33 @@
         select.innerHTML = `<option value="all">All branches</option>${branches.filter(branch => branch.is_active).map(branch => `<option value="${branch.id}">${esc(branch.name)}</option>`).join("")}`;
         select.value = [...select.options].some(option => option.value === selected) ? selected : "all";
     }
+    function kitchenControl(order) {
+        if (order.status === "out_for_delivery" || order.status === "completed") {
+            const label = order.status === "completed" ? "Delivered" : "On the way";
+            return `<span class="badge">${label}</span><select data-order-status="${order.id}" aria-label="Cancel if needed"><option value="${order.status}" selected>${label}</option><option value="cancelled">CANCELLED</option></select>`;
+        }
+        const current = order.status === "confirmed" ? "new" : order.status;
+        return `<select data-order-status="${order.id}" aria-label="Kitchen status">${[["new","NEW"],["preparing","PREPARING"],["ready","READY"],["cancelled","CANCELLED"]].map(([status, label]) => `<option value="${status}" ${status === current ? "selected" : ""}>${label}</option>`).join("")}</select>`;
+    }
+    function dispatchLabel(order) {
+        if (order.fulfilment === "pickup") return "Pickup";
+        if (order.status === "cancelled") return "Cancelled";
+        if (order.status === "completed") return "Delivered";
+        if (order.status === "out_for_delivery") return riderName(order.rider_id) || "On the way";
+        if (order.rider_id) return `${riderName(order.rider_id) || "Rider"} accepted`;
+        if (order.status === "ready") return "Waiting for a rider";
+        return "Not ready";
+    }
     function renderOrders() {
         const filter = $("#orderFilter").value;
         const scoped = scopedOrders();
-        const list = filter === "all" ? scoped : scoped.filter(order => order.status === filter);
+        const list = scoped.filter(order => {
+            if (filter === "all") return true;
+            if (filter === "new") return order.status === "new" || order.status === "confirmed";
+            return order.status === filter;
+        });
         $("#ordersEmpty").classList.toggle("hidden", list.length > 0);
-        $("#ordersBody").innerHTML = list.map(order => `<tr><td data-label="Order"><button class="secondary" data-order-view="${order.id}">${esc(order.display_order_number || order.order_number)}</button><br><small class="muted">${esc(order.order_number)} · ${esc(order.source)}</small></td><td data-label="Branch"><span class="badge active">${esc(branchName(order.branch_id))}</span></td><td data-label="Customer">${esc(order.customer_name)}<br><small class="muted">${esc(order.customer_phone)}</small></td><td data-label="Type">${esc(order.fulfilment)}</td><td data-label="Total">${money(order.total)}</td><td data-label="Payment"><select data-payment-status="${order.id}">${["unpaid","pending","paid","failed","refunded"].map(status => `<option ${status === order.payment_status ? "selected" : ""}>${status}</option>`).join("")}</select></td><td data-label="Status"><select data-order-status="${order.id}">${[["new","Received"],["confirmed","Confirmed"],["preparing","Preparing"],["ready","Ready"],["out_for_delivery","Out for delivery"],["completed","Completed"],["cancelled","Cancelled"]].map(([status, label]) => `<option value="${status}" ${status === order.status ? "selected" : ""}>${label}</option>`).join("")}</select></td><td data-label="Created">${new Date(order.created_at).toLocaleString()}</td></tr>`).join("");
+        $("#ordersBody").innerHTML = list.map(order => `<tr><td data-label="Order"><button class="secondary" data-order-view="${order.id}">${esc(order.display_order_number || order.order_number)}</button><br><small class="muted">${esc(order.order_number)} · ${esc(order.source)}</small></td><td data-label="Branch"><span class="badge active">${esc(branchName(order.branch_id))}</span></td><td data-label="Customer">${esc(order.customer_name)}<br><small class="muted">${esc(order.customer_phone)}</small></td><td data-label="Type">${esc(order.fulfilment)}</td><td data-label="Dispatch">${esc(dispatchLabel(order))}</td><td data-label="Total">${money(order.total)}</td><td data-label="Payment"><select data-payment-status="${order.id}">${["unpaid","pending","paid","failed","refunded"].map(status => `<option ${status === order.payment_status ? "selected" : ""}>${status}</option>`).join("")}</select></td><td data-label="Status">${kitchenControl(order)}</td><td data-label="Created">${new Date(order.created_at).toLocaleString()}</td></tr>`).join("");
     }
     function renderProducts() {
         $("#productsEmpty").classList.toggle("hidden", products.length > 0);
@@ -356,7 +416,22 @@
                 renderOrders();
             };
         }
-        $("#orderCall").href = `tel:${phone}`; $("#orderWhatsApp").href = `https://wa.me/${phone}`; openDialog("orderDialog");
+        const digits = String(order.customer_phone || "").replace(/\D/g, "");
+        const whatsapp = digits.startsWith("233") && digits.length === 12 ? digits : digits.startsWith("0") && digits.length === 10 ? `233${digits.slice(1)}` : digits.length === 9 ? `233${digits}` : "";
+        const link = $("#orderWhatsApp");
+        if (whatsapp) {
+            const text = `Hello, this is Sobers Pizza about order ${order.display_order_number || order.order_number}.`;
+            link.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(text)}`;
+            link.textContent = "WhatsApp customer";
+            link.removeAttribute("aria-disabled");
+        } else {
+            link.href = "#";
+            link.textContent = "No valid phone";
+            link.setAttribute("aria-disabled", "true");
+        }
+        link.onclick = event => { if (!whatsapp) event.preventDefault(); };
+        $("#orderCall").href = phone ? `tel:${phone}` : "#";
+        openDialog("orderDialog");
     }
     function editProduct(product = null) {
         const form = $("#productForm"); form.reset();
@@ -483,12 +558,24 @@
     document.querySelectorAll("[data-close-dialog]").forEach(button => button.onclick = () => closeDialog(button.dataset.closeDialog));
 
     $("#settingsForm").onsubmit = async event => { event.preventDefault(); const form = event.target; try { const openingHours = parseJson(form.elements.opening_hours.value, "Opening hours"); const { error } = await db.from("business_settings").update({ display_name: form.elements.display_name.value, whatsapp_number: form.elements.whatsapp_number.value, phone: form.elements.phone.value, email: form.elements.email.value || null, default_delivery_fee: Number(form.elements.default_delivery_fee.value || 0), opening_hours: openingHours, delivery_enabled: form.elements.delivery_enabled.checked, pickup_enabled: form.elements.pickup_enabled.checked }).eq("business_id", business.id); alert(error ? error.message : "Settings saved"); } catch (error) { alert(error.message); } };
+    let savingOrder = false;
     $("#ordersBody").onchange = async event => {
         const orderId = event.target.dataset.orderStatus || event.target.dataset.paymentStatus;
-        if (!orderId) return;
+        if (!orderId || savingOrder) return;
+        const order = orders.find(item => item.id === orderId);
+        const previous = event.target.dataset.orderStatus ? order?.status : order?.payment_status;
+        if (event.target.dataset.orderStatus && event.target.value === "cancelled" && !confirm("Cancel this order? A rider will no longer be able to accept it.")) {
+            event.target.value = previous || "";
+            return;
+        }
         const update = event.target.dataset.orderStatus ? { status: event.target.value } : { payment_status: event.target.value };
+        savingOrder = true;
+        event.target.disabled = true;
         const { error } = await db.from("platform_orders").update(update).eq("id", orderId).eq("business_id", business.id);
-        if (error) alert(error.message); else loadAll();
+        savingOrder = false;
+        event.target.disabled = false;
+        if (error) { event.target.value = previous || ""; alert(error.message); return; }
+        await loadAll();
     };
     $("#ordersBody").onclick = event => { const button = event.target.closest("[data-order-view]"); if (button) showOrder(orders.find(order => order.id === button.dataset.orderView)); };
     $("#overviewRecentOrders").onclick = event => { const button = event.target.closest("[data-order-view]"); if (button) showOrder(orders.find(order => order.id === button.dataset.orderView)); };
@@ -497,7 +584,20 @@
     function showView(viewName) { document.querySelectorAll(".nav button,.view").forEach(item => item.classList.remove("active")); document.querySelector(`.nav button[data-view="${viewName}"]`)?.classList.add("active"); $("#" + viewName)?.classList.add("active"); window.scrollTo({ top: 0, behavior: "smooth" }); }
     $("#nav").onclick = event => { const button = event.target.closest("button[data-view]"); if (button) showView(button.dataset.view); };
     document.querySelectorAll("[data-jump-view]").forEach(button => button.onclick = () => showView(button.dataset.jumpView));
-    document.addEventListener("click", event => { if (event.target.matches("[data-refresh]")) loadAll(); });
+    let refreshing = false;
+    document.addEventListener("click", async event => {
+        const button = event.target.closest("[data-refresh]");
+        if (!button || refreshing) return;
+        refreshing = true;
+        const buttons = [...document.querySelectorAll("[data-refresh]")];
+        buttons.forEach(item => { item.disabled = true; item.dataset.label = item.textContent; item.textContent = "Refreshing…"; });
+        try { await loadAll(); }
+        catch (error) { alert(error.message || "Refresh failed. The current list is still on screen."); }
+        finally {
+            refreshing = false;
+            buttons.forEach(item => { item.disabled = false; item.textContent = item.dataset.label || "Refresh"; });
+        }
+    });
     $("#showSignup").onclick = () => { $("#loginForm").classList.add("hidden"); $("#signupForm").classList.remove("hidden"); };
     $("#showLogin").onclick = () => { $("#signupForm").classList.add("hidden"); $("#loginForm").classList.remove("hidden"); };
     $("#forgotPassword").onclick = () => openPasswordDialog(false);

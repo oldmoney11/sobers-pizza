@@ -1,4 +1,4 @@
-const CACHE = "sobers-admin-v17",
+const CACHE = "sobers-admin-v18",
   SHELL = [
     "./",
     "./index.html",
@@ -9,6 +9,7 @@ const CACHE = "sobers-admin-v17",
     "./business-admin-themes.css",
     "./platform-config.js",
     "./business-admin.js",
+    "./admin-theme.js",
     "./admin-security.js",
     "./admin-pwa.js",
     "./vendor/supabase.min.js",

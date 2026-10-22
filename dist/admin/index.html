@@ -12,7 +12,8 @@
     <link rel="apple-touch-icon" href="assets/icon-192.png?v=2" />
     <link rel="stylesheet" href="platform-admin.css?v=2" />
     <link rel="stylesheet" href="admin-crud.css?v=1" />
-    <link rel="stylesheet" href="sobers-admin-pro.css?v=1" />
+    <link rel="stylesheet" href="sobers-admin-pro.css?v=2" />
+    <script src="admin-theme.js?v=1"></script>
     <script src="vendor/supabase.min.js?v=1"></script>
   </head>
   <body
@@ -124,14 +125,13 @@
               </div>
               <div class="toolbar">
                 <select id="orderFilter">
-                  <option value="all">All statuses</option>
-                  <option value="new">Received</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="preparing">Preparing</option>
-                  <option value="ready">Ready</option>
-                  <option value="out_for_delivery">Out for delivery</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option></select
+                  <option value="all">All orders</option>
+                  <option value="new">NEW</option>
+                  <option value="preparing">PREPARING</option>
+                  <option value="ready">READY</option>
+                  <option value="out_for_delivery">On the way</option>
+                  <option value="completed">Delivered</option>
+                  <option value="cancelled">CANCELLED</option></select
                 ><button data-refresh>Refresh</button>
               </div>
             </div>
@@ -147,6 +147,7 @@
                       <th>Branch</th>
                       <th>Customer</th>
                       <th>Type</th>
+                      <th>Dispatch</th>
                       <th>Total</th>
                       <th>Payment</th>
                       <th>Status</th>
@@ -164,7 +165,7 @@
               <div>
                 <span class="eyebrow">Delivery</span>
                 <h1>Riders</h1>
-                <p class="view-intro">Add a rider after they create a login on the rider page. Then assign them from an order.</p>
+                <p class="view-intro">A rider creates their own login first. Save that email here to approve them. Ready deliveries can then be accepted in the rider app. Assigning from an order is only for a recovery.</p>
               </div>
               <a class="button-link secondary" href="../rider/">Open rider page</a>
             </div>
@@ -508,7 +509,7 @@
     </dialog>
     <script src="platform-config.js?v=5"></script>
     <script src="admin-security.js?v=1"></script>
-    <script src="business-admin.js?v=18"></script>
+    <script src="business-admin.js?v=19"></script>
     <script src="admin-pwa.js?v=14"></script>
   </body>
 </html>
