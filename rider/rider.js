@@ -249,11 +249,11 @@
     if (nextHome !== homeKey) {
       destroyMap();
       homeKey = nextHome;
-      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Dispatch</p></div><p class="copy">The branch assigns a delivery to you. It appears here when it is ready.</p></article>` + (active.length
+      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip ${available ? "live" : ""}">${available ? "Online" : "Offline"}</span></div><p class="copy">${available ? "You can accept ready deliveries." : "Go online to see new deliveries. A job you already accepted stays here."}</p><button class="go" type="button" id="availabilityToggle">${available ? "Go offline" : "Go online"}</button></article>` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
         ? ticket(active[0], "active")
         : waiting.length
           ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
-          : `<p class="empty">No delivery is assigned. A job appears here when the branch assigns it to you.</p>`);
+          : (!queue.length ? `<p class="empty">No delivery is assigned. A job appears here when you accept it.</p>` : ""));
     }
     const nextActivity = selectedHistory + "|" + history.map((order) => order.order_id).join() + "|" + historyNote;
     if (nextActivity !== activityKey) {
@@ -276,7 +276,7 @@
     if ($("#riderName")) $("#riderName").textContent = riderLabel();
     if ($("#riderEmail") && sessionUser) $("#riderEmail").textContent = sessionUser.email || "";
     const status = $("#accountStatus");
-    if (status) status.textContent = active.length ? "On a delivery" : jobs.length ? "Delivery assigned" : "No delivery assigned";
+    if (status) status.textContent = active.length ? "On a delivery" : available ? "Online" : "Offline";
     const phoneLine = $("#riderPhone");
     if (phoneLine) phoneLine.textContent = riderPhone || "Not saved";
   }
@@ -300,9 +300,7 @@
     const { data, error } = await db.rpc("sobers_rider_queue");
     if (error) {
       queue = [];
-      queueNote = /sobers_rider_queue|schema cache|does not exist/i.test(error.message)
-        ? "Dispatch opens after the dispatch SQL is run once in Supabase."
-        : error.message;
+      queueNote = error.message;
       return;
     }
     queue = data || [];
@@ -347,6 +345,8 @@
     if (active) startShare(active.order_id);
     else if (sharingOrderId) stopShare();
     await loadHistory();
+    await loadProfile();
+    await loadQueue();
     showPanel("work");
   }
 

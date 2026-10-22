@@ -122,7 +122,7 @@ begin
       and fulfilment::text <> 'pickup'
     returning id into claimed;
     if claimed is null then
-        raise exception 'Another rider already accepted this job';
+        raise exception 'This order has already been accepted by another rider.';
     end if;
     return 'accepted';
 end;

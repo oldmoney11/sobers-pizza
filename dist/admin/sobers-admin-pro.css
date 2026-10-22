@@ -55,6 +55,9 @@ html[data-appearance="day"] body[data-admin-theme="sobers"] { background:#f3f3f5
 html[data-appearance="day"] body[data-admin-theme="sobers"]::before { opacity: .04; }
 html[data-appearance="day"] .sidebar, html[data-appearance="day"] .topbar, html[data-appearance="day"] .panel, html[data-appearance="day"] .stat, html[data-appearance="day"] .login-card, html[data-appearance="day"] dialog { background: #fff; color: #141416; }
 html[data-appearance="day"] .nav button { color: #3f3f46; }
+html[data-appearance="day"] button.secondary,
+html[data-appearance="day"] .button-link.secondary { color: #141416; background: #f3f3f5; border-color: #d4d4d8; }
+html[data-appearance="day"] th { background: #f4f4f5; color: #141416; }
 html[data-appearance="day"] input, html[data-appearance="day"] select, html[data-appearance="day"] textarea { background: #fff; color: #141416; border-color: #d4d4d8; }
 
 .nav button.active { border-color: rgba(240,42,53,.27); background: linear-gradient(135deg, rgba(240,42,53,.2), rgba(240,42,53,.06)); box-shadow: inset 3px 0 var(--admin-red); }
