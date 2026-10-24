@@ -194,7 +194,10 @@
         const notice = $("#riderSetupNotice");
         if (error) {
             riders = [];
-            if (notice) notice.hidden = false;
+            if (notice) {
+                notice.hidden = false;
+                notice.textContent = error.message || "The rider list could not be loaded.";
+            }
         } else {
             riders = data || [];
             if (notice) notice.hidden = true;
@@ -202,11 +205,28 @@
         renderRiders();
     }
     function renderRiders() {
-        const body = $("#ridersBody");
-        const empty = $("#ridersEmpty");
-        if (!body) return;
-        body.innerHTML = riders.map(rider => `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td><td>${rider.is_active ? "Approved" : "Inactive"}${rider.is_available ? " · Online" : ""}</td></tr>`).join("");
-        if (empty) empty.classList.toggle("hidden", riders.length > 0);
+        const notice = $("#riderSetupNotice");
+        const approvalReady = riders.every(rider => typeof rider.approval_status === "string");
+        if (notice && riders.length && !approvalReady) {
+            notice.hidden = false;
+            notice.textContent = "Rider approval is not in the database yet. Run supabase/24-sobers-rider-applications.sql in the Supabase SQL editor, then refresh.";
+        }
+        const fill = (id, rows, actions, showWork) => {
+            const body = document.getElementById(id);
+            const empty = document.getElementById(id + "Empty");
+            if (!body) return;
+            body.innerHTML = rows.map(rider => {
+                const work = showWork ? `<td>${rider.is_available ? "Online" : "Offline"}</td><td>${esc(rider.current_order || "None")}</td><td>${Number(rider.completed_deliveries || 0)}</td>` : "";
+                const buttons = approvalReady ? actions.map(action => `<button class="secondary" type="button" data-rider-decision="${action.id}" data-rider-id="${esc(rider.id)}">${action.label}</button>`).join(" ") : "";
+                return `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td>${work}<td>${buttons}</td></tr>`;
+            }).join("");
+            if (empty) empty.classList.toggle("hidden", rows.length > 0);
+        };
+        const legacy = riders.filter(rider => typeof rider.approval_status !== "string");
+        fill("ridersPending", riders.filter(rider => rider.approval_status === "pending"), [{ id: "approve", label: "Approve" }, { id: "reject", label: "Reject" }], false);
+        fill("ridersApproved", riders.filter(rider => rider.approval_status === "approved").concat(legacy.filter(rider => rider.is_active)), [{ id: "suspend", label: "Suspend" }], true);
+        fill("ridersRejected", riders.filter(rider => rider.approval_status === "rejected"), [{ id: "approve", label: "Approve" }], false);
+        fill("ridersSuspended", riders.filter(rider => rider.approval_status === "suspended").concat(legacy.filter(rider => !rider.is_active)), [{ id: "reactivate", label: "Reactivate" }], false);
     }
     function riderName(riderId) {
         return riders.find(rider => rider.id === riderId)?.display_name || "";
@@ -633,18 +653,28 @@
             if (submitButton) submitButton.disabled = false;
         }
     };
-    $("#riderForm").onsubmit = async event => {
-        event.preventDefault();
-        const form = event.target;
-        $("#riderMessage").textContent = "Saving rider…";
-        const { error } = await db.rpc("sobers_save_rider", {
+    $("#riders").onclick = async event => {
+        const button = event.target.closest("[data-rider-decision]");
+        if (!button || button.disabled) return;
+        const decision = button.dataset.riderDecision;
+        if (!["approve", "reject", "suspend", "reactivate"].includes(decision)) return;
+        const labels = { approve: "Approving…", reject: "Rejecting…", suspend: "Suspending…", reactivate: "Reactivating…" };
+        const done = {
+            approve: "Rider approved. They can go online.",
+            reject: "Application rejected. They cannot take deliveries.",
+            suspend: "Rider suspended. They cannot go online or accept new jobs.",
+            reactivate: "Rider reactivated. They can go online again."
+        };
+        $("#riderMessage").textContent = labels[decision] || "Saving…";
+        button.disabled = true;
+        const { error } = await db.rpc("sobers_review_rider", {
             p_business: business.id,
-            p_email: form.elements.email.value.trim(),
-            p_name: form.elements.display_name.value.trim(),
-            p_phone: form.elements.phone.value.trim()
+            p_rider: button.dataset.riderId,
+            p_decision: decision
         });
-        $("#riderMessage").textContent = error ? error.message : "Rider saved. You can assign them from a delivery order.";
-        if (!error) { form.reset(); await loadRiders(); }
+        $("#riderMessage").textContent = error ? error.message : (done[decision] || "Saved.");
+        if (!error) await loadRiders();
+        else button.disabled = false;
     };
     $("#signOut").onclick = async () => { await db.auth.signOut(); showLogin(); };
 

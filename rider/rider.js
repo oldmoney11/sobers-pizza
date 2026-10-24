@@ -43,6 +43,7 @@
   let queue = [];
   let queueNote = "";
   let available = false;
+  let approval = "";
   let history = [];
   let historyNote = "";
   let installEvent = null;
@@ -245,11 +246,14 @@
     $("#homeView").classList.toggle("hidden", tab !== "home");
     $("#activityView").classList.toggle("hidden", tab !== "activity");
     $("#accountView").classList.toggle("hidden", tab !== "account");
-    const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount, available ? "on" : "off", queue.map((order) => order.order_id).join(), queueNote].join("|");
+    const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount, available ? "on" : "off", approval, queue.map((order) => order.order_id).join(), queueNote].join("|");
     if (nextHome !== homeKey) {
       destroyMap();
       homeKey = nextHome;
-      $("#homeView").innerHTML = `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip ${available ? "live" : ""}">${available ? "Online" : "Offline"}</span></div><p class="copy">${available ? "You can accept ready deliveries." : "Go online to see new deliveries. A job you already accepted stays here."}</p><button class="go" type="button" id="availabilityToggle">${available ? "Go offline" : "Go online"}</button></article>` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
+      const blocked = approval !== "approved" && approval !== "legacy";
+      $("#homeView").innerHTML = blocked
+        ? `<article class="card"><p class="kicker">Application</p><h2>${esc(approvalLabel(approval))}</h2><p class="copy">${esc(approvalCopy(approval))}</p></article>`
+        : `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip ${available ? "live" : ""}">${available ? "Online" : "Offline"}</span></div><p class="copy">${available ? "You can accept ready deliveries." : "Go online to see new deliveries. A job you already accepted stays here."}</p><button class="go" type="button" id="availabilityToggle">${available ? "Go offline" : "Go online"}</button></article>` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
         ? ticket(active[0], "active")
         : waiting.length
           ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
@@ -276,7 +280,7 @@
     if ($("#riderName")) $("#riderName").textContent = riderLabel();
     if ($("#riderEmail") && sessionUser) $("#riderEmail").textContent = sessionUser.email || "";
     const status = $("#accountStatus");
-    if (status) status.textContent = active.length ? "On a delivery" : available ? "Online" : "Offline";
+    if (status) status.textContent = approval && approval !== "approved" && approval !== "legacy" ? approvalLabel(approval) : active.length ? "On a delivery" : available ? "Online" : "Offline";
     const phoneLine = $("#riderPhone");
     if (phoneLine) phoneLine.textContent = riderPhone || "Not saved";
   }
@@ -309,6 +313,46 @@
 
   let riderPhone = "";
 
+  function approvalLabel(status) {
+    if (status === "pending") return "Pending approval";
+    if (status === "rejected") return "Not approved";
+    if (status === "suspended") return "Suspended";
+    if (status === "approved") return "Approved";
+    return "Application not received";
+  }
+  function approvalCopy(status) {
+    if (status === "pending") return "Sobers has your application. You can go online after it is approved.";
+    if (status === "rejected") return "This business did not approve the application. You cannot take deliveries.";
+    if (status === "suspended") return "This business has paused your deliveries. You cannot go online until you are reactivated.";
+    return "Sign in again after the rider application is in the database.";
+  }
+  function missingRiderFunction(error) {
+    return /could not find|does not exist|schema cache/i.test(error?.message || "");
+  }
+  async function submitApplication() {
+    const { data, error } = await db.rpc("sobers_submit_rider_application", { p_business_slug: "sobers-pizza" });
+    if (error) return { error: missingRiderFunction(error) ? "legacy" : error.message };
+    return { status: data || "" };
+  }
+  async function loadAccess() {
+    const { data, error } = await db.rpc("sobers_my_rider_status");
+    if (error) {
+      approval = missingRiderFunction(error) ? "legacy" : "";
+      if (!approval) available = false;
+      return;
+    }
+    const row = (data || []).find((item) => item.business_slug === "sobers-pizza") || (data || [])[0];
+    if (!row) {
+      approval = "";
+      available = false;
+      return;
+    }
+    approval = row.approval_status || "";
+    riderPhone = row.phone || "";
+    if (row.display_name && sessionUser) sessionUser.user_metadata = Object.assign({}, sessionUser.user_metadata, { full_name: row.display_name });
+    available = approval === "approved" && Boolean(row.is_available);
+  }
+
   async function loadProfile() {
     const { data, error } = await db.rpc("sobers_rider_profile");
     if (error || !data || !data.length) return;
@@ -338,16 +382,30 @@
       return;
     }
     sessionUser = session.user;
+    let applicationError = "";
+    await loadAccess();
+    if (!approval) {
+      const submitted = await submitApplication();
+      if (submitted.error === "legacy") approval = "legacy";
+      else if (submitted.error) applicationError = submitted.error;
+      else await loadAccess();
+    }
+    if (approval === "legacy") await loadProfile();
     const { data, error } = await db.rpc("sobers_rider_orders");
-    if (error) return message(navigator.onLine ? error.message : "You’re offline. We’ll retry when data returns.");
+    if (error) {
+      jobs = [];
+      showPanel("work");
+      return message(applicationError || (navigator.onLine ? error.message : "You’re offline. We’ll retry when data returns."));
+    }
     jobs = data || [];
     const active = jobs.find((order) => order.status === "out_for_delivery");
     if (active) startShare(active.order_id);
     else if (sharingOrderId) stopShare();
     await loadHistory();
-    await loadProfile();
     await loadQueue();
     showPanel("work");
+    if (applicationError && !approval) message(applicationError);
+    else if (approval && approval !== "approved" && approval !== "legacy") message("");
   }
 
   async function update(orderId, action) {
@@ -400,16 +458,23 @@
     const { data, error } = await db.auth.signUp({
       email: form.elements.email.value.trim(),
       password,
-      options: { data: { full_name: form.elements.full_name.value.trim(), phone: form.elements.phone.value.trim() }, emailRedirectTo: redirectHere() }
+      options: {
+        data: {
+          full_name: form.elements.full_name.value.trim(),
+          phone: form.elements.phone.value.trim(),
+          account_type: "rider",
+          business_slug: "sobers-pizza"
+        },
+        emailRedirectTo: redirectHere()
+      }
     });
     form.elements.password.value = "";
     form.elements.confirm.value = "";
     busy(form, false);
     if (error) return message(error.message);
-    message(data.session
-      ? "Account created. Ask the business to add this email under Riders before jobs appear."
-      : "Account created. Confirm the email if asked, then have the business add it under Riders.");
     await load();
+    if (!data.session) message("Account created. Confirm the email if asked, then sign in. Deliveries stay locked until Sobers approves you.");
+    else if (approval) message("");
   };
 
   $("#riderForgot").onsubmit = async (event) => {
@@ -464,6 +529,7 @@
     const tabButton = event.target.closest("[data-tab]");
     if (tabButton) { tab = tabButton.dataset.tab; selectedHistory = ""; message(""); paint(); return; }
     if (event.target.id === "availabilityToggle") {
+      if (approval !== "approved" && approval !== "legacy") return message(approvalCopy(approval));
       const next = !available;
       message(next ? "Going online…" : "Going offline…");
       const { data, error } = await db.rpc("sobers_rider_availability", { p_available: next });
@@ -493,6 +559,7 @@
       return;
     }
     if (button.dataset.action === "accept") {
+      if (approval !== "approved" && approval !== "legacy") return message(approvalCopy(approval));
       button.disabled = true;
       message("Accepting…");
       const { error } = await db.rpc("sobers_rider_accept", { p_order: orderId });

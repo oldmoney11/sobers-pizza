@@ -23,7 +23,7 @@
     <div id="gate">
       <aside class="hero-pane">
         <p class="brand-lock">SOBERS <span>RIDER</span></p>
-        <h1>Deliver what is assigned.</h1>
+        <h1>Go online after approval.</h1>
         <p>One next step. Nothing else on this phone.</p>
       </aside>
       <section class="auth-pane">
@@ -36,7 +36,7 @@
           <form id="riderLogin" data-screen="login">
             <p class="kicker">Staff access</p>
             <h1>Sign in</h1>
-            <p class="copy">Use the email the branch added for you.</p>
+            <p class="copy">Use the email you registered with.</p>
             <label>Email<input name="email" type="email" required autocomplete="username" placeholder="you@email.com" /></label>
             <label class="field">Password
               <input name="password" type="password" required autocomplete="current-password" placeholder="Password" />
@@ -52,7 +52,7 @@
             <button class="back" type="button" data-panel="login">Back</button>
             <p class="kicker">New rider</p>
             <h1>Create account</h1>
-            <p class="copy">The business still has to approve this email before a job appears.</p>
+            <p class="copy">Sobers reviews this application before you can go online.</p>
             <label>Your name<input name="full_name" required autocomplete="name" placeholder="Your name" /></label>
             <label>Phone<input name="phone" type="tel" required autocomplete="tel" placeholder="024…" /></label>
             <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@email.com" /></label>
@@ -120,7 +120,7 @@
               <div><dt>Location</dt><dd id="permState">Checking</dd></div>
               <div><dt>Alerts</dt><dd>Not available yet</dd></div>
             </dl>
-            <p class="copy">You only see deliveries assigned to this login. Earnings, ratings, and proof of delivery are not turned on.</p>
+            <p class="copy">You only see deliveries you have accepted. Earnings are not turned on yet.</p>
             <button class="go" type="button" id="installApp" hidden>Install app</button>
             <p class="copy">On iPhone, use Share, then Add to Home Screen.</p>
             <button class="ghost" type="button" id="signOut">Sign out</button>
@@ -146,6 +146,6 @@
     <p id="toast" class="toast" hidden role="status"></p>
     <script src="../track/vendor/leaflet.js"></script>
     <script src="../admin/vendor/supabase.min.js"></script>
-    <script src="./rider.js?v=11"></script>
+    <script src="./rider.js?v=12"></script>
   </body>
 </html>

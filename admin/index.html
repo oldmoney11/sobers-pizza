@@ -165,27 +165,50 @@
               <div>
                 <span class="eyebrow">Delivery</span>
                 <h1>Riders</h1>
-                <p class="view-intro">A rider creates their own login first. Save that email here to approve them. A ready delivery is then accepted by an online rider.</p>
+                <p class="view-intro">Riders apply from the rider app. Approve or reject the application here. You do not re-enter their email. Ready deliveries are accepted by online riders.</p>
               </div>
               <a class="button-link secondary" href="../rider/">Open rider page</a>
             </div>
-            <p class="notice" id="riderSetupNotice" hidden>Rider setup is not in the database yet. Run supabase/20-sobers-rider-access.sql in the Supabase SQL editor, then refresh.</p>
-            <form id="riderForm" class="panel">
-              <div class="form-grid">
-                <label>Rider name<input name="display_name" required /></label>
-                <label>Login email<input name="email" type="email" required /></label>
-                <label>Phone<input name="phone" type="tel" /></label>
-              </div>
-              <div class="actions"><button type="submit">Save rider</button></div>
-              <p class="message" id="riderMessage"></p>
-            </form>
+            <p class="notice" id="riderSetupNotice" hidden>Rider approval is not in the database yet. Run supabase/24-sobers-rider-applications.sql in the Supabase SQL editor, then refresh.</p>
+            <p class="message" id="riderMessage"></p>
             <div class="panel">
+              <p class="eyebrow">Pending</p>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
-                  <tbody id="ridersBody"></tbody>
+                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+                  <tbody id="ridersPending"></tbody>
                 </table>
-                <div class="empty hidden" id="ridersEmpty">No riders yet.</div>
+                <div class="empty hidden" id="ridersPendingEmpty">No riders are waiting for approval.</div>
+              </div>
+            </div>
+            <div class="panel">
+              <p class="eyebrow">Approved</p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Online</th><th>Current delivery</th><th>Completed</th><th></th></tr></thead>
+                  <tbody id="ridersApproved"></tbody>
+                </table>
+                <div class="empty hidden" id="ridersApprovedEmpty">No approved riders yet.</div>
+              </div>
+            </div>
+            <div class="panel">
+              <p class="eyebrow">Rejected</p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+                  <tbody id="ridersRejected"></tbody>
+                </table>
+                <div class="empty hidden" id="ridersRejectedEmpty">No rejected applications.</div>
+              </div>
+            </div>
+            <div class="panel">
+              <p class="eyebrow">Suspended</p>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+                  <tbody id="ridersSuspended"></tbody>
+                </table>
+                <div class="empty hidden" id="ridersSuspendedEmpty">No suspended riders.</div>
               </div>
             </div>
           </section>
@@ -509,7 +532,7 @@
     </dialog>
     <script src="platform-config.js?v=5"></script>
     <script src="admin-security.js?v=1"></script>
-    <script src="business-admin.js?v=22"></script>
+    <script src="business-admin.js?v=23"></script>
     <script src="admin-pwa.js?v=14"></script>
   </body>
 </html>
