@@ -47,7 +47,7 @@
     const fallback = 'assets/logo/favicon-512.png';
     if (!value) return fallback;
     try {
-      const appRoot = new URL('../../', window.location.href);
+      const appRoot = new URL('../', window.location.href);
       const optimizedValue = String(value).replace(
         /^(\/?assets\/sobers-pizza\/generated\/[^?#]+)\.png(?=([?#].*)?$)/i,
         '$1.webp',

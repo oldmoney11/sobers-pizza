@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: blob: https://inthadecmxmbqexufzpe.supabase.co; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta name="theme-color" content="#11100f" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <title>Sobers Pizza — Town Branch Kiosk</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="../assets/logo/favicon-192.png" />
+    <link rel="apple-touch-icon" href="../assets/logo/favicon-192.png" />
+    <link rel="stylesheet" href="kiosk.css?v=3" />
+  </head>
+  <body>
+    <main class="kiosk-shell">
+      <section class="kiosk-screen welcome-screen active" data-screen="welcome">
+        <div class="welcome-mark">SOBERS <span>PIZZA</span></div>
+        <p class="eyebrow">TOWN BRANCH · SELF-SERVICE</p>
+        <h1>Ready for something delicious?</h1>
+        <p>Build your order, choose dine-in or takeaway, and keep your order number.</p>
+        <button class="primary-action" data-start-order>Start order <span>→</span></button>
+      </section>
+
+      <section class="kiosk-screen ordering-screen" data-screen="ordering">
+        <header class="kiosk-header">
+          <div><strong>SOBERS <span>PIZZA</span></strong><small>Town Branch</small></div>
+          <div class="kiosk-progress" aria-label="Ordering progress"><b>1</b><span>Choose</span><i></i><b>2</b><span>Review</span><i></i><b>3</b><span>Confirm</span></div>
+          <button class="quiet-button" data-cancel-order>Start over</button>
+        </header>
+        <div class="category-tabs" data-categories aria-label="Menu categories"></div>
+        <div class="ordering-layout">
+          <section>
+            <div class="section-heading"><p class="eyebrow">BUILD YOUR ORDER</p><h2>Choose your favourites</h2></div>
+            <div class="product-grid" data-products></div>
+            <p class="empty-state hidden" data-empty-menu>Menu items are temporarily unavailable. Please ask a team member for assistance.</p>
+          </section>
+          <aside class="cart-panel">
+            <button class="cart-sheet-close" data-close-cart aria-label="Close order summary">×</button>
+            <div><p class="eyebrow">YOUR ORDER</p><h2>Cart <span data-cart-count>0</span></h2></div>
+            <div class="cart-items" data-cart-items></div>
+            <p class="empty-state" data-empty-cart>Your cart is empty.</p>
+            <div class="cart-total"><span>Total</span><strong data-cart-total>GH₵0.00</strong></div>
+            <button class="primary-action" data-review-order disabled>Review order</button>
+          </aside>
+        </div>
+        <button class="mobile-cart-dock" data-open-cart disabled>
+          <span><b data-mobile-cart-count>0</b><em>View order</em></span>
+          <strong data-mobile-cart-total>GH₵0.00</strong>
+          <i>Review →</i>
+        </button>
+      </section>
+
+      <section class="kiosk-screen review-screen" data-screen="review">
+        <header class="kiosk-header"><div><strong>SOBERS <span>PIZZA</span></strong><small>Review order</small></div><button class="quiet-button" data-back-menu>Back to menu</button></header>
+        <div class="review-card">
+          <p class="eyebrow">HOW WILL YOU ENJOY IT?</p>
+          <h1>Choose your order type</h1>
+          <div class="fulfilment-options">
+            <label><input type="radio" name="kioskFulfilment" value="dine_in" checked /><span><b>Dine in</b><small>Enjoy your meal here</small></span></label>
+            <label><input type="radio" name="kioskFulfilment" value="takeaway" /><span><b>Takeaway</b><small>Pack it to go</small></span></label>
+          </div>
+          <details>
+            <summary>Add your details <small>(optional)</small></summary>
+            <div class="customer-fields">
+              <label>Name<input name="kioskName" autocomplete="off" maxlength="80" /></label>
+              <label>Phone<input name="kioskPhone" type="tel" inputmode="tel" autocomplete="off" maxlength="18" /></label>
+            </div>
+          </details>
+          <div class="review-total"><span>Order total</span><strong data-review-total>GH₵0.00</strong></div>
+          <p class="trust-note"><b>Official Sobers order</b>This kiosk sends your order directly to the Sobers team. Keep the order number shown after confirmation.</p>
+          <button class="primary-action" data-place-order>Place order</button>
+          <p class="status-message" data-order-message role="status"></p>
+        </div>
+      </section>
+
+      <section class="kiosk-screen confirmation-screen" data-screen="confirmation">
+        <p class="success-icon">✓</p><p class="eyebrow">ORDER RECEIVED</p><h1>Thank you!</h1>
+        <p>Your order number is</p><strong class="display-number" data-display-number>—</strong>
+        <p class="official-reference" data-official-reference></p>
+        <p>Your order has been sent to the Sobers team. Please keep this number.</p>
+        <button class="primary-action" data-new-order>Done · New order</button>
+      </section>
+    </main>
+
+    <div class="idle-overlay" data-idle-overlay aria-hidden="true">
+      <div><p class="eyebrow">ARE YOU STILL THERE?</p><h2>Your order is waiting.</h2><p>Continue now or the kiosk will securely clear this session.</p><button class="primary-action" data-continue-order>Yes, continue</button><button class="quiet-button" data-reset-order>No, start over</button></div>
+    </div>
+    <div class="option-overlay" data-option-overlay aria-hidden="true">
+      <section class="option-sheet" role="dialog" aria-modal="true" aria-labelledby="optionProductName">
+        <header><div><p class="eyebrow">MAKE IT YOURS</p><h2 id="optionProductName" data-option-name>Choose options</h2></div><button class="option-close" data-option-close aria-label="Close options">×</button></header>
+        <p class="option-description" data-option-description></p>
+        <div class="option-groups" data-option-groups></div>
+        <footer><div><small>Your selection</small><strong data-option-total>GH₵0.00</strong></div><button class="primary-action" data-option-add>Add to order</button></footer>
+      </section>
+    </div>
+    <script src="kiosk-config.js?v=2"></script>
+    <script src="kiosk.js?v=13"></script>
+    <script src="kiosk-pwa.js?v=1"></script>
+  </body>
+</html>
