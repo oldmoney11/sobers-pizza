@@ -3,7 +3,7 @@
   if ("serviceWorker" in navigator) {
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => { if (refreshing) return; refreshing = true; location.reload(); });
-    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=17").then(r => r.update()).catch(console.error));
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=18").then(r => r.update()).catch(console.error));
   }
   window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); deferredInstall = event; mountInstall(); });
   function mountInstall() {

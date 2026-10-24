@@ -216,9 +216,9 @@
             const empty = document.getElementById(id + "Empty");
             if (!body) return;
             body.innerHTML = rows.map(rider => {
-                const work = showWork ? `<td>${rider.is_available ? "Online" : "Offline"}</td><td>${esc(rider.current_order || "None")}</td><td>${Number(rider.completed_deliveries || 0)}</td>` : "";
+                const work = showWork ? `<td data-label="Online">${rider.is_available ? "Online" : "Offline"}</td><td data-label="Current delivery">${esc(rider.current_order || "None")}</td><td data-label="Completed">${Number(rider.completed_deliveries || 0)}</td>` : "";
                 const buttons = approvalReady ? actions.map(action => `<button class="secondary" type="button" data-rider-decision="${action.id}" data-rider-id="${esc(rider.id)}">${action.label}</button>`).join(" ") : "";
-                return `<tr><td><strong>${esc(rider.display_name)}</strong></td><td>${esc(rider.email || "")}</td><td>${esc(rider.phone || "")}</td>${work}<td>${buttons}</td></tr>`;
+                return `<tr><td data-label="Name"><strong>${esc(rider.display_name)}</strong></td><td data-label="Email">${esc(rider.email || "")}</td><td data-label="Phone">${esc(rider.phone || "")}</td>${work}<td data-label="Action">${buttons}</td></tr>`;
             }).join("");
             if (empty) empty.classList.toggle("hidden", rows.length > 0);
         };
@@ -343,11 +343,11 @@
     }
     function renderProducts() {
         $("#productsEmpty").classList.toggle("hidden", products.length > 0);
-        $("#productsBody").innerHTML = products.map(product => { const image = officialProductImages[product.slug] || product.image_url; const name = product.slug === "walch-473ml" ? "Welch's 473ml" : product.name; return `<tr><td>${image ? `<img class="product-thumb" src="${esc(productImageUrl(image))}" alt="${esc(name)}" loading="lazy" decoding="async">` : ""}<strong>${esc(name)}</strong><br><small class="muted">${esc(product.description)}</small></td><td>${esc(product.categories?.name || "Uncategorised")}</td><td>${money(product.base_price)}</td><td><button class="secondary" data-product-toggle="${product.id}" data-value="${product.is_available}">${product.is_available ? "Available" : "Unavailable"}</button></td><td><button class="secondary" data-product-edit="${product.id}">Edit</button></td></tr>`; }).join("");
+        $("#productsBody").innerHTML = products.map(product => { const image = officialProductImages[product.slug] || product.image_url; const name = product.slug === "walch-473ml" ? "Welch's 473ml" : product.name; return `<tr><td data-label="Product">${image ? `<img class="product-thumb" src="${esc(productImageUrl(image))}" alt="${esc(name)}" loading="lazy" decoding="async">` : ""}<strong>${esc(name)}</strong><br><small class="muted">${esc(product.description)}</small></td><td data-label="Category">${esc(product.categories?.name || "Uncategorised")}</td><td data-label="Price">${money(product.base_price)}</td><td data-label="Available"><button class="secondary" data-product-toggle="${product.id}" data-value="${product.is_available}">${product.is_available ? "Available" : "Unavailable"}</button></td><td data-label="Action"><button class="secondary" data-product-edit="${product.id}">Edit</button></td></tr>`; }).join("");
     }
     function renderCategories() {
         $("#categoriesEmpty").classList.toggle("hidden", categories.length > 0);
-        $("#categoriesBody").innerHTML = categories.map(category => `<tr><td><strong>${esc(category.name)}</strong><br><small class="muted">${esc(category.description)}</small></td><td>${esc(category.slug)}</td><td>${category.sort_order}</td><td><span class="badge ${category.is_active ? "active" : "inactive"}">${category.is_active ? "Visible" : "Hidden"}</span></td><td><button class="secondary" data-category-edit="${category.id}">Edit</button></td></tr>`).join("");
+        $("#categoriesBody").innerHTML = categories.map(category => `<tr><td data-label="Category"><strong>${esc(category.name)}</strong><br><small class="muted">${esc(category.description)}</small></td><td data-label="Slug">${esc(category.slug)}</td><td data-label="Order">${category.sort_order}</td><td data-label="Status"><span class="badge ${category.is_active ? "active" : "inactive"}">${category.is_active ? "Visible" : "Hidden"}</span></td><td data-label="Action"><button class="secondary" data-category-edit="${category.id}">Edit</button></td></tr>`).join("");
     }
     function renderNotices() {
         $("#noticesEmpty").classList.toggle("hidden", notices.length > 0);
@@ -361,7 +361,7 @@
     }
     function renderPaymentMethods() {
         $("#paymentMethodsEmpty").classList.toggle("hidden", paymentMethods.length > 0);
-        $("#paymentMethodsBody").innerHTML = paymentMethods.map(method => `<tr><td><strong>${esc(method.display_name)}</strong><br><small class="muted">${esc(method.method_type.replace(/_/g, " "))}</small></td><td>${esc(method.provider || "—")}</td><td>${esc(method.account_name || "")}${method.account_number ? `<br><small class="muted">${esc(method.account_number)}</small>` : ""}</td><td><span class="badge ${method.is_active ? "active" : "inactive"}">${method.is_active ? "Active" : "Inactive"}</span></td><td><button class="secondary" data-payment-edit="${method.id}">Edit</button></td></tr>`).join("");
+        $("#paymentMethodsBody").innerHTML = paymentMethods.map(method => `<tr><td data-label="Method"><strong>${esc(method.display_name)}</strong><br><small class="muted">${esc(method.method_type.replace(/_/g, " "))}</small></td><td data-label="Provider">${esc(method.provider || "—")}</td><td data-label="Account">${esc(method.account_name || "")}${method.account_number ? `<br><small class="muted">${esc(method.account_number)}</small>` : ""}</td><td data-label="Status"><span class="badge ${method.is_active ? "active" : "inactive"}">${method.is_active ? "Active" : "Inactive"}</span></td><td data-label="Action"><button class="secondary" data-payment-edit="${method.id}">Edit</button></td></tr>`).join("");
     }
     function renderSettings(settings) {
         if (!settings) return;
@@ -590,7 +590,7 @@
     $("#overviewRecentOrders").onclick = event => { const button = event.target.closest("[data-order-view]"); if (button) showOrder(orders.find(order => order.id === button.dataset.orderView)); };
     $("#orderFilter").onchange = renderOrders;
     $("#branchFilter").onchange = () => { renderOrders(); renderStats(); };
-    function showView(viewName) { document.querySelectorAll(".nav button,.view").forEach(item => item.classList.remove("active")); document.querySelector(`.nav button[data-view="${viewName}"]`)?.classList.add("active"); $("#" + viewName)?.classList.add("active"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    function showView(viewName) { document.querySelectorAll(".nav button,.view").forEach(item => item.classList.remove("active")); const navButton = document.querySelector(`.nav button[data-view="${viewName}"]`); navButton?.classList.add("active"); navButton?.scrollIntoView({ inline: "nearest", block: "nearest" }); $("#" + viewName)?.classList.add("active"); window.scrollTo({ top: 0, behavior: "smooth" }); }
     $("#nav").onclick = event => { const button = event.target.closest("button[data-view]"); if (button) showView(button.dataset.view); };
     document.querySelectorAll("[data-jump-view]").forEach(button => button.onclick = () => showView(button.dataset.jumpView));
     let refreshing = false;
