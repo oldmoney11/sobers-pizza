@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "sobers-kiosk-v12";
+const CACHE_NAME = "sobers-kiosk-v13";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -9,8 +9,9 @@ const APP_SHELL = [
   "kiosk.css?v=3",
   "kiosk-config.js?v=2",
   "kiosk.js?v=13",
-  "../assets/logo/favicon-192.png",
-  "../assets/logo/favicon-512.png"
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", event => {
