@@ -4,11 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: https://server.arcgisonline.com; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://inthadecmxmbqexufzpe.supabase.co; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="theme-color" content="#0c0c0e" />
     <title>Track your Sobers Pizza order</title>
     <link rel="stylesheet" href="./vendor/leaflet.css" />
-    <link rel="stylesheet" href="./track-live.css?v=7" />
+    <link rel="stylesheet" href="./track-live.css?v=8" />
   </head>
   <body>
     <main class="app">
@@ -41,7 +41,10 @@
                 <p class="eyebrow" id="mapKicker">Delivery</p>
                 <h2 id="mapTitle">Map</h2>
               </div>
-              <button id="recenter" type="button" hidden>Re-center</button>
+              <div class="map-actions">
+                <a id="openMaps" href="https://www.google.com/maps" target="_blank" rel="noopener" hidden>Open in Google Maps</a>
+                <button id="recenter" type="button" hidden>Re-center</button>
+              </div>
             </div>
             <div class="map-stage">
               <div id="deliveryMap" aria-label="Rider location"></div>
@@ -87,7 +90,7 @@
       </section>
     </main>
     <script src="./vendor/leaflet.js"></script>
-    <script src="./delivery-map.js?v=3"></script>
+    <script src="./delivery-map.js?v=4"></script>
     <script src="./track-live.js?v=7"></script>
   </body>
 </html>

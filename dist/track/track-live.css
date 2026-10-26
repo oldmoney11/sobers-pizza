@@ -17,7 +17,7 @@ h1, h2, h3, p { margin: 0; }
 .top, .status-row, .map-head, .total, .costs p, .item { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .brand { color: white; font-weight: 800; letter-spacing: 0.12em; text-decoration: none; }
 .brand span { color: var(--red); }
-.back, .print, .contact, button[type="submit"], #recenter {
+.back, .print, .contact, button[type="submit"], #recenter, #openMaps {
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
   border-radius: 12px; text-decoration: none; font-weight: 750;
 }
@@ -59,7 +59,8 @@ button:disabled { opacity: 0.5; }
 }
 .map-empty[hidden], #deliveryMap[hidden] { display: none; }
 .map-note { margin-top: 8px; font-size: 0.85rem; }
-#recenter { padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
+.map-actions { display: flex; gap: 8px; align-items: center; }
+#recenter, #openMaps { padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
 .status-card, .way, .summary { padding: 16px; }
 .status { padding: 6px 10px; border-radius: 999px; background: rgba(239, 35, 60, 0.16); color: #ffb4bc; font-size: 0.78rem; font-weight: 800; }
 .status-card h2, .way h3 { margin: 8px 0; font-size: 1.55rem; letter-spacing: -0.03em; line-height: 1.1; }
