@@ -118,8 +118,11 @@
     if (!host || !lastPosition || !window.L) return;
     const latlng = [lastPosition.lat, lastPosition.lng];
     if (!map || map.getContainer() !== host) {
-      map = window.L.map(host, { zoomControl: true, attributionControl: false }).setView(latlng, 16);
-      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 19 }).addTo(map);
+      map = window.L.map(host, { zoomControl: true, attributionControl: true }).setView(latlng, 16);
+      window.L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 16,
+        attribution: "Tiles &copy; Esri — Esri, HERE, Garmin, &copy; OpenStreetMap contributors"
+      }).addTo(map);
       marker = window.L.circleMarker(latlng, { radius: 10, color: "#ffffff", weight: 3, fillColor: "#ef233c", fillOpacity: 1 }).addTo(map);
     } else {
       marker.setLatLng(latlng);

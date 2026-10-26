@@ -64,10 +64,9 @@
     const latlng = [Number(point.latitude), Number(point.longitude)];
     if (!map) {
       map = window.L.map("deliveryMap", { zoomControl: true, attributionControl: true }).setView(latlng, 16);
-      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        subdomains: "abcd",
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap &copy; CARTO"
+      window.L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 16,
+        attribution: "Tiles &copy; Esri — Esri, HERE, Garmin, &copy; OpenStreetMap contributors"
       }).addTo(map);
       marker = window.L.circleMarker(latlng, {
         radius: 11,
