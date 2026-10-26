@@ -192,7 +192,7 @@ begin
         raise exception 'This order cannot move to that step yet';
     end if;
     update public.platform_orders
-    set status = next_status, updated_at = now()
+    set status = next_status::public.order_status, updated_at = now()
     where id = selected.id;
     return next_status;
 end;
