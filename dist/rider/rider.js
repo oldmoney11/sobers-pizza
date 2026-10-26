@@ -52,8 +52,98 @@
   let selectedHistory = "";
   let homeKey = "";
   let activityKey = "";
+  let inboxKey = "";
   let toastTimer = 0;
   let confirmAction = null;
+  let audioCtx = null;
+  let ringTimer = 0;
+  const seenKey = "sobers-rider-seen";
+  const inboxKeyName = "sobers-rider-inbox";
+
+  function stored(key) {
+    try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (error) { return []; }
+  }
+  function saveStore(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+  function unlockAudio() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  }
+  function stopRing() {
+    window.clearTimeout(ringTimer);
+    ringTimer = 0;
+    if (navigator.vibrate) navigator.vibrate(0);
+  }
+  function ringMuted() {
+    return localStorage.getItem("sobers-rider-ring") === "off";
+  }
+  function setRingMuted(off) {
+    localStorage.setItem("sobers-rider-ring", off ? "off" : "on");
+    if (off) stopRing();
+    homeKey = "";
+    paint();
+    toast(off ? "Ring is off. New orders still show in Inbox." : "Ring is on for new orders.");
+  }
+  function ringForTenSeconds() {
+    if (ringMuted()) return;
+    unlockAudio();
+    stopRing();
+    const started = Date.now();
+    const beep = () => {
+      if (Date.now() - started >= 10000) return;
+      if (audioCtx && audioCtx.state === "running") {
+        const tone = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        tone.type = "square";
+        tone.frequency.setValueAtTime(880, audioCtx.currentTime);
+        tone.frequency.setValueAtTime(660, audioCtx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.06, audioCtx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.36);
+        tone.connect(gain);
+        gain.connect(audioCtx.destination);
+        tone.start();
+        tone.stop(audioCtx.currentTime + 0.4);
+      }
+      ringTimer = window.setTimeout(beep, 700);
+    };
+    beep();
+    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500, 200, 800]);
+  }
+  function pushInbox(order) {
+    const items = stored(inboxKeyName).filter((item) => item.id !== order.order_id);
+    items.unshift({
+      id: order.order_id,
+      title: "New delivery " + (order.order_number || ""),
+      body: (order.branch_name || "Sobers") + " · " + (order.delivery_address || "Address on the order"),
+      at: new Date().toISOString(),
+      read: false
+    });
+    saveStore(inboxKeyName, items.slice(0, 40));
+    inboxKey = "";
+  }
+  function unreadCount() {
+    return stored(inboxKeyName).filter((item) => !item.read).length;
+  }
+  function noticeNewOrders() {
+    if (!available || (approval !== "approved" && approval !== "legacy")) return;
+    const seen = stored(seenKey);
+    const fresh = queue.filter((order) => order.order_id && !seen.includes(order.order_id));
+    if (!fresh.length) return;
+    saveStore(seenKey, seen.concat(fresh.map((order) => order.order_id)).slice(-200));
+    fresh.forEach(pushInbox);
+    ringForTenSeconds();
+    const first = fresh[0];
+    toast(fresh.length === 1 ? "New order " + (first.order_number || "") : fresh.length + " new orders");
+    if (window.Notification && Notification.permission === "granted") {
+      fresh.slice(0, 3).forEach((order) => {
+        new Notification("Sobers delivery", { body: (order.order_number || "New order") + " is ready", tag: order.order_id });
+      });
+    }
+  }
 
   function message(text) {
     const value = text || "";
@@ -234,21 +324,80 @@
 
   function detailCard(order) {
     const when = order.updated_at ? new Date(order.updated_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "";
-    return `<button class="back" type="button" id="historyBack">Back to activity</button><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p><p class="fare">${money(order.order_total)}</p></article>`;
+    return `<button class="back" type="button" id="historyBack">Back to earnings</button><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p><p class="fare">${money(order.order_total)}</p></article>`;
+  }
+
+  function availabilityCard() {
+    if (available) {
+      return `<article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip live">Online</span></div><p class="copy">You can accept ready deliveries. ${ringMuted() ? "The ring is silenced. New orders still appear here and in Inbox." : "A new order rings for 10 seconds."}</p><button class="ghost" type="button" id="availabilityToggle">Go offline</button><button class="text" type="button" id="silenceRing">${ringMuted() ? "Turn ring on" : "Silence ring"}</button></article>`;
+    }
+    return `<article class="card live-call"><p class="kicker">Your shift</p><div class="point" aria-hidden="true"><i></i><i></i><i></i></div><button class="go go-live" type="button" id="availabilityToggle">Go online</button><p class="copy">${ringMuted() ? "The ring is off. You can turn it on below." : "Tap this. A new order rings for 10 seconds."}</p><button class="text" type="button" id="silenceRing">${ringMuted() ? "Turn ring on" : "Silence ring"}</button></article>`;
+  }
+
+  function sum(rows) {
+    return rows.reduce((total, order) => total + Number(order.order_total || 0), 0);
+  }
+
+  function reward(label, done, goal) {
+    return `<article class="reward ${done >= goal ? "on" : ""}"><b>${done >= goal ? "Unlocked" : "Locked"}</b><span>${esc(label)}</span></article>`;
+  }
+
+  function paintEarnings(activeCount) {
+    const host = $("#earningsView");
+    if (!host) return;
+    const today = history.filter((order) => sameDay(order.updated_at, 0));
+    const week = history.filter((order) => Date.now() - Date.parse(order.updated_at) < 7 * 86400000);
+    const done = history.length;
+    const list = selectedHistory
+      ? ""
+      : historyNote
+        ? `<p class="empty">${esc(historyNote)}</p>`
+        : !history.length
+          ? `<p class="empty">Completed deliveries from the last 60 days show here.</p>`
+          : [["Today", today], ["Yesterday", history.filter((order) => sameDay(order.updated_at, 1))], ["Earlier", history.filter((order) => !sameDay(order.updated_at, 0) && !sameDay(order.updated_at, 1))]]
+            .filter(([, rows]) => rows.length)
+            .map(([name, rows]) => `<section class="group"><h3>${name}</h3><div class="board">${rows.map(historyCard).join("")}</div></section>`)
+            .join("");
+    const detail = selectedHistory
+      ? (() => {
+        const order = history.find((item) => item.order_id === selectedHistory);
+        return order ? detailCard(order) : `<button class="back" type="button" id="historyBack">Back</button><p class="empty">That delivery is no longer in this list.</p>`;
+      })()
+      : "";
+    host.innerHTML = detail || `<div class="stats"><div class="stat"><b>${money(sum(today))}</b><span>Delivered today</span></div><div class="stat"><b>${money(sum(week))}</b><span>Last 7 days</span></div></div><article class="card"><p class="kicker">Recognition</p><h2>${done} completed</h2><p class="copy">These marks count finished deliveries. They are not cash bonuses.</p><div class="reward-row">${reward("First delivery", done, 1)}${reward("5 deliveries", done, 5)}${reward("10 deliveries", done, 10)}${reward("25 deliveries", done, 25)}</div></article><p class="copy">Assigned right now: ${activeCount}. The amounts are the order totals you delivered.</p>${list}`;
+  }
+
+  function paintInbox() {
+    const host = $("#inboxView");
+    if (!host) return;
+    const items = stored(inboxKeyName);
+    host.innerHTML = items.length
+      ? `<button class="ghost" type="button" id="clearInbox">Clear inbox</button>` + items.map((item) => `<article class="card"><p class="kicker">${item.read ? "Seen" : "New"}</p><h2>${esc(item.title)}</h2><p class="copy">${esc(item.body)}</p><p class="when">${esc(item.at ? new Date(item.at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "")}</p></article>`).join("")
+      : `<p class="empty">New ready orders appear here while you are online, with a 10-second ring.</p>`;
   }
 
   function paint() {
-    const titles = { home: ["Now", "Home"], activity: ["Last 60 days", "Activity"], account: ["You", "Account"] };
-    $("#deskKicker").textContent = titles[tab][0];
-    $("#deskTitle").textContent = tab === "home" ? riderLabel() : titles[tab][1];
+    const titles = {
+      home: ["Now", "Home"],
+      discover: ["Two kitchens", "Discover"],
+      earnings: ["Last 60 days", "Earnings"],
+      inbox: ["Alerts", "Inbox"],
+      menu: ["You", "Menu"],
+      safety: ["On the road", "Safety"],
+      help: ["How a run works", "Help"]
+    };
+    const title = titles[tab] || titles.home;
+    $("#deskKicker").textContent = title[0];
+    $("#deskTitle").textContent = tab === "home" ? riderLabel() : title[1];
     document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("on", button.dataset.tab === tab));
     const active = jobs.filter((order) => order.status === "out_for_delivery");
     const waiting = jobs.filter((order) => order.status === "ready");
     const todayCount = history.filter((order) => sameDay(order.updated_at, 0)).length;
     setPill();
-    $("#homeView").classList.toggle("hidden", tab !== "home");
-    $("#activityView").classList.toggle("hidden", tab !== "activity");
-    $("#accountView").classList.toggle("hidden", tab !== "account");
+    ["home", "discover", "earnings", "inbox", "menu", "safety", "help"].forEach((name) => {
+      const view = document.getElementById(name + "View");
+      if (view) view.classList.toggle("hidden", tab !== name);
+    });
     const nextHome = [waiting.map((order) => order.order_id).join(), active.map((order) => order.order_id).join(), todayCount, available ? "on" : "off", approval, queue.map((order) => order.order_id).join(), queueNote].join("|");
     if (nextHome !== homeKey) {
       destroyMap();
@@ -256,29 +405,27 @@
       const blocked = approval !== "approved" && approval !== "legacy";
       $("#homeView").innerHTML = blocked
         ? `<article class="card"><p class="kicker">Application</p><h2>${esc(approvalLabel(approval))}</h2><p class="copy">${esc(approvalCopy(approval))}</p></article>`
-        : `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div><article class="card"><div class="ticket-top"><p class="kicker">Availability</p><span class="chip ${available ? "live" : ""}">${available ? "Online" : "Offline"}</span></div><p class="copy">${available ? "You can accept ready deliveries." : "Go online to see new deliveries. A job you already accepted stays here."}</p><button class="go" type="button" id="availabilityToggle">${available ? "Go offline" : "Go online"}</button></article>` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
+        : `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div>${availabilityCard()}` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
         ? ticket(active[0], "active")
         : waiting.length
           ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
           : (!queue.length ? `<p class="empty">No delivery is assigned. A job appears here when you accept it.</p>` : ""));
     }
     const nextActivity = selectedHistory + "|" + history.map((order) => order.order_id).join() + "|" + historyNote;
-    if (nextActivity !== activityKey) {
+    if (tab === "earnings" && nextActivity !== activityKey) {
       activityKey = nextActivity;
-      if (historyNote) $("#activityView").innerHTML = `<p class="empty">${esc(historyNote)}</p>`;
-      else if (selectedHistory) {
-        const order = history.find((item) => item.order_id === selectedHistory);
-        $("#activityView").innerHTML = order ? detailCard(order) : `<button class="back" type="button" id="historyBack">Back</button><p class="empty">That delivery is no longer in this list.</p>`;
-      } else if (!history.length) $("#activityView").innerHTML = `<p class="empty">Completed deliveries from the last 60 days show here.</p>`;
-      else {
-        const buckets = [
-          ["Today", history.filter((order) => sameDay(order.updated_at, 0))],
-          ["Yesterday", history.filter((order) => sameDay(order.updated_at, 1))],
-          ["Earlier", history.filter((order) => !sameDay(order.updated_at, 0) && !sameDay(order.updated_at, 1))]
-        ];
-        $("#activityView").innerHTML = buckets.filter(([, rows]) => rows.length).map(([name, rows]) => `<section class="group"><h3>${name}</h3><div class="board">${rows.map(historyCard).join("")}</div></section>`).join("");
-      }
+      paintEarnings(waiting.length + active.length);
     }
+    const nextInbox = stored(inboxKeyName).map((item) => item.id + (item.read ? "1" : "0")).join();
+    if (tab === "inbox" && nextInbox !== inboxKey) {
+      inboxKey = nextInbox;
+      paintInbox();
+    }
+    const count = unreadCount();
+    document.querySelectorAll(".inbox-count").forEach((badge) => {
+      badge.hidden = count === 0;
+      badge.textContent = count > 9 ? "9+" : String(count);
+    });
     if (tab === "home" && active.length) updateMap();
     if ($("#riderName")) $("#riderName").textContent = riderLabel();
     if ($("#riderEmail") && sessionUser) $("#riderEmail").textContent = sessionUser.email || "";
@@ -286,6 +433,8 @@
     if (status) status.textContent = approval && approval !== "approved" && approval !== "legacy" ? approvalLabel(approval) : active.length ? "On a delivery" : available ? "Online" : "Offline";
     const phoneLine = $("#riderPhone");
     if (phoneLine) phoneLine.textContent = riderPhone || "Not saved";
+    const ringButton = $("#silenceRingMenu");
+    if (ringButton) ringButton.textContent = ringMuted() ? "Off" : "On";
   }
 
   function showPanel(name) {
@@ -406,6 +555,7 @@
     else if (sharingOrderId) stopShare();
     await loadHistory();
     await loadQueue();
+    noticeNewOrders();
     showPanel("work");
     if (applicationError && !approval) message(applicationError);
     else if (approval && approval !== "approved" && approval !== "legacy") message("");
@@ -530,10 +680,33 @@
 
   document.body.addEventListener("click", async (event) => {
     const tabButton = event.target.closest("[data-tab]");
-    if (tabButton) { tab = tabButton.dataset.tab; selectedHistory = ""; message(""); paint(); return; }
+    if (tabButton) {
+      tab = tabButton.dataset.tab;
+      selectedHistory = "";
+      if (tab === "inbox") {
+        saveStore(inboxKeyName, stored(inboxKeyName).map((item) => Object.assign({}, item, { read: true })));
+        inboxKey = "";
+      }
+      message("");
+      paint();
+      return;
+    }
+    if (event.target.id === "clearInbox") {
+      saveStore(inboxKeyName, []);
+      inboxKey = "";
+      paint();
+      return;
+    }
+    if (event.target.id === "silenceRing" || event.target.id === "silenceRingMenu") {
+      setRingMuted(!ringMuted());
+      return;
+    }
     if (event.target.id === "availabilityToggle") {
+      unlockAudio();
+      if (window.Notification && Notification.permission === "default") Notification.requestPermission().catch(() => {});
       if (approval !== "approved" && approval !== "legacy") return message(approvalCopy(approval));
       const next = !available;
+      if (!next) stopRing();
       message(next ? "Going online…" : "Going offline…");
       const { data, error } = await db.rpc("sobers_rider_availability", { p_available: next });
       if (error) return message(error.message);
@@ -545,7 +718,7 @@
     }
     if (event.target.id === "historyBack") { selectedHistory = ""; paint(); return; }
     const historyButton = event.target.closest("[data-history]");
-    if (historyButton && tab === "activity" && !selectedHistory) {
+    if (historyButton && tab === "earnings" && !selectedHistory) {
       selectedHistory = historyButton.dataset.history;
       paint();
       return;
@@ -590,6 +763,7 @@
 
   $("#signOut").onclick = async () => {
     stopShare();
+    stopRing();
     destroyMap();
     recovery = false;
     await db.auth.signOut();

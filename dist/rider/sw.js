@@ -1,4 +1,4 @@
-const CACHE = "rider-app-v7";
+const CACHE = "rider-app-v9";
 const FILES = [
   "./index.html",
   "./rider.css",

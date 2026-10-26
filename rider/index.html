@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../track/vendor/leaflet.css" />
-    <link rel="stylesheet" href="./rider.css?v=9" />
+    <link rel="stylesheet" href="./rider.css?v=10" />
     <script>document.documentElement.dataset.theme = localStorage.getItem("rider-theme") || "night";</script>
   </head>
   <body>
@@ -92,8 +92,12 @@
         <p class="brand-lock">SOBERS <span>RIDER</span></p>
         <nav class="side-nav" aria-label="Rider">
           <button type="button" data-tab="home" class="on">Home</button>
-          <button type="button" data-tab="activity">Activity</button>
-          <button type="button" data-tab="account">Account</button>
+          <button type="button" data-tab="discover">Discover</button>
+          <button type="button" data-tab="earnings">Earnings</button>
+          <button type="button" data-tab="inbox">Inbox <span class="inbox-count" hidden></span></button>
+          <button type="button" data-tab="menu">Menu</button>
+          <button type="button" data-tab="safety">Safety</button>
+          <button type="button" data-tab="help">Help</button>
         </nav>
       </aside>
       <div class="stage">
@@ -107,8 +111,45 @@
           <span id="livePill" class="pill">Off shift</span>
         </header>
         <section id="homeView"></section>
-        <section id="activityView" class="hidden"></section>
-        <section id="accountView" class="hidden">
+        <section id="discoverView" class="hidden">
+          <article class="card">
+            <p class="kicker">Two kitchens</p>
+            <h2>Where Sobers delivers</h2>
+            <p class="copy">You only see an order after that kitchen marks it ready. Go online first.</p>
+          </article>
+          <div class="branch-grid">
+            <article class="card branch">
+              <p class="kicker">TTU</p>
+              <h2>Campus</h2>
+              <p class="copy">Orders for the TTU kitchen.</p>
+              <a class="ghost" href="tel:0553138780">Call 055 313 8780</a>
+            </article>
+            <article class="card branch">
+              <p class="kicker">TOWN</p>
+              <h2>Town kitchen</h2>
+              <p class="copy">Orders for the town kitchen.</p>
+              <a class="ghost" href="tel:0247836769">Call 024 783 6769</a>
+            </article>
+          </div>
+          <article class="card">
+            <p class="kicker">How a run works</p>
+            <ol class="steps">
+              <li>The customer places the order.</li>
+              <li>Sobers marks it ready.</li>
+              <li>You accept it, then tap Pick up and start.</li>
+              <li>The customer sees your live point until you mark it delivered.</li>
+            </ol>
+          </article>
+        </section>
+        <section id="earningsView" class="hidden"></section>
+        <section id="inboxView" class="hidden"></section>
+        <section id="menuView" class="hidden">
+          <div class="menu-jumps">
+            <button type="button" data-tab="safety">Safety toolkit</button>
+            <button type="button" data-tab="help">Help</button>
+            <button type="button" data-tab="earnings">Earnings</button>
+            <button type="button" data-tab="inbox">Inbox</button>
+          </div>
           <article class="card account-card">
             <p class="kicker">Account</p>
             <h2 id="riderName">Rider</h2>
@@ -118,20 +159,73 @@
               <div><dt>Status</dt><dd id="accountStatus">Signed in</dd></div>
               <div><dt>Connection</dt><dd id="accountNet">Checking</dd></div>
               <div><dt>Location</dt><dd id="permState">Checking</dd></div>
-              <div><dt>Alerts</dt><dd>Not available yet</dd></div>
+              <div><dt>New-order ring</dt><dd><button class="text" type="button" id="silenceRingMenu">On</button></dd></div>
             </dl>
-            <p class="copy">You only see deliveries you have accepted. Earnings are not turned on yet.</p>
+            <p class="copy">You only see deliveries you accept. Earnings are the value of orders you have delivered, not a separate payout.</p>
             <button class="go" type="button" id="installApp" hidden>Install app</button>
             <p class="copy">On iPhone, use Share, then Add to Home Screen.</p>
             <button class="ghost" type="button" id="signOut">Sign out</button>
+          </article>
+        </section>
+        <section id="safetyView" class="hidden">
+          <article class="card">
+            <p class="kicker">Safety toolkit</p>
+            <h2>If something is wrong, call first.</h2>
+            <p class="copy">These are Ghana emergency numbers. Sobers cannot see an emergency unless you call.</p>
+            <div class="actions safety-actions">
+              <a class="go" href="tel:112">Emergency 112</a>
+              <a href="tel:191">Police 191</a>
+              <a href="tel:193">Ambulance 193</a>
+              <a href="tel:192">Fire 192</a>
+            </div>
+          </article>
+          <article class="card">
+            <p class="kicker">Sobers kitchens</p>
+            <div class="actions">
+              <a href="tel:0553138780">Call TTU</a>
+              <a href="tel:0247836769">Call Town</a>
+            </div>
+          </article>
+          <article class="card">
+            <p class="kicker">On the road</p>
+            <ul class="steps">
+              <li>Keep this app open while the order is on the way so the customer can see your point.</li>
+              <li>Use Navigate for the route. Do not type while riding.</li>
+              <li>Do not post a customer’s phone number or address.</li>
+              <li>If you feel unsafe, do not continue the drop. Call 112, then call the kitchen.</li>
+            </ul>
+          </article>
+        </section>
+        <section id="helpView" class="hidden">
+          <article class="card">
+            <p class="kicker">Help</p>
+            <h2>The whole run</h2>
+            <ol class="steps">
+              <li>Sign in and wait until Sobers approves your account.</li>
+              <li>Tap Go online. A new ready order rings for about 10 seconds. Silence ring turns the sound off and leaves the Inbox alert on.</li>
+              <li>Tap Accept, collect the food, then tap Pick up and start.</li>
+              <li>Allow location. The customer tracking page shows your latest point.</li>
+              <li>Tap Navigate if you want Google Maps directions to the address.</li>
+              <li>Tap Mark delivered only when the customer has the order.</li>
+            </ol>
+          </article>
+          <article class="card">
+            <p class="kicker">If an order is missing</p>
+            <p class="copy">You must be approved and online. The kitchen must mark the order ready. Another rider may already have accepted it.</p>
+          </article>
+          <article class="card">
+            <p class="kicker">If the map is blank</p>
+            <p class="copy">The customer map opens only after you tap Pick up and start. Allow location for this site and keep the phone awake.</p>
           </article>
         </section>
         <p id="riderMessage" role="status"></p>
       </div>
       <nav class="tabs" aria-label="Rider">
         <button type="button" data-tab="home" class="on">Home</button>
-        <button type="button" data-tab="activity">Activity</button>
-        <button type="button" data-tab="account">Account</button>
+        <button type="button" data-tab="discover">Discover</button>
+        <button type="button" data-tab="earnings">Earn</button>
+        <button type="button" data-tab="inbox">Inbox <span class="inbox-count" hidden></span></button>
+        <button type="button" data-tab="menu">Menu</button>
       </nav>
     </div>
 
@@ -146,6 +240,6 @@
     <p id="toast" class="toast" hidden role="status"></p>
     <script src="../track/vendor/leaflet.js"></script>
     <script src="../admin/vendor/supabase.min.js"></script>
-    <script src="./rider.js?v=13"></script>
+    <script src="./rider.js?v=15"></script>
   </body>
 </html>
