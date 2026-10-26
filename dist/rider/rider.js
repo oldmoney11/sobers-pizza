@@ -165,8 +165,6 @@
     return meta.full_name || meta.name || ((sessionUser && sessionUser.email) || "Rider").split("@")[0];
   }
 
-  function money(value) { return "GH\u20b5" + Number(value || 0).toFixed(2); }
-
   function ageText(ms) {
     const seconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
     if (seconds < 60) return seconds + "s ago";
@@ -310,7 +308,7 @@
     const status = order.status === "out_for_delivery" ? "On the way" : "Ready for pickup";
     const maps = address ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}" target="_blank" rel="noopener">Navigate</a>` : "";
     const call = phone ? `<a href="tel:${esc(phone)}">Call</a>` : "";
-    const head = `<div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned")}</p><span class="chip">${esc(status)}</span></div><div class="ticket-main"><h2>${esc(order.order_number)}</h2><strong class="fare">${money(order.order_total)}</strong></div><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
+    const head = `<div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Assigned")}</p><span class="chip">${esc(status)}</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(address || "No address saved")}</p>${order.customer_note ? `<p class="addr">Note: ${esc(order.customer_note)}</p>` : ""}`;
     if (mode === "active") {
       return `<article class="card active-layout"><div id="riderMap"></div><div class="ticket">${head}<p class="addr" id="locStamp">Waiting for the first location</p><div class="actions">${maps}${call}<button type="button" data-action="share" data-order="${order.order_id}">Share location</button><button class="go" type="button" data-action="ask-delivered" data-order="${order.order_id}">Mark delivered</button></div></div></article>`;
     }
@@ -319,12 +317,12 @@
 
   function historyCard(order) {
     const when = order.updated_at ? new Date(order.updated_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "";
-    return `<button class="history-btn" type="button" data-history="${esc(order.order_id)}"><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)} · ${money(order.order_total)}</p></article></button>`;
+    return `<button class="history-btn" type="button" data-history="${esc(order.order_id)}"><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p></article></button>`;
   }
 
   function detailCard(order) {
     const when = order.updated_at ? new Date(order.updated_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" }) : "";
-    return `<button class="back" type="button" id="historyBack">Back to earnings</button><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p><p class="fare">${money(order.order_total)}</p></article>`;
+    return `<button class="back" type="button" id="historyBack">Back to rewards</button><article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(order.branch_name || "Sobers")}</p><span class="chip">Delivered</span></div><h2>${esc(order.order_number)}</h2><p class="who">${esc(order.customer_name || "Customer")}</p><p class="addr">${esc(order.delivery_address || "No address saved")}</p><p class="when">${esc(when)}</p></article>`;
   }
 
   function availabilityCard() {
@@ -334,37 +332,46 @@
     return `<article class="card live-call"><p class="kicker">Your shift</p><div class="point" aria-hidden="true"><i></i><i></i><i></i></div><button class="go go-live" type="button" id="availabilityToggle">Go online</button><p class="copy">${ringMuted() ? "The ring is off. You can turn it on below." : "Tap this. A new order rings for 10 seconds."}</p><button class="text" type="button" id="silenceRing">${ringMuted() ? "Turn ring on" : "Silence ring"}</button></article>`;
   }
 
-  function sum(rows) {
-    return rows.reduce((total, order) => total + Number(order.order_total || 0), 0);
+  // Future platform fee, not charged yet: 5% of the rider's own delivery
+  // earnings, with a maximum of GH₵100 in a month. For now the fee is free.
+  const monthRewards = [
+    { rides: 10, name: "10 rides" },
+    { rides: 20, name: "20 rides" },
+    { rides: 40, name: "40 rides" }
+  ];
+
+  function inMonth(iso) {
+    const d = new Date(iso);
+    const n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();
   }
 
   function reward(label, done, goal) {
-    return `<article class="reward ${done >= goal ? "on" : ""}"><b>${done >= goal ? "Unlocked" : "Locked"}</b><span>${esc(label)}</span></article>`;
+    const unlocked = done >= goal;
+    return `<article class="reward ${unlocked ? "on" : ""}"><b>${unlocked ? "Reached" : done + " / " + goal}</b><span>${esc(label)}</span></article>`;
   }
 
-  function paintEarnings(activeCount) {
+  function paintEarnings() {
     const host = $("#earningsView");
     if (!host) return;
-    const today = history.filter((order) => sameDay(order.updated_at, 0));
-    const week = history.filter((order) => Date.now() - Date.parse(order.updated_at) < 7 * 86400000);
-    const done = history.length;
-    const list = selectedHistory
-      ? ""
-      : historyNote
-        ? `<p class="empty">${esc(historyNote)}</p>`
-        : !history.length
-          ? `<p class="empty">Completed deliveries from the last 60 days show here.</p>`
-          : [["Today", today], ["Yesterday", history.filter((order) => sameDay(order.updated_at, 1))], ["Earlier", history.filter((order) => !sameDay(order.updated_at, 0) && !sameDay(order.updated_at, 1))]]
-            .filter(([, rows]) => rows.length)
-            .map(([name, rows]) => `<section class="group"><h3>${name}</h3><div class="board">${rows.map(historyCard).join("")}</div></section>`)
-            .join("");
+    const monthName = new Date().toLocaleString([], { month: "long" });
+    const monthRides = history.filter((order) => inMonth(order.updated_at));
+    const todayRides = monthRides.filter((order) => sameDay(order.updated_at, 0));
+    const next = monthRewards.find((item) => monthRides.length < item.rides);
+    const left = next ? next.rides - monthRides.length : 0;
+    const heading = next ? (left === 1 ? "1 ride to the next mark" : left + " rides to the next mark") : "Every mark reached this month";
     const detail = selectedHistory
       ? (() => {
         const order = history.find((item) => item.order_id === selectedHistory);
         return order ? detailCard(order) : `<button class="back" type="button" id="historyBack">Back</button><p class="empty">That delivery is no longer in this list.</p>`;
       })()
       : "";
-    host.innerHTML = detail || `<div class="stats"><div class="stat"><b>${money(sum(today))}</b><span>Delivered today</span></div><div class="stat"><b>${money(sum(week))}</b><span>Last 7 days</span></div></div><article class="card"><p class="kicker">Recognition</p><h2>${done} completed</h2><p class="copy">These marks count finished deliveries. They are not cash bonuses.</p><div class="reward-row">${reward("First delivery", done, 1)}${reward("5 deliveries", done, 5)}${reward("10 deliveries", done, 10)}${reward("25 deliveries", done, 25)}</div></article><p class="copy">Assigned right now: ${activeCount}. The amounts are the order totals you delivered.</p>${list}`;
+    const list = historyNote
+      ? `<p class="empty">${esc(historyNote)}</p>`
+      : !monthRides.length
+        ? `<p class="empty">Completed rides for ${esc(monthName)} show here. The count starts again next month.</p>`
+        : `<section class="group"><h3>${esc(monthName)}</h3><div class="board">${monthRides.map(historyCard).join("")}</div></section>`;
+    host.innerHTML = detail || `<div class="stats"><div class="stat"><b>${monthRides.length}</b><span>Rides in ${esc(monthName)}</span></div><div class="stat"><b>${todayRides.length}</b><span>Rides today</span></div></div><article class="card"><p class="kicker">Platform fee</p><h2>Free for now</h2><p class="copy">You set your own delivery charge, and that payment stays with you. This page counts your rides only. Sobers sales are not shown here.</p></article><article class="card"><p class="kicker">Monthly rides</p><h2>${heading}</h2><div class="reward-row">${monthRewards.map((item) => reward(item.name, monthRides.length, item.rides)).join("")}</div></article>${list}`;
   }
 
   function paintInbox() {
@@ -380,7 +387,7 @@
     const titles = {
       home: ["Now", "Home"],
       discover: ["Two kitchens", "Discover"],
-      earnings: ["Last 60 days", "Earnings"],
+      earnings: ["This month", "Rewards"],
       inbox: ["Alerts", "Inbox"],
       menu: ["You", "Menu"],
       safety: ["On the road", "Safety"],
@@ -405,7 +412,7 @@
       const blocked = approval !== "approved" && approval !== "legacy";
       $("#homeView").innerHTML = blocked
         ? `<article class="card"><p class="kicker">Application</p><h2>${esc(approvalLabel(approval))}</h2><p class="copy">${esc(approvalCopy(approval))}</p></article>`
-        : `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div>${availabilityCard()}` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><p class="fare">${money(offer.order_total)}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
+        : `<div class="stats"><div class="stat"><b>${todayCount}</b><span>Completed today</span></div><div class="stat"><b>${waiting.length + active.length}</b><span>Assigned now</span></div></div>${availabilityCard()}` + (queueNote ? `<p class="empty">${esc(queueNote)}</p>` : queue.length ? `<div class="board">${queue.map(offer => `<article class="card ticket"><div class="ticket-top"><p class="kicker">${esc(offer.branch_name || "Sobers")}</p><span class="chip">Ready</span></div><h2>${esc(offer.order_number)}</h2><p class="addr">${esc(offer.delivery_address || "Address not saved")}</p><div class="actions"><button class="go" type="button" data-action="accept" data-order="${offer.order_id}">Accept order</button></div></article>`).join("")}</div>` : (available ? `<p class="empty">No delivery is waiting. A ready order with no rider shows here.</p>` : "")) + (active.length
         ? ticket(active[0], "active")
         : waiting.length
           ? `<div class="board">${waiting.map((order) => ticket(order, "job")).join("")}</div>`
@@ -414,7 +421,7 @@
     const nextActivity = selectedHistory + "|" + history.map((order) => order.order_id).join() + "|" + historyNote;
     if (tab === "earnings" && nextActivity !== activityKey) {
       activityKey = nextActivity;
-      paintEarnings(waiting.length + active.length);
+      paintEarnings();
     }
     const nextInbox = stored(inboxKeyName).map((item) => item.id + (item.read ? "1" : "0")).join();
     if (tab === "inbox" && nextInbox !== inboxKey) {
