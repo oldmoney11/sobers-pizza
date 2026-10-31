@@ -1,0 +1,63 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy & build on cPanel via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: soberspi
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            # Key: manually load NVM (non-interactive shell does not load it automatically)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # Confirm Node version (should be v20.x)
+            node -v
+
+            REPO_ROOT="$HOME/public_html/repositories/hotel_sytem"
+
+            echo "Deploying Laravel backend..."
+            cd "$REPO_ROOT/backend"
+
+            git pull origin master
+
+            # Install production dependencies
+            php "$HOME/composer.phar" install --no-dev --optimize-autoloader --no-interaction
+
+            # Clear existing caches
+            php artisan optimize:clear
+
+            # Run database migrations
+            php artisan migrate --force
+
+            # Create storage link if it doesn't exist
+            if [ ! -L public/storage ]; then
+              php artisan storage:link
+            fi
+
+            # Rebuild Laravel caches
+            php artisan optimize
+
+            # Restart queue workers
+            php artisan queue:restart
+
+            echo "Backend deployment completed!"
+
+            cd "$REPO_ROOT/frontend"
+            git pull origin master
+
+            # pnpm is now available
+            pnpm install --frozen-lockfile
+            pnpm build
