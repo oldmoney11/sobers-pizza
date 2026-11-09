@@ -80,32 +80,67 @@
         button.title = button.getAttribute("aria-label");
     }
 
+    let alertAudioContext = null;
+
     function alertsEnabled() {
-        return localStorage.getItem("sobers-admin-alerts") === "on" && "Notification" in window && Notification.permission === "granted";
+        return localStorage.getItem("sobers-admin-alerts") === "on";
     }
 
     function renderNotificationState() {
         if (!notificationButton) return;
         notificationButton.disabled = false;
-        if (!("Notification" in window)) { notificationButton.textContent = "Alerts unavailable"; notificationButton.disabled = true; return; }
-        if (Notification.permission === "denied") { notificationButton.textContent = "Alerts blocked"; return; }
         notificationButton.textContent = alertsEnabled() ? "Alerts on" : "Alerts off";
         notificationButton.setAttribute("aria-pressed", alertsEnabled() ? "true" : "false");
     }
 
+    function unlockAlertAudio() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return null;
+        if (!alertAudioContext) alertAudioContext = new AudioContext();
+        if (alertAudioContext.state === "suspended") alertAudioContext.resume();
+        return alertAudioContext;
+    }
+
+    function vibrateForNewOrder() {
+        if (!navigator.vibrate) return;
+        const pattern = [];
+        for (let i = 0; i < 9; i += 1) pattern.push(500, 200);
+        navigator.vibrate(pattern);
+    }
+
+    function soundNewOrder() {
+        try {
+            const context = unlockAlertAudio();
+            if (!context) return;
+            const now = context.currentTime;
+            const duration = 6;
+            for (let offset = 0; offset < duration; offset += 0.45) {
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                oscillator.type = "square";
+                oscillator.frequency.setValueAtTime(880, now + offset);
+                oscillator.frequency.setValueAtTime(660, now + offset + 0.18);
+                gain.gain.setValueAtTime(0.0001, now + offset);
+                gain.gain.exponentialRampToValueAtTime(0.35, now + offset + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.32);
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.start(now + offset);
+                oscillator.stop(now + offset + 0.34);
+            }
+        } catch (error) { console.warn("New-order sound was blocked:", error); }
+    }
+
     async function enableNotifications() {
-        if (!("Notification" in window)) return;
         if (alertsEnabled()) {
             localStorage.setItem("sobers-admin-alerts", "off");
+            if (navigator.vibrate) navigator.vibrate(0);
             renderNotificationState();
             return;
         }
-        if (Notification.permission !== "granted") {
-            const result = await Notification.requestPermission();
-            if (result !== "granted") {
-                renderNotificationState();
-                return;
-            }
+        unlockAlertAudio();
+        if ("Notification" in window && Notification.permission === "default") {
+            try { await Notification.requestPermission(); } catch (_) {}
         }
         localStorage.setItem("sobers-admin-alerts", "on");
         renderNotificationState();
@@ -114,12 +149,16 @@
 
     async function notifyOrder(order, test = false) {
         if (!alertsEnabled()) return;
+        soundNewOrder();
+        vibrateForNewOrder();
         const title = test ? `${businessLabel} alerts enabled` : `New ${businessLabel} order`;
         const body = test ? "You will be notified when a new order arrives." : `${order?.order_number || "New order"}${order?.customer_name ? ` · ${order.customer_name}` : ""}`;
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
         try {
+            const options = { body, icon: "./assets/icon-192.png", badge: "./assets/icon-192.png", tag: test ? "alerts-test" : `order-${order?.id || Date.now()}`, renotify: true, requireInteraction: !test, vibrate: [500, 200, 500, 200, 500, 200, 500, 200, 500, 200, 500], data: { url: "./#orders" } };
             const registration = await navigator.serviceWorker?.ready;
-            if (registration) return registration.showNotification(title, { body, icon: "./assets/icon-192.png", badge: "./assets/icon-192.png", tag: test ? "alerts-test" : `order-${order?.id || Date.now()}`, data: { url: "./#orders" } });
-            new Notification(title, { body, tag: test ? "alerts-test" : `order-${order?.id || Date.now()}` });
+            if (registration) return registration.showNotification(title, options);
+            new Notification(title, options);
         } catch (error) { console.warn("Order notification could not be displayed:", error); }
     }
 
@@ -232,22 +271,11 @@
         return riders.find(rider => rider.id === riderId)?.display_name || "";
     }
 
-    function soundNewOrder() {
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            const context = new AudioContext();
-            const oscillator = context.createOscillator();
-            const gain = context.createGain();
-            oscillator.frequency.value = 880; gain.gain.value = 0.08; oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + 0.18);
-        } catch (error) { console.warn("New-order sound was blocked:", error); }
-    }
     function subscribeToOrders() {
         if (!business || orderChannel) return;
         orderChannel = db.channel(`business-orders-${business.id}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "platform_orders", filter: `business_id=eq.${business.id}` }, async payload => {
             await loadAll();
             $("#liveOrderNotice").classList.remove("hidden");
-            soundNewOrder();
             notifyOrder(payload.new);
             setTimeout(() => $("#liveOrderNotice").classList.add("hidden"), 10000);
         }).on("postgres_changes", { event: "UPDATE", schema: "public", table: "platform_orders", filter: `business_id=eq.${business.id}` }, loadAll)
