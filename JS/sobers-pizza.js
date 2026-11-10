@@ -63,8 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const OFFICIAL = {
-    "MAIN-BRANCH": { whatsapp: "233247836769", momo: "0247836769" },
-    "TTU-MAIN-CAMPUS": { whatsapp: "233553138780", momo: "0553138780" },
+    "MAIN-BRANCH": { whatsapp: "233247836769", momo: "0247836769", accountName: "KABENLAH PATRICK", label: "Town" },
+    "TTU-MAIN-CAMPUS": { whatsapp: "233553138780", momo: "0553138780", accountName: "KABENLAH PATRICK", label: "TTU" },
   };
 
   function officialFor(branch) {
@@ -89,14 +89,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.querySelector("#spCheckoutBranchName")?.replaceChildren(document.createTextNode(branch.name));
     const checkoutMeta = document.querySelector("#spCheckoutBranchMeta");
+    const momo = official ? official.momo : (branch.momo_number || (branch.whatsapp_number ? "0" + branch.whatsapp_number.slice(3) : ""));
+    const wa = official ? official.whatsapp : (branch.whatsapp_number || "");
     if (checkoutMeta) {
-      const official = officialFor(branch);
-      const momo = official ? official.momo : (branch.momo_number || (branch.whatsapp_number ? "0" + branch.whatsapp_number.slice(3) : ""));
-      const wa = official ? official.whatsapp : (branch.whatsapp_number || "");
       checkoutMeta.textContent = branch.accepting_orders === false
         ? "Online orders are paused"
         : `WhatsApp: ${wa} · MoMo: ${momo}`;
     }
+    const momoName = document.querySelector("#spMomoAccountName");
+    const momoNum = document.querySelector("#spMomoNumber");
+    const momoLabel = document.querySelector("#spMomoBranchLabel");
+    if (momoName) momoName.textContent = official?.accountName || "KABENLAH PATRICK";
+    if (momoNum) momoNum.textContent = momo;
+    if (momoLabel) momoLabel.textContent = `${official?.label || branch.name} branch`;
     document.querySelectorAll("[data-branch-code]").forEach(button => button.classList.toggle("active", button.dataset.branchCode === branch.code));
     if (remember) try { localStorage.setItem(BUSINESS.branchStorageKey, branch.code); } catch (_) {}
   }
@@ -1822,15 +1827,82 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
 
+
+  /* Order confirmation modal */
+  const confirmDialog = document.querySelector("#spConfirmOrder");
+  const confirmYes = document.querySelector("#spConfirmYes");
+  const confirmNo = document.querySelector("#spConfirmNo");
+  const confirmClose = document.querySelector("#spConfirmClose");
+  const confirmTotalEl = document.querySelector("#spConfirmTotal");
+  let orderConfirmed = false;
+  let submitting = false;
+
+  function closeConfirm() {
+    if (submitting) return;
+    if (confirmDialog?.open) confirmDialog.close();
+    orderConfirmed = false;
+  }
+  confirmNo?.addEventListener("click", closeConfirm);
+  confirmClose?.addEventListener("click", closeConfirm);
+  confirmDialog?.addEventListener("cancel", event => { event.preventDefault(); closeConfirm(); });
+
+  confirmYes?.addEventListener("click", () => {
+    if (submitting || confirmYes.disabled) return;
+    if (checkoutForm && !checkoutForm.checkValidity()) {
+      checkoutForm.reportValidity();
+      return;
+    }
+    orderConfirmed = true;
+    confirmYes.disabled = true;
+    if (confirmDialog?.open) confirmDialog.close();
+    checkoutForm?.requestSubmit();
+  });
+
+  /* Copy MoMo number */
+  const copyMomoBtn = document.querySelector("#spCopyMomo");
+  const copyConfirm = document.querySelector("#spCopyConfirm");
+  copyMomoBtn?.addEventListener("click", async () => {
+    const num = document.querySelector("#spMomoNumber")?.textContent?.trim();
+    if (!num) return;
+    try {
+      await navigator.clipboard.writeText(num);
+      if (copyConfirm) { copyConfirm.hidden = false; setTimeout(() => { copyConfirm.hidden = true; }, 1800); }
+    } catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = num;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      if (copyConfirm) { copyConfirm.hidden = false; setTimeout(() => { copyConfirm.hidden = true; }, 1800); }
+    }
+  });
+
   if (checkoutForm) {
     checkoutForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       if (!cart.length) {
         alert("Your cart is empty.");
-
         return;
       }
+
+      if (submitting) {
+        event.preventDefault();
+        return;
+      }
+
+      // Show confirmation modal before creating the order
+      if (!orderConfirmed && confirmDialog) {
+        const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+        const isDelivery = document.querySelector("#spCheckoutForm input[name=fulfilment]:checked")?.value === "Delivery";
+        const grand = subtotal + (isDelivery ? (BUSINESS.deliveryFee || 0) : 0);
+        if (confirmTotalEl) confirmTotalEl.textContent = money(grand);
+        confirmDialog.showModal();
+        return;
+      }
+      orderConfirmed = false;
+      submitting = true;
 
       const submitButton = checkoutForm.querySelector('button[type="submit"]');
 
@@ -1945,36 +2017,41 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         });
 
+        const deliveryFee = fulfilment === "Delivery" ? (BUSINESS.deliveryFee || 0) : 0;
+        const finalTotal = total + deliveryFee;
+        const official = officialFor(selectedBranch);
+        const momoNumber = official ? official.momo : "";
+        const accountName = official?.accountName || "KABENLAH PATRICK";
+        const branchLabel = official?.label || selectedBranch?.name || "Town";
+
         const message = [
-          "*NEW SOBERS PIZZA ORDER*",
-
-          orderNumber ? `Order: ${orderNumber}` : "",
-
-          `Live tracking: ${trackingURL}`,
-
-          `Branch: ${selectedBranch?.name || "Town"}`,
-
+          "*SOBERS PIZZA*",
           "",
-
-          ...lines,
-
+          "New order submitted. Awaiting confirmation by Sobers.",
           "",
-
-          `*Subtotal: ${money(total)}*`,
-
-          fulfilment === "Delivery" ? `Delivery fee: ${money(BUSINESS.deliveryFee || 0)} (confirm with branch)` : "Pickup: no delivery fee",
-
+          `*Order ref:* ${orderNumber}`,
+          `*Branch:* ${branchLabel}`,
           "",
-
+          `*Customer*`,
           `Name: ${customerName}`,
-
           `Phone: ${customerPhone}`,
-
-          `Order type: ${fulfilment}`,
-
-          fulfilment === "Delivery" ? `Address: ${address}` : "Pickup",
-
+          `Type: ${fulfilment}`,
+          fulfilment === "Delivery" ? `Address: ${address}` : "",
           note ? `Note: ${note}` : "",
+          "",
+          "*Items*",
+          ...lines,
+          "",
+          `Subtotal: ${money(total)}`,
+          fulfilment === "Delivery" ? `Delivery fee: ${money(deliveryFee)}` : "Delivery fee: none (pickup)",
+          `*Total: ${money(finalTotal)}*`,
+          "",
+          "*Payment*",
+          momoNumber ? `MoMo: ${momoNumber}` : "",
+          `Account: ${accountName}`,
+          "Please use the official payment details for this branch. Payment is confirmed by Sobers after receipt.",
+          "",
+          `Track: ${trackingURL}`,
         ]
           .filter(Boolean)
           .join("\n");
@@ -2072,6 +2149,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         alert("Something went wrong while preparing your order. Please try again.");
       } finally {
+        submitting = false;
+        if (confirmYes) confirmYes.disabled = false;
         if (submitButton) {
           submitButton.disabled = false;
           checkoutForm.setAttribute("aria-busy", "false");

@@ -682,37 +682,24 @@
             <small class="sp-cost-note">Final availability and delivery charges are confirmed by your branch.</small>
           </div>
 
-          <fieldset class="sp-payment-cards">
-            <legend class="sr-only">Payment method</legend>
-            <label class="sp-payment-card">
-              <input type="radio" name="payment_method" value="whatsapp" checked />
-              <span class="sp-payment-card-body">
-                <strong>Order via WhatsApp</strong>
-                <small>Pay on delivery or pickup.</small>
-              </span>
-            </label>
-            <label class="sp-payment-card">
-              <input type="radio" name="payment_method" value="momo" />
-              <span class="sp-payment-card-body">
-                <strong>Pay with Mobile Money</strong>
-                <small>Pay securely through Paystack using an available supported provider (MTN MoMo or Telecel Cash where enabled).</small>
-              </span>
-            </label>
-          </fieldset>
-          <div id="spMomoProviderField" hidden>
-            <label>
-              Preferred provider (optional)
-              <select name="momo_provider">
-                <option value="MTN">MTN Mobile Money</option>
-                <option value="VOD">Telecel Cash</option>
-              </select>
-              <small>Final provider is chosen on the Paystack page. Availability depends on account configuration.</small>
-            </label>
+          <div class="sp-momo-details" id="spMomoDetails">
+            <p class="sp-momo-kicker">Pay manually via Mobile Money</p>
+            <div class="sp-momo-row">
+              <div>
+                <strong id="spMomoAccountName">KABENLAH PATRICK</strong>
+                <span id="spMomoNumber">0247836769</span>
+              </div>
+              <button type="button" id="spCopyMomo" class="sp-copy-momo">Copy number</button>
+            </div>
+            <small id="spMomoBranchLabel">Town branch</small>
+            <span id="spCopyConfirm" class="sp-copy-confirm" hidden>Copied</span>
           </div>
+
+          <input type="hidden" name="payment_method" value="whatsapp" />
 
           <p id="spCheckoutStatus" role="status" aria-live="polite"></p>
           <button type="submit">
-            Place order
+            Order via WhatsApp
             <span>→</span>
           </button>
         </form>
@@ -720,6 +707,18 @@
     </div>
 
     <dialog id="spOrderReceipt" class="sp-order-receipt" aria-labelledby="spReceiptTitle"><button type="button" data-receipt-close aria-label="Close order receipt">×</button><p>YOUR SOBERS ORDER</p><h2 id="spReceiptTitle" data-receipt-title>Order receipt</h2><p data-receipt-message role="status" aria-live="polite"></p><strong data-receipt-reference></strong><p data-receipt-branch></p><div class="sp-receipt-actions"><a data-receipt-track>Check tracking</a><button type="button" data-receipt-retry>Check / retry same order</button><button type="button" data-receipt-check-payment hidden>Check payment status</button><a data-receipt-contact target="_blank" rel="noopener">Contact branch on WhatsApp</a></div><small data-receipt-storage>Find this receipt later in Purchases. Guest receipts are saved on this device.</small></dialog>
+
+    <dialog id="spConfirmOrder" class="sp-confirm-order" aria-labelledby="spConfirmTitle">
+      <button type="button" class="sp-confirm-close" id="spConfirmClose" aria-label="Cancel order">×</button>
+      <p class="sp-confirm-kicker">SOBERS PIZZA</p>
+      <h2 id="spConfirmTitle">Are you sure you want to place this order?</h2>
+      <p class="sp-confirm-total">Order total: <strong id="spConfirmTotal">GH₵0.00</strong></p>
+      <p class="sp-confirm-note">Your order will be sent to the selected branch. Sobers will confirm availability and preparation time.</p>
+      <div class="sp-confirm-actions">
+        <button type="button" class="sp-confirm-yes" id="spConfirmYes">Yes, confirm order</button>
+        <button type="button" class="sp-confirm-no" id="spConfirmNo">Cancel</button>
+      </div>
+    </dialog>
 
     <div class="sp-qr-overlay" id="spQrOverlay" aria-hidden="true">
       <section class="sp-qr-card" role="dialog" aria-modal="true" aria-labelledby="spQrTitle">

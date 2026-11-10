@@ -862,7 +862,7 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
   color: inherit;
-  font: inherit;
+  font-size: 16px;
   resize: vertical;
   min-height: 72px;
 }
@@ -938,9 +938,162 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
   border: 1px solid rgba(255,255,255,.15);
   background: #1a1a1a;
   color: #fff;
-  font: inherit;
+  font-size: 16px;
 }
 .sp-checkout select option {
   background: #1a1a1a;
   color: #fff;
+}
+
+/* Order confirmation modal */
+.sp-confirm-order {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: grid;
+  place-items: center;
+  margin: auto;
+  padding: 22px;
+  width: min(420px, calc(100% - 32px));
+  max-height: calc(100vh - 40px);
+  border: 0;
+  border-radius: 22px;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+.sp-confirm-order::backdrop {
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(8px);
+}
+.sp-confirm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+.sp-confirm-kicker {
+  margin: 0 0 8px;
+  color: #e3262e;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+.sp-confirm-order h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.35rem, 4vw, 1.7rem);
+  line-height: 1.25;
+  letter-spacing: -.02em;
+}
+.sp-confirm-total {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+.sp-confirm-total strong {
+  color: #fff;
+  font-size: 1.25rem;
+}
+.sp-confirm-note {
+  margin: 0 0 22px;
+  color: rgba(255,255,255,.68);
+  font-size: .92rem;
+  line-height: 1.45;
+}
+.sp-confirm-actions {
+  display: grid;
+  gap: 10px;
+}
+.sp-confirm-yes,
+.sp-confirm-no {
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sp-confirm-yes {
+  background: #e3262e;
+  color: #fff;
+}
+.sp-confirm-yes:hover { background: #c41f26; }
+.sp-confirm-no {
+  background: transparent;
+  color: rgba(255,255,255,.8);
+  border: 1px solid rgba(255,255,255,.2);
+}
+.sp-confirm-order[open] { animation: spConfirmIn .18s ease-out; }
+@keyframes spConfirmIn {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Branch MoMo details */
+.sp-momo-details {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+}
+.sp-momo-kicker {
+  margin: 0 0 8px;
+  color: #e3262e;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.sp-momo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sp-momo-row strong {
+  display: block;
+  font-size: 1rem;
+}
+.sp-momo-row span {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.sp-copy-momo {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #e3262e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sp-copy-momo:hover { background: #c41f26; }
+.sp-momo-details small {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255,255,255,.55);
+  font-size: .78rem;
+}
+.sp-copy-confirm {
+  display: inline-block;
+  margin-top: 6px;
+  color: #4ade80;
+  font-size: .8rem;
+  font-weight: 700;
+}
+@media (max-width: 480px) {
+  .sp-momo-row { flex-wrap: wrap; }
+  .sp-copy-momo { width: 100%; }
 }
