@@ -2,7 +2,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./sw.js?v=79")
+      .register("./sw.js?v=80")
       .then((registration) => {
         registration.update();
         console.log("Sobers Pizza service worker registered:", registration.scope);

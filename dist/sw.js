@@ -1,14 +1,20 @@
-const CACHE_NAME = "sobers-pizza-independent-v79";
+const CACHE_NAME = "sobers-pizza-independent-v80";
 const SHELL = [
   "./",
   "./index.html",
   "./JS/sobers-pwa.js?v=1",
   "./css/sobers-pizza.css",
+  "./css/sobers-pizza.css?v=18",
   "./css/sobers-vibrant.css",
+  "./css/sobers-vibrant.css?v=11",
   "./css/sobers-urban.css",
+  "./css/sobers-urban.css?v=10",
   "./css/sobers-glass.css",
+  "./css/sobers-glass.css?v=9",
   "./css/sobers-customer.css",
-  "./css/sobers-polished.css?v=2",
+  "./css/sobers-customer.css?v=11",
+  "./css/sobers-polished.css",
+  "./css/sobers-polished.css?v=5",
   "./JS/sobers-platform-orders.js",
   "./JS/sobers-pizza.js",
   "./JS/sobers-notices.js",
