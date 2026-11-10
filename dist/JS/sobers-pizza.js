@@ -151,11 +151,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const [businessRow] = businessResponse.ok ? await businessResponse.json() : [];
       if (!businessRow) return BUSINESS.whatsappNumber;
       const [settingsResponse, branchesResponse] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number,default_delivery_fee&limit=1`, { headers, cache: "no-store" }),
+        fetch(`${supabaseUrl}/rest/v1/business_settings?business_id=eq.${businessRow.id}&select=whatsapp_number,default_delivery_fee,opening_hours&limit=1`, { headers, cache: "no-store" }),
         fetch(`${supabaseUrl}/rest/v1/branches?business_id=eq.${businessRow.id}&is_active=eq.true&select=id,code,name,address,phone,whatsapp_number,accepting_orders,prep_min_minutes,prep_max_minutes,is_active&order=name.asc`, { headers, cache: "no-store" }),
       ]);
       const [settings] = settingsResponse.ok ? await settingsResponse.json() : [];
       BUSINESS.deliveryFee = Math.max(0, Number(settings?.default_delivery_fee || 0));
+      const oh = settings?.opening_hours;
+      if (oh && (oh.open || oh.close)) BUSINESS.openingHours = { open: oh.open || "08:00", close: oh.close || "23:00" };
       updateCheckoutCosts();
       const settingsNumber = normalizeGhanaNumber(settings?.whatsapp_number);
       if (settingsNumber) BUSINESS.defaultWhatsAppNumber = settingsNumber;
@@ -1899,6 +1901,30 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // Business hours check (default 08:00–23:00, override from admin opening_hours)
+      const hours = (typeof BUSINESS !== "undefined" && BUSINESS.openingHours) || { open: "08:00", close: "23:00" };
+      const now = new Date();
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const toMins = t => { const [h, m] = String(t || "00:00").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+      const openM = toMins(hours.open);
+      const closeM = toMins(hours.close);
+      const open = closeM > openM ? (mins >= openM && mins < closeM) : (mins >= openM || mins < closeM);
+      if (!open) {
+        const status = document.querySelector("#spCheckoutStatus");
+        if (status) status.textContent = `Sobers is closed. We open at ${hours.open} and close at ${hours.close}.`;
+        return;
+      }
+
+      // Show confirmation modal before creating the order
+      if (!orderConfirmed && confirmDialog) {
+        const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+        const isDelivery = document.querySelector("#spCheckoutForm input[name=fulfilment]:checked")?.value === "Delivery";
+        const grand = subtotal + (isDelivery ? (BUSINESS.deliveryFee || 0) : 0);
+        if (confirmTotalEl) confirmTotalEl.textContent = money(grand);
+        confirmDialog.showModal();
+        return;
+      }
+      orderConfirmed = false;
       submitting = true;
 
       const submitButton = checkoutForm.querySelector('button[type="submit"]');

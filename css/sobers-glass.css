@@ -917,14 +917,17 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
 .sp-payment-card-body small { opacity: .75; font-size: 13px; line-height: 1.35; }
 .sp-checkout form > button[type="submit"] {
   width: 100%;
-  padding: 14px 18px;
-  border-radius: 14px;
-  font-weight: 700;
-  letter-spacing: .02em;
-  background: #d31a2d;
+  padding: 16px 22px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #e3262e, #b60e23);
   color: #fff;
   border: 0;
   cursor: pointer;
+  box-shadow: 0 10px 28px rgba(227, 38, 46, .45);
 }
 .sp-checkout form > button[type="submit"]:hover { background: #b81626; }
 .sp-checkout form > button[type="submit"]:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
@@ -1031,8 +1034,12 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
   cursor: pointer;
 }
 .sp-confirm-yes {
-  background: #e3262e;
+  background: linear-gradient(135deg, #e3262e, #b60e23);
   color: #fff;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 22px rgba(227, 38, 46, .4);
 }
 .sp-confirm-yes:hover { background: #c41f26; }
 .sp-confirm-no {
