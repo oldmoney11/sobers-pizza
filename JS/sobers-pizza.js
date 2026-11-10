@@ -1899,16 +1899,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Show confirmation modal before creating the order
-      if (!orderConfirmed && confirmDialog) {
-        const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
-        const isDelivery = document.querySelector("#spCheckoutForm input[name=fulfilment]:checked")?.value === "Delivery";
-        const grand = subtotal + (isDelivery ? (BUSINESS.deliveryFee || 0) : 0);
-        if (confirmTotalEl) confirmTotalEl.textContent = money(grand);
-        confirmDialog.showModal();
-        return;
-      }
-      orderConfirmed = false;
       submitting = true;
 
       const submitButton = checkoutForm.querySelector('button[type="submit"]');
