@@ -1839,8 +1839,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeConfirm() {
     if (submitting) return;
-    if (confirmDialog?.open) confirmDialog.close();
     orderConfirmed = false;
+    if (confirmDialog) {
+      if (confirmDialog.open) confirmDialog.close();
+      confirmDialog.removeAttribute("open");
+    }
+  }
+  if (confirmDialog) {
+    confirmDialog.close();
+    confirmDialog.removeAttribute("open");
   }
   confirmNo?.addEventListener("click", closeConfirm);
   confirmClose?.addEventListener("click", closeConfirm);

@@ -945,12 +945,12 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
   color: #fff;
 }
 
-/* Order confirmation modal */
+/* Order confirmation modal — hidden until showModal() adds [open] */
 .sp-confirm-order {
   position: fixed;
   inset: 0;
   z-index: 2100;
-  display: grid;
+  display: none;
   place-items: center;
   margin: auto;
   padding: 22px;
@@ -961,6 +961,9 @@ html[data-sp-theme="light"] .sp-service-strip small { color:#655852; }
   background: #111;
   color: #fff;
   box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+.sp-confirm-order[open] {
+  display: grid;
 }
 .sp-confirm-order::backdrop {
   background: rgba(0,0,0,.72);
