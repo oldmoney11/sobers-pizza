@@ -1,4 +1,4 @@
-const CACHE_NAME = "sobers-pizza-independent-v78";
+const CACHE_NAME = "sobers-pizza-independent-v79";
 const SHELL = [
   "./",
   "./index.html",
@@ -86,7 +86,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(event.request).then((hit) => hit || caches.match("./index.html"))),
+        .catch(() => caches.match(event.request).then((hit) => hit || caches.match("./index.html", { ignoreSearch: true }))),
     );
     return;
   }
@@ -111,6 +111,6 @@ self.addEventListener("fetch", (event) => {
         if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
         return response;
       })
-      .catch(() => caches.match(event.request)),
+      .catch(() => caches.match(event.request).then((hit) => hit || caches.match(event.request, { ignoreSearch: true }))),
   );
 });
