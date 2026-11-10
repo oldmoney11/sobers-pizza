@@ -1,0 +1,21 @@
+{
+  "appId": "com.soberspizza.app",
+  "appName": "Sobers Pizza",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "allowNavigation": [
+      "www.soberspizza.com",
+      "soberspizza.com",
+      "*.supabase.co",
+      "*.paystack.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "sobers-pizza",
+  "version": "1.0.0",
+  "description": "Sobers Pizza Capacitor wrapper for Play Store and App Store",
+  "main": "sw.js",
+  "scripts": {
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oldmoney11/sobers-pizza.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oldmoney11/sobers-pizza/issues"
+  },
+  "homepage": "https://github.com/oldmoney11/sobers-pizza#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0"
+  },
+  "private": true
+}
