@@ -1,4 +1,4 @@
-const CACHE = "sobers-admin-v23",
+const CACHE = "sobers-admin-v24",
   SHELL = [
     "./",
     "./index.html",
@@ -66,5 +66,29 @@ self.addEventListener("notificationclick", (e) => {
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((list) => (list[0] ? list[0].focus() : clients.openWindow("./#orders"))),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (_) { data = { body: event.data ? event.data.text() : "" }; }
+  const title = data.title || "New Sobers Pizza order";
+  const options = {
+    body: data.body || "A new order has arrived.",
+    icon: "./assets/icon-192.png",
+    badge: "./assets/icon-192.png",
+    tag: data.tag || "sobers-order",
+    renotify: true,
+    silent: data.silent === true,
+    vibrate: data.silent ? undefined : [500, 200, 500, 200, 500, 200, 500],
+    data: { url: data.url || "./#orders" },
+  };
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() => {
+      if (data.silent) return;
+      return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+        list.forEach((client) => client.postMessage({ type: "sobers-order-alert" }));
+      });
+    }),
   );
 });

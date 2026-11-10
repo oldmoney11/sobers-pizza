@@ -131,21 +131,74 @@
         } catch (error) { console.warn("New-order sound was blocked:", error); }
     }
 
+    function pushKeyBytes(value) {
+        const padding = "=".repeat((4 - value.length % 4) % 4);
+        const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
+    }
+
+    async function savePushSubscription(enabled) {
+        if (!business || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+        const publicKey = window.RichRepublicConfig?.vapidPublicKey;
+        if (!publicKey) return;
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: pushKeyBytes(publicKey),
+            });
+        }
+        const json = subscription.toJSON();
+        const { error } = await db.from("admin_push_subscriptions").upsert({
+            profile_id: session.user.id,
+            business_id: business.id,
+            endpoint: json.endpoint,
+            p256dh: json.keys?.p256dh,
+            auth: json.keys?.auth,
+            alerts_enabled: enabled,
+            user_agent: navigator.userAgent,
+            updated_at: new Date().toISOString(),
+        }, { onConflict: "profile_id,endpoint" });
+        if (error) console.warn("Could not save phone alert registration:", error.message);
+    }
+
     async function enableNotifications() {
         if (alertsEnabled()) {
             localStorage.setItem("sobers-admin-alerts", "off");
             if (navigator.vibrate) navigator.vibrate(0);
             renderNotificationState();
+            try { await savePushSubscription(false); } catch (error) { console.warn(error); }
             return;
         }
         unlockAlertAudio();
-        if ("Notification" in window && Notification.permission === "default") {
-            try { await Notification.requestPermission(); } catch (_) {}
+        if (!("Notification" in window) || !("PushManager" in window)) {
+            alert("This phone or browser cannot receive background order alerts. Add Sobers Admin to the Home Screen and open it from there.");
+            return;
+        }
+        let permission = Notification.permission;
+        if (permission === "default") {
+            try { permission = await Notification.requestPermission(); } catch (_) { permission = "denied"; }
+        }
+        if (permission !== "granted") {
+            alert("Phone notifications are blocked. Allow notifications for Sobers Admin, then turn alerts on again.");
+            return;
         }
         localStorage.setItem("sobers-admin-alerts", "on");
         renderNotificationState();
+        try { await savePushSubscription(true); } catch (error) { console.warn(error); }
         notifyOrder({ order_number: "Test", customer_name: businessLabel }, true);
     }
+
+    navigator.serviceWorker?.addEventListener("message", event => {
+        if (event.data?.type === "sobers-order-alert" && alertsEnabled()) {
+            soundNewOrder();
+            vibrateForNewOrder();
+        }
+    });
 
     async function notifyOrder(order, test = false) {
         if (!alertsEnabled()) return;
@@ -202,6 +255,7 @@
         $("#app").classList.remove("hidden");
         await loadAll();
         subscribeToOrders();
+        if (alertsEnabled()) { try { await savePushSubscription(true); } catch (error) { console.warn(error); } }
     }
 
     async function loadAll() {

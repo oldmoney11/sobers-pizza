@@ -2,6 +2,7 @@ window.RichRepublicConfig = Object.freeze({
     supabaseUrl: "https://inthadecmxmbqexufzpe.supabase.co",
     supabasePublishableKey: "sb_publishable_G6-TdmABB0bA93gzDZVElw_Q2VrwE80",
     sobersSlug: "sobers-pizza",
+    vapidPublicKey: "BDcNyocXQP1eO5TvjwGxVz8F-7uHkbWyHtYsEMaUTVXMPOdQA8Mt2siFIeAOAZmCqhvn4-gAOf9avBTZGxCXxEY",
     // The customer app lives one level above /admin/ on every environment,
     // including the owner preview and the final custom domain.
     customerAppBaseUrl: new URL("../", window.location.href).href
