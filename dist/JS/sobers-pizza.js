@@ -265,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 100,
       featured: true,
       category: "classic",
-      image: "/assets/sobers-pizza/pizzas/margherita.jpg",
+      image: "/assets/sobers-pizza/pizzas/margherita.webp",
       description: "Tomato, mozzarella and fresh herbs.",
       options: {
         size: [
@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 120,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/pineapple.jpg",
+      image: "/assets/sobers-pizza/pizzas/pineapple.webp",
       description: "Pineapple, sweet pepper, onion and mozzarella.",
       options: {
         size: [
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 135,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/meat-lovers.jpg",
+      image: "/assets/sobers-pizza/pizzas/meat-lovers.webp",
       description: "A bold mix of chicken, beef, sausage and pepperoni.",
       options: {
         size: [
@@ -381,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 125,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/bbq-chicken.jpg",
+      image: "/assets/sobers-pizza/pizzas/bbq-chicken.webp",
       description: "Tender chicken, smoky BBQ sauce, onions and mozzarella.",
       options: {
         size: [
@@ -410,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 125,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/beef-pepper.jpg",
+      image: "/assets/sobers-pizza/pizzas/beef-pepper.webp",
       description: "Seasoned beef, peppers, onions and melted mozzarella.",
       options: {
         size: [
@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 110,
       featured: true,
       category: "classic",
-      image: "/assets/sobers-pizza/pizzas/veggie.jpg",
+      image: "/assets/sobers-pizza/pizzas/veggie.webp",
       description: "Fresh peppers, onions, mushrooms, olives and mozzarella.",
       options: {
         size: [
@@ -468,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price: 125,
       featured: true,
       category: "meat",
-      image: "/assets/sobers-pizza/pizzas/spicy-sobers.jpg",
+      image: "/assets/sobers-pizza/pizzas/spicy-sobers.webp",
       description: "A fiery combination of spicy toppings, peppers and mozzarella.",
       options: {
         size: [
